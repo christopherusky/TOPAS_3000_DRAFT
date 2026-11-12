@@ -161,8 +161,8 @@ jobs:
           TOPAS_AMQP_URL: amqp://localhost:5672
 
       # A11.2 idempotency. Python-only: the responder is the thing under
-      # test here, not the client language, so running it once is enough
-      # - name: A11 idempotency conformance
+      # test here, not the client language, so running it once is enough.
+      - name: A11 idempotency conformance
         if: matrix.language == 'python'
         run: uv run python asyncapi_clients/smoketest/a11_idempotency.py
         env:
