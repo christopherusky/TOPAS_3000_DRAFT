@@ -1,0 +1,45 @@
+name: Feedback on TOPAS 3000A
+description: Comment on the specification, the buyer's guide or any other file in this repository
+title: "[Feedback] "
+labels: ["documentation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to comment. This issue will be public, along with your GitHub username. Please do not include passwords, personal data or confidential information about your authority's systems or suppliers.
+
+        New to GitHub? See [HOW-TO-GIVE-FEEDBACK.md](https://github.com/christopherusky/TOPAS_3000_DRAFT/blob/main/HOW-TO-GIVE-FEEDBACK.md).
+  - type: input
+    id: file
+    attributes:
+      label: Which file are you commenting on?
+      description: For example README.md (the specification), PROCUREMENT-BUYERS-GUIDE.md, or a schema.
+    validations:
+      required: true
+  - type: input
+    id: location
+    attributes:
+      label: Section, clause or line
+      description: For example "Conformance Testing" or "Clause C1.6".
+  - type: textarea
+    id: comment
+    attributes:
+      label: What is wrong, missing or unclear?
+      description: One or two sentences is enough.
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: What would you like instead?
+      description: If you have exact wording in mind, quote the current text with ">" and write your wording underneath.
+  - type: dropdown
+    id: role
+    attributes:
+      label: Who are you commenting as? (optional)
+      options:
+        - Local authority officer
+        - Procurement officer
+        - UTC or traffic system supplier
+        - Systems integrator or consultant
+        - Other
