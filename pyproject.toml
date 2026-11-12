@@ -13,7 +13,7 @@ dependencies = [
     # Pinned exactly: the version is stamped into every generated Python
     # SDK file's header, so any drift between developer
     # environments and CI breaks the drift workflow.
-    "datamodel-code-generator==0.57.0",
+    "datamodel-code-generator==0.81.0",
 ]
 
 [dependency-groups]
