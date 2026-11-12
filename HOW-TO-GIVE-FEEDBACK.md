@@ -34,7 +34,7 @@ Anything you write in a comment is **public**, along with your username. Do not 
 | Ask a question, report a mistake or make a general comment | **Open an issue** | 3 |
 | Comment on one particular sentence, table row or line in a file | **Comment on a line** | 4 |
 | Reply to something someone else has already said | **Reply to a discussion** | 5 |
-| Suggest the exact new wording | **Suggest an edit** | 6 |
+| Suggest the exact new wording | **Open an issue with your wording** | 6 |
 
 If you are unsure, use an **issue** (section 3). It always works.
 
@@ -112,25 +112,21 @@ You do not need any of this, and plain text is fine.
 
 ## 6. Suggest the exact wording (optional)
 
-If you can see precisely how a sentence should read, you can propose it so the maintainers can accept it with one click. This is the most useful form of feedback, but the other methods are just as welcome.
+If you can see precisely how a sentence should read, say so in an issue (section 3). You do not need to change any file yourself.
 
-1. Open the file and click the **pencil icon** (**Edit this file**) at the top right.
-2. GitHub will say you need to **fork** the repository. Click **Fork this repository** (or **Create fork**). A fork is simply your own private copy. It does not change the original.
-3. Make your change in the text box.
-4. Click **Commit changes…** (green button, top right).
-5. In the box that appears, write a one-line description of what you changed, and choose **Create a new branch for this commit and start a pull request**.
-6. Click **Propose changes**, then **Create pull request** on the next page.
-7. Add a sentence explaining *why*, and click **Create pull request** again.
+1. Open a new issue, or reply to an existing one.
+2. Quote the current text using a `>` at the start of the line (see the formatting table in section 5).
+3. Underneath, write the wording you would like instead, and add a sentence on why.
 
-The maintainers see exactly what you changed and can accept it, adjust it, or reply with a question. A pull request never changes the original files until a maintainer approves it.
+The maintainers will consider it and either update the document or reply with a question.
 
-**Note:** do not edit anything under `Schemas/`, `Schemas_asyncapi/`, `Diagrams/`, `asyncapi.yaml` or `asyncapi_clients/output/`. These are produced automatically from the models in `topas_3000_model/`. If you think one of them is wrong, open an **issue** (section 3) and say which schema or field. The maintainers will fix the source.
+**Note:** do not worry about the generated files under `Schemas/`, `Schemas_asyncapi/`, `Diagrams/`, `asyncapi.yaml` or `asyncapi_clients/output/`. These are produced automatically from the models in `topas_3000_model/`. If you think one of them is wrong, open an **issue** (section 3) and say which schema or field. The maintainers will fix the source.
 
 ---
 
 ## 7. What happens next
 
-1. A maintainer reads your issue or pull request.
+1. A maintainer reads your issue.
 2. They may reply with a question, so check your email.
 3. They will either change the documents, explain why not, or note the point as deferred. The specification's *Deferred and Won't Do* section lists what is outside the current scope.
 4. When the matter is settled, they close the issue. A closed issue can still be read, and you can reopen the discussion by replying.
@@ -153,8 +149,5 @@ Response times are not guaranteed. Certification is performed by TOPAS, and feed
 |---|---|
 | **Repository** ("repo") | The shared folder that holds all the files for a project, and their history. |
 | **Issue** | A titled message used for questions, comments and problem reports. |
-| **Fork** | Your own copy of someone else's repository, so you can propose changes safely. |
-| **Pull request** | A proposal to change a file. It does nothing until a maintainer accepts it. |
-| **Commit** | A saved change, with a short note saying what it was. |
 | **Maintainer** | A person who looks after the repository and decides what is accepted. |
 | **Markdown** (`.md`) | The plain-text format the documents are written in. GitHub displays it as a formatted page. |
