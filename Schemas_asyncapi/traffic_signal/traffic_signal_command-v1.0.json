@@ -1,0 +1,263 @@
+{
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/traffic_signal/traffic_signal_command-v1.0.json",
+  "$ref": "#/$defs/TrafficSignalCommand",
+  "$defs": {
+    "ForceStageCommand": {
+      "additionalProperties": false,
+      "description": "Force a specific stage on a traffic signal controller.",
+      "properties": {
+        "trafficSignalId": {
+          "description": "Identifier of the traffic signal receiving the command.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "commandCorrelationId": {
+          "description": "Caller-assigned identifier correlating a command request with its response. Not an identifier of the command itself. Named to avoid collision with the AMQP 1.0 correlation-id message property.",
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "requestTime": {
+          "description": "When the command was issued.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "kind": {
+          "const": "forceStage",
+          "description": "Discriminator for the tagged union. The fixed value \"forceStage\" selects the ForceStageCommand payload; it is not free-text command content.",
+          "type": "string"
+        },
+        "stageNumber": {
+          "description": "Stage number to force.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions."
+        }
+      },
+      "required": [
+        "commandCorrelationId",
+        "kind",
+        "requestTime",
+        "stageNumber",
+        "trafficSignalId"
+      ],
+      "type": "object"
+    },
+    "HoldStageCommand": {
+      "additionalProperties": false,
+      "description": "Hold a specific stage on a traffic signal controller.",
+      "properties": {
+        "trafficSignalId": {
+          "description": "Identifier of the traffic signal receiving the command.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "commandCorrelationId": {
+          "description": "Caller-assigned identifier correlating a command request with its response. Not an identifier of the command itself. Named to avoid collision with the AMQP 1.0 correlation-id message property.",
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "requestTime": {
+          "description": "When the command was issued.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "kind": {
+          "const": "holdStage",
+          "description": "Discriminator for the tagged union. The fixed value \"holdStage\" selects the HoldStageCommand payload; it is not free-text command content.",
+          "type": "string"
+        },
+        "stageNumber": {
+          "description": "Stage number to hold.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions."
+        }
+      },
+      "required": [
+        "commandCorrelationId",
+        "kind",
+        "requestTime",
+        "stageNumber",
+        "trafficSignalId"
+      ],
+      "type": "object"
+    },
+    "RequestStatusCommand": {
+      "additionalProperties": false,
+      "description": "Request the current status of a traffic signal controller.",
+      "properties": {
+        "trafficSignalId": {
+          "description": "Identifier of the traffic signal receiving the command.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "commandCorrelationId": {
+          "description": "Caller-assigned identifier correlating a command request with its response. Not an identifier of the command itself. Named to avoid collision with the AMQP 1.0 correlation-id message property.",
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "requestTime": {
+          "description": "When the command was issued.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "kind": {
+          "const": "requestStatus",
+          "description": "Discriminator for the tagged union. The fixed value \"requestStatus\" selects the RequestStatusCommand payload; it is not free-text command content.",
+          "type": "string"
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions."
+        }
+      },
+      "required": [
+        "commandCorrelationId",
+        "kind",
+        "requestTime",
+        "trafficSignalId"
+      ],
+      "type": "object"
+    },
+    "SetPlanCommand": {
+      "additionalProperties": false,
+      "description": "Set the active plan on a traffic signal controller.",
+      "properties": {
+        "trafficSignalId": {
+          "description": "Identifier of the traffic signal receiving the command.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "commandCorrelationId": {
+          "description": "Caller-assigned identifier correlating a command request with its response. Not an identifier of the command itself. Named to avoid collision with the AMQP 1.0 correlation-id message property.",
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "requestTime": {
+          "description": "When the command was issued.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "kind": {
+          "const": "setPlan",
+          "description": "Discriminator for the tagged union. The fixed value \"setPlan\" selects the SetPlanCommand payload; it is not free-text command content.",
+          "type": "string"
+        },
+        "planNumber": {
+          "description": "Plan number to activate. Same 1 to 99 range as the plan number a controller reports (PlanLine.plan_number), so any plan the controller can be told to run can be reported back.",
+          "maximum": 99,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions."
+        }
+      },
+      "required": [
+        "commandCorrelationId",
+        "kind",
+        "planNumber",
+        "requestTime",
+        "trafficSignalId"
+      ],
+      "type": "object"
+    },
+    "SynchronizeClockCommand": {
+      "additionalProperties": false,
+      "description": "Synchronize the traffic signal controller's clock.",
+      "properties": {
+        "trafficSignalId": {
+          "description": "Identifier of the traffic signal receiving the command.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "commandCorrelationId": {
+          "description": "Caller-assigned identifier correlating a command request with its response. Not an identifier of the command itself. Named to avoid collision with the AMQP 1.0 correlation-id message property.",
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "requestTime": {
+          "description": "When the command was issued.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "kind": {
+          "const": "synchronizeClock",
+          "description": "Discriminator for the tagged union. The fixed value \"synchronizeClock\" selects the SynchronizeClockCommand payload; it is not free-text command content.",
+          "type": "string"
+        },
+        "targetTime": {
+          "description": "Target time to synchronize the controller clock to.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions."
+        }
+      },
+      "required": [
+        "commandCorrelationId",
+        "kind",
+        "requestTime",
+        "targetTime",
+        "trafficSignalId"
+      ],
+      "type": "object"
+    },
+    "TrafficSignalCommand": {
+      "discriminator": "kind",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/SetPlanCommand"
+        },
+        {
+          "$ref": "#/$defs/ForceStageCommand"
+        },
+        {
+          "$ref": "#/$defs/HoldStageCommand"
+        },
+        {
+          "$ref": "#/$defs/SynchronizeClockCommand"
+        },
+        {
+          "$ref": "#/$defs/RequestStatusCommand"
+        }
+      ],
+      "title": "UTMC Traffic Signal 0064 Command",
+      "description": "Traffic signal command payloads (reused from TS004.0061:2010 Annex D)."
+    }
+  }
+}

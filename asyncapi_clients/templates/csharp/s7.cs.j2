@@ -1,0 +1,162 @@
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
+
+using Amqp;
+using Amqp.Framing;
+using Amqp.Types;
+
+/// <summary>
+/// Scenario S7 — Static reference data: consume the network topology.
+///
+/// Demonstrates: the snapshot-then-disconnect idiom for static
+/// reference data. Network topology is published across five
+/// channels (one per object type: node, link, zone, path, turn). A
+/// consumer that needs the topology opens five receivers in one
+/// session, accumulates each object into a per-channel
+/// <c>Dictionary&lt;string, JsonElement&gt;</c> keyed by the
+/// per-type id field (nodeId, linkId, ...), and disconnects once all five streams have
+/// produced their first message — different from S1/S5 which are
+/// continuous-telemetry consumers.
+///
+/// The resulting in-memory <c>Dictionary</c>s are what a
+/// route-planning or incident-location component would build before
+/// serving its first request.
+/// </summary>
+public class S7
+{
+    private static readonly string[] Channels =
+    {
+        "{{ channels.network_node }}",
+        "{{ channels.network_link }}",
+        "{{ channels.network_zone }}",
+        "{{ channels.network_path }}",
+        "{{ channels.network_turn }}",
+    };
+
+    // Each network object has a type-specific id field (no shared objectId).
+    private static readonly Dictionary<string, string> IdFields = new()
+    {
+        ["{{ channels.network_node }}"] = "nodeId",
+        ["{{ channels.network_link }}"] = "linkId",
+        ["{{ channels.network_zone }}"] = "zoneId",
+        ["{{ channels.network_path }}"] = "pathId",
+        ["{{ channels.network_turn }}"] = "turnId",
+    };
+
+    public static async Task Main(string[] args)
+    {
+        string url = Environment.GetEnvironmentVariable("TOPAS_AMQP_URL")
+            ?? "{{ server_uri }}".Replace("{host}", "localhost").Replace("{port}", "5671");
+
+        var address = new Address(url);
+        var connection = await Connection.Factory.CreateAsync(address);
+        var session = new Session(connection);
+
+        // Channel name -> per-channel object store, keyed by the per-type id field.
+        // JsonDocument is held alongside the element so it isn't GC'd
+        // while we're still reading from the JsonElement.
+        var topology = new Dictionary<string, Dictionary<string, JsonDocument>>();
+        var receivers = new Dictionary<string, ReceiverLink>();
+
+        foreach (string channel in Channels)
+        {
+            topology[channel] = new Dictionary<string, JsonDocument>();
+            // See S1 for why the source needs the `topic` capability.
+            var source = new Source
+            {
+                Address = channel,
+                Capabilities = new Symbol[] { new Symbol("topic") },
+            };
+            receivers[channel] = new ReceiverLink(
+                session, $"s7-receiver-{channel}", source, null);
+        }
+        // Readiness handshake: the harness waits for this before
+        // starting the publisher. Every publisher sends a fixed burst and
+        // exits, so a message published before this link is attached is
+        // discarded by the broker with no consumer to route it to.
+        Console.Error.WriteLine("[ready]");
+
+        var seenFirstOn = new HashSet<string>();
+        DateTime deadline = DateTime.UtcNow.AddSeconds(30);
+
+        try
+        {
+            // Round-robin poll all five receivers; in production you
+            // would tune this differently (drain each stream, or wait
+            // for a sync-batch completion per A5). This getting-started
+            // snippet just exits as soon as every channel has produced
+            // at least one message.
+            while (seenFirstOn.Count < Channels.Length && DateTime.UtcNow < deadline)
+            {
+                foreach (string channel in Channels)
+                {
+                    Message msg = await receivers[channel].ReceiveAsync(TimeSpan.FromMilliseconds(500));
+                    if (msg == null)
+                    {
+                        continue;
+                    }
+
+                    string body = BodyAsString(msg);
+                    JsonDocument obj = JsonDocument.Parse(body);
+                    string idField = IdFields[channel];
+                    if (!obj.RootElement.TryGetProperty(idField, out JsonElement idEl)
+                        || idEl.ValueKind != JsonValueKind.String)
+                    {
+                        // Safety net — every network object should
+                        // carry its type-specific id (nodeId, linkId, ...).
+                        obj.Dispose();
+                        receivers[channel].Accept(msg);
+                        continue;
+                    }
+                    topology[channel][idEl.GetString()] = obj;
+                    seenFirstOn.Add(channel);
+                    receivers[channel].Accept(msg);
+                }
+            }
+
+            if (seenFirstOn.Count < Channels.Length)
+            {
+                Console.Error.WriteLine(
+                    $"[S7] timed out waiting for all five channels; saw: {string.Join(",", seenFirstOn)}");
+                return;
+            }
+
+            var summary = new StringBuilder("[topology] ");
+            bool first = true;
+            foreach (string channel in Channels)
+            {
+                if (!first) summary.Append(", ");
+                int dot = channel.LastIndexOf('.');
+                string shortName = dot >= 0 ? channel.Substring(dot + 1) : channel;
+                summary.Append(shortName).Append('=').Append(topology[channel].Count);
+                first = false;
+            }
+            Console.WriteLine(summary.ToString());
+        }
+        finally
+        {
+            foreach (var doc in topology.Values)
+            {
+                foreach (var d in doc.Values) d.Dispose();
+            }
+            foreach (var r in receivers.Values) await r.CloseAsync();
+            await session.CloseAsync();
+            await connection.CloseAsync();
+        }
+    }
+
+    private static string BodyAsString(Message msg)
+    {
+        object body = msg.Body;
+        return body switch
+        {
+            string s => s,
+            byte[] bytes => Encoding.UTF8.GetString(bytes),
+            null => string.Empty,
+            _ => body.ToString() ?? string.Empty,
+        };
+    }
+}

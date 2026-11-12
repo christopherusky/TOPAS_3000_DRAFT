@@ -1,0 +1,53 @@
+---
+title: UTMC Transport Link Measurement
+---
+erDiagram
+    TRANSPORT_LINK_ANPR_DYNAMIC {
+        ObjectId transportLinkId FK
+        datetime timestamp
+        object quality
+        number averageSpeedKph
+        number linkTravelTimeSeconds
+        string kind
+        int numberPlatesIn
+        int numberPlatesOut
+        int numberPlatesMatches
+        int numberPlatesMatchesUsed
+    }
+
+    TRANSPORT_LINK_GPS_DYNAMIC {
+        ObjectId transportLinkId FK
+        datetime timestamp
+        object quality
+        number averageSpeedKph
+        number linkTravelTimeSeconds
+        string kind
+        number currentJourneyTimeSeconds
+        number meanTravelTimeSeconds
+        number medianTravelTimeSeconds
+        number varianceTravelTimeSeconds
+        int numberOfVehicles
+        number reservedLaneFlowVehicles
+    }
+
+    TRANSPORT_LINK_SCOOT_DYNAMIC {
+        ObjectId transportLinkId FK
+        datetime timestamp
+        object quality
+        number averageSpeedKph
+        number linkTravelTimeSeconds
+        string kind
+        number congestionPercent
+        number currentFlowVehicles
+        number occupancyPercent
+    }
+
+    TRANSPORT_LINK_MEASUREMENT {
+        string kind
+    }
+
+    TRANSPORT_LINK_MEASUREMENT ||--|| TRANSPORT_LINK_SCOOT_DYNAMIC : "scoot"
+    TRANSPORT_LINK_MEASUREMENT ||--|| TRANSPORT_LINK_ANPR_DYNAMIC : "anpr"
+    TRANSPORT_LINK_MEASUREMENT ||--|| TRANSPORT_LINK_GPS_DYNAMIC : "gps"
+
+

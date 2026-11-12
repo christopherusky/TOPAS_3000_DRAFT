@@ -1,0 +1,36 @@
+---
+title: UTMC Fault Support
+---
+erDiagram
+    FAULT_TYPE_DEFINITION {
+        TypeId faultTypeId PK
+        string description
+        int severity
+        TypeId subsystemTypeId
+        string code
+        object category
+        string messageTemplate
+        string[] parameterNames
+    }
+
+    ACKNOWLEDGEMENT_STATE {
+        enum notAcknowledged
+        enum acknowledged
+        enum deferred
+        enum recordedForAction
+    }
+
+    FAULT_CATEGORY {
+        enum hardware
+        enum communications
+        enum signalTimings
+        enum environmental
+        enum other
+    }
+
+    FAULT_STATUS {
+        enum active
+        enum cleared
+    }
+
+

@@ -1,0 +1,57 @@
+---
+title: UTMC Traffic Signal 0064 Dynamic State
+---
+erDiagram
+    PLAN_LINE {
+        int planNumber
+        datetime planStartTime
+        int cycleTime
+        string planDescription
+        int offset
+        object[] signalGroupTimings
+    }
+
+    SIGNAL_GROUP_TIMINGS {
+        string primarySignalGroup
+        int primarySignalGroupDuration
+        string alternateSignalGroup
+    }
+
+    TRAFFIC_SIGNAL_DYNAMIC_STATE {
+        ObjectId trafficSignalId FK
+        datetime timestamp
+        object trafficSignalMode
+        object trafficSignalSubMode
+        string subArea
+        object planLine
+    }
+
+    TRAFFIC_SIGNAL_MODE_ENUM {
+        enum localMode
+        enum centralMode
+        enum signalsOffMode
+        enum startUpMode
+        enum unknownMode
+    }
+
+    TRAFFIC_SIGNAL_SUB_MODE_ENUM {
+        enum cablelessLinking
+        enum fixedModeSimpleOrLinked
+        enum fixedModeToCurrentMax
+        enum manualMode
+        enum manualStepOn
+        enum movaMode
+        enum otherDistributedMode
+        enum preEmptLevel1
+        enum preEmptLevel2
+        enum preEmptLevel3
+        enum utcFixedTime
+        enum utcOtherCentralControlMethod
+        enum utcScoot
+        enum vehicleActuated
+        enum wardenControl
+    }
+
+    PLAN_LINE ||--|| SIGNAL_GROUP_TIMINGS : signalGroupTimings
+    TRAFFIC_SIGNAL_DYNAMIC_STATE ||--|| PLAN_LINE : planLine
+

@@ -1,0 +1,169 @@
+{
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/traffic_signal/traffic_signal_measurement-v1.0.json",
+  "$ref": "#/$defs/TrafficSignalDynamicState",
+  "$defs": {
+    "PlanLine": {
+      "additionalProperties": false,
+      "description": "A signal plan definition carried in the dynamic state (\u00a73.5, \u00a73.6).",
+      "properties": {
+        "planNumber": {
+          "description": "The currently active plan.",
+          "maximum": 99,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "planStartTime": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The time the plan was started. Optional: a publisher emitting on a fixed interval may not know the start time of the running plan."
+        },
+        "cycleTime": {
+          "type": "integer",
+          "maximum": 1000,
+          "minimum": 1,
+          "description": "The current cycle time."
+        },
+        "planDescription": {
+          "type": "string",
+          "maxLength": 50,
+          "minLength": 1,
+          "description": "A user entered description of the active plan."
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "The offset to the first SignalGroupTiming in the list. Must be present if SignalGroupTimingList is present."
+        },
+        "signalGroupTimings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SignalGroupTimings"
+          },
+          "description": "The signal group data for the plan."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or forward-compatibility extensions. Open-content object."
+        }
+      },
+      "required": [
+        "planNumber"
+      ],
+      "type": "object"
+    },
+    "SignalGroupTimings": {
+      "additionalProperties": false,
+      "description": "Signal-group timing row within a PlanLine (\u00a73.5, \u00a73.6).",
+      "properties": {
+        "primarySignalGroup": {
+          "description": "A text representation of the primary signal group.",
+          "maxLength": 20,
+          "minLength": 1,
+          "type": "string"
+        },
+        "primarySignalGroupDuration": {
+          "description": "The length of the primary signal group. Note that there is no timing data associated with the alternate signal group.",
+          "maximum": 998,
+          "minimum": 2,
+          "type": "integer"
+        },
+        "alternateSignalGroup": {
+          "type": "string",
+          "maxLength": 20,
+          "minLength": 1,
+          "description": "A text representation of the alternatives to the primary signal group."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or forward-compatibility extensions. Open-content object."
+        }
+      },
+      "required": [
+        "primarySignalGroup",
+        "primarySignalGroupDuration"
+      ],
+      "type": "object"
+    },
+    "TrafficSignalDynamicState": {
+      "additionalProperties": false,
+      "description": "Traffic signal dynamic state with PlanLine/SignalGroupTimings (TS004.0064bis:2017 \u00a73.5).",
+      "properties": {
+        "trafficSignalId": {
+          "description": "Identifier of the traffic signal this reading is about.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Time the state was observed.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "trafficSignalMode": {
+          "$ref": "#/$defs/TrafficSignalModeEnum",
+          "description": "The high level mode of the traffic signal."
+        },
+        "trafficSignalSubMode": {
+          "$ref": "#/$defs/TrafficSignalSubModeEnum",
+          "description": "The detailed sub-mode of the traffic signal."
+        },
+        "subArea": {
+          "type": "string",
+          "description": "Name for the sub-area that identifies the group of signals to which the associated traffic signal equipment belongs."
+        },
+        "planLine": {
+          "$ref": "#/$defs/PlanLine",
+          "description": "A plan line for this traffic signal. This is intended to provide information allowing the plan data to be displayed to an operator. It contains the current plan data and would be updated when the plan is changed. For adaptive central control, such as SCOOT, the information should be available periodically and contain the plan at that instant."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or forward-compatibility extensions. Open-content object."
+        }
+      },
+      "required": [
+        "trafficSignalId",
+        "timestamp",
+        "trafficSignalMode"
+      ],
+      "type": "object",
+      "title": "UTMC Traffic Signal 0064 Dynamic State"
+    },
+    "TrafficSignalModeEnum": {
+      "description": "PDF \u00a74.3 \u2014 high-level traffic-signal modes.",
+      "enum": [
+        "localMode",
+        "centralMode",
+        "signalsOffMode",
+        "startUpMode",
+        "unknownMode"
+      ],
+      "type": "string"
+    },
+    "TrafficSignalSubModeEnum": {
+      "description": "PDF \u00a74.4 \u2014 detailed traffic-signal sub-modes.\n\nNote: \u00a75.1's mode/subMode combinations table references additional values\n(hurryCall, cablelessLinkingBaseTime, cablelessLinkingNonBaseTime,\npublicServiceVehiclePriority, lightRailTransitMode, pre-emption) that are\nNOT defined in \u00a74.4 or the XSD. This enum follows \u00a74.4 + XSD.",
+      "enum": [
+        "cablelessLinking",
+        "fixedModeSimpleOrLinked",
+        "fixedModeToCurrentMax",
+        "manualMode",
+        "manualStepOn",
+        "movaMode",
+        "otherDistributedMode",
+        "preEmptLevel1",
+        "preEmptLevel2",
+        "preEmptLevel3",
+        "utcFixedTime",
+        "utcOtherCentralControlMethod",
+        "utcScoot",
+        "vehicleActuated",
+        "wardenControl"
+      ],
+      "type": "string"
+    }
+  }
+}

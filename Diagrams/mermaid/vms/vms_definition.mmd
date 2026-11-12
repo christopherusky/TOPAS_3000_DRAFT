@@ -1,0 +1,35 @@
+---
+title: UTMC VMS Definition
+---
+erDiagram
+    VMS_DEFINITION {
+        ObjectId vmsId PK
+        TypeId typeId FK
+        datetime creationDate
+        object location
+        ObjectId transportLinkId
+        number linkDistanceMetres
+        ObjectId networkLinkId
+        ObjectId networkPathId
+        string shortDescription
+        string longDescription
+        int signHeight
+        int signWidth
+        int numberOfLines
+        int charactersPerLine
+        bool supportsGraphics
+        object colourCapability
+        ParticipantId participantId
+        string ownerOperator
+        ParticipantId originatingParticipantId
+        ObjectId originatingObjectId
+    }
+
+    VMS_COLOUR_CAPABILITY {
+        enum monochrome
+        enum amber
+        enum multiColour
+        enum fullColour
+    }
+
+

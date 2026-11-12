@@ -1,0 +1,22 @@
+{
+  "name": "topas-snippets-smoketest",
+  "version": "1.0.0",
+  "private": true,
+  "description": "TopasSnippets TypeScript smoke harness — compiles asyncapi_clients/output/typescript/snippets/*.ts in place and runs them against a live Artemis broker.",
+  "type": "module",
+  "scripts": {
+    "build": "tsc && tsc -p tsconfig.conformance.json"
+  },
+  "dependencies": {
+    "rhea": "3.0.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "5.4.5"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "Apache-2.0",
+  "author": "Christopher Kettell, TRL Software"
+}

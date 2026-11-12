@@ -1,0 +1,45 @@
+{
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/vms/vms_type-v1.0.json",
+  "$ref": "#/$defs/VmsType",
+  "$defs": {
+    "VmsType": {
+      "additionalProperties": false,
+      "description": "Variable message sign type definitions.",
+      "properties": {
+        "typeId": {
+          "description": "Identifier of this VMS type.",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^\\S(?:[\\s\\S]*\\S)?$",
+          "title": "TypeId",
+          "type": "string"
+        },
+        "description": {
+          "description": "Human-readable description.",
+          "type": "string"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional notes."
+        },
+        "specificationLink": {
+          "type": "string",
+          "format": "uri",
+          "minLength": 1,
+          "description": "URL to an external specification document."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions."
+        }
+      },
+      "required": [
+        "typeId",
+        "description"
+      ],
+      "type": "object",
+      "title": "UTMC VMS Type"
+    }
+  }
+}

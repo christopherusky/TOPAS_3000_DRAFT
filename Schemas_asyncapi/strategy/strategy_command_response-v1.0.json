@@ -1,0 +1,72 @@
+{
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/strategy/strategy_command_response-v1.0.json",
+  "$ref": "#/$defs/StrategyCommandResponse",
+  "$defs": {
+    "StrategyCommandResponse": {
+      "additionalProperties": false,
+      "description": "Strategy command response payloads.",
+      "properties": {
+        "strategyId": {
+          "description": "Identifier of the strategy the command targeted.",
+          "minLength": 1,
+          "type": "string"
+        },
+        "commandCorrelationId": {
+          "description": "Correlation identifier copied verbatim from the originating command request. Not an identifier of the command itself.",
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "serviceRequester": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Audit label copied from the command, if it carried one. Never used for authorisation or idempotency."
+        },
+        "status": {
+          "$ref": "../common/common-v1.0.json#/$defs/CommandResponseStatus",
+          "description": "Outcome of the command execution."
+        },
+        "responseTime": {
+          "description": "When the response was generated.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "code": {
+          "type": "string",
+          "description": "Machine-readable response code for programmatic handling."
+        },
+        "errorCode": {
+          "$ref": "#/$defs/TriggerUpdateErrorEnum",
+          "description": "Strategy-specific rejection category. Only permitted when the outcome is not success or pending."
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable detail."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions."
+        }
+      },
+      "required": [
+        "strategyId",
+        "commandCorrelationId",
+        "status",
+        "responseTime"
+      ],
+      "type": "object",
+      "title": "UTMC Strategy Command Response"
+    },
+    "TriggerUpdateErrorEnum": {
+      "description": "Categorisation of strategy trigger rejection reason.",
+      "enum": [
+        "accessDenied",
+        "notAuthenticated",
+        "strategyIdDoesNotExist",
+        "other"
+      ],
+      "type": "string"
+    }
+  }
+}

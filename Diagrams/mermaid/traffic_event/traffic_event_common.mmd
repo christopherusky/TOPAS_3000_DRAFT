@@ -1,0 +1,43 @@
+---
+title: UTMC Traffic Event Common
+---
+erDiagram
+    EVENT_STATUS {
+        enum active
+        enum planned
+        enum suspended
+        enum cleared
+    }
+
+    LANES_AFFECTED_TYPE {
+        enum I
+        enum T
+        enum II
+        enum IT
+        enum TI
+        enum TT
+        enum III
+        enum IIT
+        enum ITI
+        enum ITT
+        enum TII
+        enum TIT
+        enum TTI
+        enum TTT
+        enum IIII
+        enum IIIT
+        enum IITT
+        enum ITTT
+        enum TIII
+        enum TTTT
+        enum allOpen
+    }
+
+    SEVERITY_TYPE {
+        enum unknown
+        enum low
+        enum medium
+        enum high
+    }
+
+

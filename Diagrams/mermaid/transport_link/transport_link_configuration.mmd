@@ -1,0 +1,46 @@
+---
+title: UTMC Transport Link Configuration
+---
+erDiagram
+    TRANSPORT_LINK_ANPR_CONFIGURATION {
+        ObjectId transportLinkId FK
+        datetime configurationDate
+        number lengthMetres
+        number fullLengthMetres
+        int numberOfLanes
+        number maximumSpeedKph
+        number capacityVehiclesPerHour
+        string kind
+    }
+
+    TRANSPORT_LINK_GPS_CONFIGURATION {
+        ObjectId transportLinkId FK
+        datetime configurationDate
+        number lengthMetres
+        number fullLengthMetres
+        int numberOfLanes
+        number maximumSpeedKph
+        number capacityVehiclesPerHour
+        string kind
+    }
+
+    TRANSPORT_LINK_SCOOT_CONFIGURATION {
+        ObjectId transportLinkId FK
+        datetime configurationDate
+        number lengthMetres
+        number fullLengthMetres
+        int numberOfLanes
+        number maximumSpeedKph
+        number capacityVehiclesPerHour
+        string kind
+    }
+
+    TRANSPORT_LINK_CONFIGURATION {
+        string kind
+    }
+
+    TRANSPORT_LINK_CONFIGURATION ||--|| TRANSPORT_LINK_SCOOT_CONFIGURATION : "scoot"
+    TRANSPORT_LINK_CONFIGURATION ||--|| TRANSPORT_LINK_GPS_CONFIGURATION : "gps"
+    TRANSPORT_LINK_CONFIGURATION ||--|| TRANSPORT_LINK_ANPR_CONFIGURATION : "anpr"
+
+

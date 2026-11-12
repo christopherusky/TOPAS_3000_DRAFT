@@ -1,0 +1,18 @@
+{
+  // tsconfig.conformance.json — hand-written A11 conformance code.
+  //
+  // The main tsconfig pins rootDir to the generated tree so snippets emit
+  // to dist/snippets/*.js, which run_all.py depends on. Hand-written
+  // harness code cannot share that rootDir without moving those outputs,
+  // so it gets its own config and emits to dist/*.js.
+  //
+  // Origin:    Hand-written for asyncapi-clients conformance
+  // Author:    Christopher Kettell, TRL Software
+  // License:   Apache-2.0
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "./conformance",
+    "outDir": "./dist"
+  },
+  "include": ["./conformance/*.ts"]
+}

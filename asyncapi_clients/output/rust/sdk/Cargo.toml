@@ -1,0 +1,29 @@
+# Cargo.toml — build stub for the generated Rust SDK.
+#
+# Hand-written and copied into output/rust/sdk/ by step_sdk_stubs so CI can
+# compile the generated modules. The sources under src/ are produced by
+# cargo-typify from Schemas/ and must not be hand-edited.
+#
+# Origin:    Hand-written for the Rust SDK
+# Author:    Christopher Kettell, TRL Software
+# License:   Apache-2.0
+
+[package]
+name = "utmc-sdk"
+version = "0.1.0"
+edition = "2021"
+publish = false
+authors = ["Christopher Kettell, TRL Software"]
+license = "Apache-2.0"
+description = "TOPAS 3000A UTMC types — generated from Schemas/ by cargo-typify."
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# typify emits chrono types for date-time formats and regress for `pattern`
+# constraints; both are required to compile the generated modules.
+chrono = { version = "0.4", features = ["serde"] }
+regress = "0.10"

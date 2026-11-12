@@ -1,0 +1,75 @@
+# Cargo.toml — manifest for the asyncapi-clients Rust smoke harness.
+#
+# Single package with seven [[bin]] entries; each [[bin]] points at the
+# corresponding generated snippet under ../../output/rust/snippets/.
+# This shares one compile of the dep graph (fe2o3-amqp + tokio +
+# serde_json + uuid) across all seven binaries.
+#
+# Origin:    Hand-written for asyncapi-clients smoke testing
+# Author:    Christopher Kettell, TRL Software
+# Date:      2026-05-05
+# License:   Apache-2.0
+
+[package]
+name = "topas-snippets-smoketest"
+version = "0.1.0"
+edition = "2021"
+publish = false
+authors = ["Christopher Kettell, TRL Software"]
+license = "Apache-2.0"
+description = "TopasSnippets Rust smoke harness — compiles asyncapi_clients/output/rust/snippets/*.rs in place and runs them against a live Artemis broker."
+
+[dependencies]
+# Pin fe2o3-amqp with `=` so CI is deterministic across pre-1.0 minor
+# bumps. Latest GA on crates.io as of 2026-05-05 is 0.14.0; bump this
+# pin in lockstep with future template updates.
+fe2o3-amqp = "=0.14.0"
+tokio = { version = "1", features = ["full"] }
+# `derive` feature is required for `#[derive(Deserialize)]` in S5/S7
+# (the deps tree pulls in serde transitively via fe2o3-amqp, but
+# without `features = ["derive"]` the proc-macro is unavailable).
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+uuid = { version = "1", features = ["v4"] }
+
+[profile.release]
+opt-level = 3
+
+[[bin]]
+name = "s1"
+path = "../../output/rust/snippets/s1.rs"
+
+[[bin]]
+name = "s2"
+path = "../../output/rust/snippets/s2.rs"
+
+[[bin]]
+name = "s3"
+path = "../../output/rust/snippets/s3.rs"
+
+[[bin]]
+name = "s4"
+path = "../../output/rust/snippets/s4.rs"
+
+[[bin]]
+name = "s5"
+path = "../../output/rust/snippets/s5.rs"
+
+[[bin]]
+name = "s6"
+path = "../../output/rust/snippets/s6.rs"
+
+[[bin]]
+name = "s7"
+path = "../../output/rust/snippets/s7.rs"
+
+# Hand-written conformance binary, not a generated snippet: it asserts a
+# property of the broker and the AMQP type system that every language's
+# transport check depends on.
+[[bin]]
+name = "a11_ids"
+path = "conformance/a11_ids.rs"
+
+[[bin]]
+name = "responder"
+path = "conformance/responder.rs"

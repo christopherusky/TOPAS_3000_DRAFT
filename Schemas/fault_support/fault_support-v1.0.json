@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/fault_support/fault_support-v1.0.json",
+  "title": "UTMC Fault Support",
+  "description": "Shared fault support types (acknowledgement state, fault type definition).",
+  "$defs": {
+    "AcknowledgementState": {
+      "description": "Acknowledgement state of a device fault.\n\nMaps from legacy XSD integer values:\n- 0 -> notAcknowledged\n- 1 -> acknowledged\n- 2 -> deferred\n- 3 -> recordedForAction",
+      "enum": [
+        "notAcknowledged",
+        "acknowledged",
+        "deferred",
+        "recordedForAction"
+      ],
+      "type": "string"
+    },
+    "FaultCategory": {
+      "description": "Coarse grouping for catalogue entries.\n\nDeliberately short. It exists so an operator can filter \"show me the\ncommunications faults\" without the catalogue having to agree on a\ntaxonomy first; the precise meaning of a fault is its catalogue entry,\nnot its category.",
+      "enum": [
+        "hardware",
+        "communications",
+        "signalTimings",
+        "environmental",
+        "other"
+      ],
+      "type": "string"
+    },
+    "FaultStatus": {
+      "description": "Whether a fault is still active or has been cleared.\n\nThis is the only fault lifecycle the payload carries. Record archival\n\u2014 distinguishing a live record from a retired one \u2014 is not modelled\nhere and is a matter for the publishing system.",
+      "enum": [
+        "active",
+        "cleared"
+      ],
+      "type": "string"
+    },
+    "FaultTypeDefinition": {
+      "additionalProperties": false,
+      "description": "Catalogue entry describing one kind of fault that can be reported.",
+      "properties": {
+        "faultTypeId": {
+          "description": "Identifier of this fault type.",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^\\S(?:[\\s\\S]*\\S)?$",
+          "title": "TypeId",
+          "type": "string"
+        },
+        "description": {
+          "description": "Human-readable description of the fault type.",
+          "type": "string"
+        },
+        "severity": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Numeric severity (higher = more severe). Optional."
+        },
+        "subsystemTypeId": {
+          "type": "string",
+          "description": "Reference to a SubsystemDefinition entry: the subsystem this fault type belongs to.",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^\\S(?:[\\s\\S]*\\S)?$",
+          "title": "TypeId"
+        },
+        "code": {
+          "type": "string",
+          "maxLength": 32,
+          "minLength": 1,
+          "description": "The identifier this fault carries in its source document or vendor documentation \u2014 'A1', 'F3', 'W12'. Distinct from faultTypeId, which is this catalogue's key: a deployment may hold two entries with the same code from different vendors."
+        },
+        "category": {
+          "$ref": "#/$defs/FaultCategory",
+          "description": "Coarse grouping, for filtering rather than semantics."
+        },
+        "messageTemplate": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable message with positional placeholders, e.g. 'Minimum green not met: stage {0} ran {1}s against a minimum of {2}s'. A fault instance supplies the values in its parameters field. This is what lets a catalogue carry faults whose meaning depends on runtime values \u2014 the stuck-stage and interstage timing faults that a closed enum cannot express."
+        },
+        "parameterNames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "description": "Names for the positional placeholders in messageTemplate, in order \u2014 ['stageNumber', 'actualSeconds', 'minimumSeconds']. Lets a consumer label the values rather than only interpolate them. Length SHOULD match the number of placeholders."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions. Open-content object."
+        }
+      },
+      "required": [
+        "faultTypeId",
+        "description"
+      ],
+      "type": "object"
+    }
+  }
+}

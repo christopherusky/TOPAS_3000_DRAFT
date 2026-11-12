@@ -1,0 +1,19 @@
+---
+title: UTMC Transport Route Definition
+---
+erDiagram
+    TRANSPORT_ROUTE_DEFINITION {
+        ObjectId transportRouteId PK
+        TypeId typeId FK
+        datetime creationDate
+        object location
+        object endPoint
+        string shortDescription
+        string longDescription
+        ParticipantId participantId
+        string ownerOperator
+        ParticipantId originatingParticipantId
+        ObjectId originatingObjectId
+    }
+
+

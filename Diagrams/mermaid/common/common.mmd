@@ -1,0 +1,64 @@
+---
+title: UTMC Common Primitives
+---
+erDiagram
+    COORDINATES {
+        number latitude
+        number longitude
+    }
+
+    DATE_TYPE_DEFINITION {
+        int dayTypeId
+        date date
+        bool abnormal
+        string reason
+    }
+
+    DAY_TYPE_DEFINITION {
+        int dayTypeId
+        string description
+        string shortName
+        bool preDefined
+    }
+
+    GEO_JSON_LINE_STRING {
+        string type
+        array[] coordinates
+    }
+
+    GEO_JSON_POINT {
+        string type
+        any[] coordinates
+    }
+
+    POINT {
+        object coordinates
+        number altitudeMeters
+    }
+
+    QUALITY {
+        QualityId qualityId PK
+        string sourceName
+        string sourceType
+        ParticipantId participantId
+        datetime lastUpdated
+    }
+
+    SUBSYSTEM_DEFINITION {
+        TypeId typeId
+        string description
+        string notes
+        uri specificationLink
+    }
+
+    COMMAND_RESPONSE_STATUS {
+        enum success
+        enum failed
+        enum timedOut
+        enum invalid
+        enum notSupported
+        enum pending
+    }
+
+    POINT ||--|| COORDINATES : coordinates
+

@@ -1,0 +1,39 @@
+---
+title: UTMC Fault Support Domain
+---
+erDiagram
+    ACKNOWLEDGEMENT_STATE {
+        enum notAcknowledged
+        enum acknowledged
+        enum deferred
+        enum recordedForAction
+    }
+
+    FAULT_CATEGORY {
+        enum hardware
+        enum communications
+        enum signalTimings
+        enum environmental
+        enum other
+    }
+
+    FAULT_STATUS {
+        enum active
+        enum cleared
+    }
+
+    FAULT_SUPPORT {
+        TypeId faultTypeId PK
+        string description
+        int severity
+        TypeId subsystemTypeId
+        string code
+        object category
+        string messageTemplate
+        string[] parameterNames
+    }
+
+    FAULT_SUPPORT }o--|| ACKNOWLEDGEMENT_STATE : classifiedBy
+    FAULT_SUPPORT }o--|| FAULT_CATEGORY : classifiedBy
+    FAULT_SUPPORT }o--|| FAULT_STATUS : classifiedBy
+

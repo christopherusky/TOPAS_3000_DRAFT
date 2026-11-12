@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/traffic_signal/traffic_signal_configuration-v1.0.json",
+  "$ref": "#/$defs/TrafficSignalConfiguration",
+  "$defs": {
+    "TrafficSignalConfiguration": {
+      "additionalProperties": false,
+      "description": "Traffic signal operational configuration (TS004.0064bis:2017 \u00a73.4).",
+      "properties": {
+        "trafficSignalId": {
+          "description": "Identifier of the traffic signal this configuration applies to.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "controllerType": {
+          "type": "string",
+          "description": "Textual description of controller type."
+        },
+        "supplier": {
+          "type": "string",
+          "description": "Name of supplier."
+        },
+        "trafficSignalType": {
+          "$ref": "#/$defs/TrafficSignalTypeEnum",
+          "description": "Type of the traffic signal."
+        },
+        "configurationDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When this configuration record became effective."
+        },
+        "subArea": {
+          "type": "string",
+          "description": "Group of signals to which this traffic signal belongs."
+        },
+        "userCodeNumber": {
+          "type": "string",
+          "maxLength": 32,
+          "description": "Operator's own reference for this traffic signal."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or forward-compatibility extensions. Open-content object."
+        }
+      },
+      "required": [
+        "trafficSignalId"
+      ],
+      "type": "object",
+      "title": "UTMC Traffic Signal 0064 Configuration"
+    },
+    "TrafficSignalTypeEnum": {
+      "description": "PDF \u00a74.2 \u2014 traffic-signal types. XSD values (camelCase) are authoritative.",
+      "enum": [
+        "intersection",
+        "pegasus",
+        "pelican",
+        "puffin",
+        "toucan",
+        "tramCrossing",
+        "wigWag",
+        "other"
+      ],
+      "type": "string"
+    }
+  }
+}

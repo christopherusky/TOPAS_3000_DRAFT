@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/traffic_signal/traffic_signal_type-v1.0.json",
+  "$ref": "#/$defs/TrafficSignalType",
+  "$defs": {
+    "TrafficSignalType": {
+      "additionalProperties": false,
+      "description": "Traffic signal type definitions (reused from TS004.0061:2010 Annex D).",
+      "properties": {
+        "typeId": {
+          "description": "Identifier of this control method. Referenced by TrafficSignalDefinition.controlMethodId.",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^\\S(?:[\\s\\S]*\\S)?$",
+          "title": "TypeId",
+          "type": "string"
+        },
+        "description": {
+          "description": "Human-readable description of the control method (e.g. 'MOVA', 'SCOOT', 'fixed-time', 'vehicle-actuated').",
+          "type": "string"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional notes, e.g. deployment details."
+        },
+        "specificationLink": {
+          "type": "string",
+          "format": "uri",
+          "minLength": 1,
+          "description": "URL to an external specification document for this control method."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions. Open-content object."
+        }
+      },
+      "required": [
+        "typeId",
+        "description"
+      ],
+      "type": "object",
+      "title": "UTMC Traffic Signal 0064 Type"
+    }
+  }
+}

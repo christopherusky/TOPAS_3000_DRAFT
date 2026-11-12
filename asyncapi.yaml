@@ -1,0 +1,1476 @@
+asyncapi: 2.6.0
+info:
+  title: TOPAS 3000A
+  version: 1.0.0
+  description: "\nTOPAS 3000A is the successor to the UTMC standards and a modern replacement \nfor the legacy CORBA-based\
+    \ UTMC interface between UTC \n(Urban Traffic Control) systems and the Common Database. \nThe standard aims to create\
+    \ an open, interoperable environment \nfor intelligent traffic systems while addressing the limitations \nof the original\
+    \ UTMC standards introduced from 1997.\n\nPublished by TOPAS (Traffic Open Products & Specifications). Scoped to\nthe\
+    \ application-layer interface between UTC systems and UTMC systems \n(informally known as Common Database platforms).\n\
+    \nA system that is TOPAS 3000A compliant is not required to be UTMCv1 \ncompliant, and vice versa. The two protocols are\
+    \ not interoperable \nwithout a translation gateway.\n"
+  contact:
+    name: TOPAS Group
+    url: https://topasgroup.org.uk/
+  license:
+    name: TOPAS Specification Licence
+servers:
+  production:
+    url: amqps://{host}:{port}
+    protocol: amqp
+    protocolVersion: 1.0.0
+    description: AMQP 1.0 broker with mTLS
+    x-deploymentTimezone: Europe/London
+    security:
+    - mtls: []
+    variables:
+      host:
+        description: AMQP broker hostname
+      port:
+        default: '5671'
+        description: AMQPS port (TLS)
+defaultContentType: application/json
+channels:
+  detector.command:
+    description: Detector command payloads.
+    x-sender: data-subscriber
+    subscribe:
+      message:
+        $ref: '#/components/messages/DetectorCommand'
+    publish:
+      message:
+        $ref: '#/components/messages/DetectorCommand'
+    x-amqp1-request-reply:
+      responseMessage:
+        $ref: '#/components/messages/DetectorCommandResponse'
+      replyAddress:
+        requestProperty: reply-to
+        required: true
+        permittedTypes:
+        - dynamic
+        - provisioned
+        preferredType: dynamic
+      responseDestination:
+        messageProperty: to
+        valueFrom: request.reply-to
+      transportCorrelation:
+        requestProperty: message-id
+        responseProperty: correlation-id
+      applicationCorrelation:
+        payloadProperty: commandCorrelationId
+      fanout: false
+  detector.configuration:
+    description: Detector operational configuration.
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/DetectorConfiguration'
+    publish:
+      message:
+        $ref: '#/components/messages/DetectorConfiguration'
+  detector.definition:
+    description: Detector equipment details.
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/DetectorDefinition'
+    publish:
+      message:
+        $ref: '#/components/messages/DetectorDefinition'
+  detector.fault:
+    description: Detector fault reports.
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/DetectorFault'
+    publish:
+      message:
+        $ref: '#/components/messages/DetectorFault'
+  detector.history:
+    description: Detector history entries.
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/DetectorHistory'
+    publish:
+      message:
+        $ref: '#/components/messages/DetectorHistory'
+  detector.measurement:
+    description: Detector dynamic measurement data.
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/DetectorMeasurement'
+    publish:
+      message:
+        $ref: '#/components/messages/DetectorMeasurement'
+  detector.sync-request:
+    description: 'Request the current state of detector objects. The Data Publisher answers to the request''s reply-to address,
+      not the domain''s data channels: a sync batch (x-message-mode: sync, x-sync-id/-sequence/-total) followed by a SyncComplete.'
+    x-sender: data-subscriber
+    subscribe:
+      message:
+        $ref: '#/components/messages/DetectorSyncRequest'
+    publish:
+      message:
+        $ref: '#/components/messages/DetectorSyncRequest'
+    x-amqp1-request-reply:
+      responseMessage:
+        $ref: '#/components/messages/DetectorSyncComplete'
+      replyAddress:
+        requestProperty: reply-to
+        required: true
+        permittedTypes:
+        - dynamic
+        - provisioned
+        preferredType: dynamic
+      responseDestination:
+        messageProperty: to
+        valueFrom: request.reply-to
+      transportCorrelation:
+        requestProperty: message-id
+        responseProperty: correlation-id
+      applicationCorrelation:
+        payloadProperty: syncCorrelationId
+      fanout: false
+  detector.type:
+    description: Detector type definitions.
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/DetectorType'
+    publish:
+      message:
+        $ref: '#/components/messages/DetectorType'
+  network.link:
+    description: Road network link between two nodes.
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/NetworkLink'
+    publish:
+      message:
+        $ref: '#/components/messages/NetworkLink'
+  network.node:
+    description: Road network node (junction or endpoint).
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/NetworkNode'
+    publish:
+      message:
+        $ref: '#/components/messages/NetworkNode'
+  network.path:
+    description: Road network path (ordered sequence of links).
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/NetworkPath'
+    publish:
+      message:
+        $ref: '#/components/messages/NetworkPath'
+  network.sync-request:
+    description: 'Request the current state of network topology objects. The Data Publisher answers to the request''s reply-to
+      address, not the domain''s data channels: a sync batch (x-message-mode: sync, x-sync-id/-sequence/-total) followed by
+      a SyncComplete.'
+    x-sender: data-subscriber
+    subscribe:
+      message:
+        $ref: '#/components/messages/NetworkTopologySyncRequest'
+    publish:
+      message:
+        $ref: '#/components/messages/NetworkTopologySyncRequest'
+    x-amqp1-request-reply:
+      responseMessage:
+        $ref: '#/components/messages/NetworkTopologySyncComplete'
+      replyAddress:
+        requestProperty: reply-to
+        required: true
+        permittedTypes:
+        - dynamic
+        - provisioned
+        preferredType: dynamic
+      responseDestination:
+        messageProperty: to
+        valueFrom: request.reply-to
+      transportCorrelation:
+        requestProperty: message-id
+        responseProperty: correlation-id
+      applicationCorrelation:
+        payloadProperty: syncCorrelationId
+      fanout: false
+  network.turn:
+    description: Road network turn (movement through a node between links).
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/NetworkTurn'
+    publish:
+      message:
+        $ref: '#/components/messages/NetworkTurn'
+  network.zone:
+    description: Road network zone (area grouping of links/nodes).
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/NetworkZone'
+    publish:
+      message:
+        $ref: '#/components/messages/NetworkZone'
+  strategy.command:
+    description: Strategy trigger command payloads.
+    x-sender: data-subscriber
+    subscribe:
+      message:
+        $ref: '#/components/messages/StrategyCommand'
+    publish:
+      message:
+        $ref: '#/components/messages/StrategyCommand'
+    x-amqp1-request-reply:
+      responseMessage:
+        $ref: '#/components/messages/StrategyCommandResponse'
+      replyAddress:
+        requestProperty: reply-to
+        required: true
+        permittedTypes:
+        - dynamic
+        - provisioned
+        preferredType: dynamic
+      responseDestination:
+        messageProperty: to
+        valueFrom: request.reply-to
+      transportCorrelation:
+        requestProperty: message-id
+        responseProperty: correlation-id
+      applicationCorrelation:
+        payloadProperty: commandCorrelationId
+      fanout: false
+  strategy.definition:
+    description: Traffic management strategy static metadata.
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/StrategyDefinition'
+    publish:
+      message:
+        $ref: '#/components/messages/StrategyDefinition'
+  strategy.status:
+    description: Traffic management strategy current status.
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/StrategyStatus'
+    publish:
+      message:
+        $ref: '#/components/messages/StrategyStatus'
+  strategy.sync-request:
+    description: 'Request the current state of strategy objects. The Data Publisher answers to the request''s reply-to address,
+      not the domain''s data channels: a sync batch (x-message-mode: sync, x-sync-id/-sequence/-total) followed by a SyncComplete.'
+    x-sender: data-subscriber
+    subscribe:
+      message:
+        $ref: '#/components/messages/StrategySyncRequest'
+    publish:
+      message:
+        $ref: '#/components/messages/StrategySyncRequest'
+    x-amqp1-request-reply:
+      responseMessage:
+        $ref: '#/components/messages/StrategySyncComplete'
+      replyAddress:
+        requestProperty: reply-to
+        required: true
+        permittedTypes:
+        - dynamic
+        - provisioned
+        preferredType: dynamic
+      responseDestination:
+        messageProperty: to
+        valueFrom: request.reply-to
+      transportCorrelation:
+        requestProperty: message-id
+        responseProperty: correlation-id
+      applicationCorrelation:
+        payloadProperty: syncCorrelationId
+      fanout: false
+  traffic-event.accident:
+    description: Accident traffic event payload.
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/TrafficEventAccident'
+    publish:
+      message:
+        $ref: '#/components/messages/TrafficEventAccident'
+  traffic-event.event:
+    description: Planned event traffic event payload.
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/TrafficEventPlannedEvent'
+    publish:
+      message:
+        $ref: '#/components/messages/TrafficEventPlannedEvent'
+  traffic-event.incident:
+    description: Incident traffic event payload.
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/TrafficEventIncident'
+    publish:
+      message:
+        $ref: '#/components/messages/TrafficEventIncident'
+  traffic-event.roadworks:
+    description: Roadworks traffic event payload.
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/TrafficEventRoadworks'
+    publish:
+      message:
+        $ref: '#/components/messages/TrafficEventRoadworks'
+  traffic-event.sync-request:
+    description: 'Request the current state of traffic event objects. The Data Publisher answers to the request''s reply-to
+      address, not the domain''s data channels: a sync batch (x-message-mode: sync, x-sync-id/-sequence/-total) followed by
+      a SyncComplete.'
+    x-sender: data-subscriber
+    subscribe:
+      message:
+        $ref: '#/components/messages/TrafficEventSyncRequest'
+    publish:
+      message:
+        $ref: '#/components/messages/TrafficEventSyncRequest'
+    x-amqp1-request-reply:
+      responseMessage:
+        $ref: '#/components/messages/TrafficEventSyncComplete'
+      replyAddress:
+        requestProperty: reply-to
+        required: true
+        permittedTypes:
+        - dynamic
+        - provisioned
+        preferredType: dynamic
+      responseDestination:
+        messageProperty: to
+        valueFrom: request.reply-to
+      transportCorrelation:
+        requestProperty: message-id
+        responseProperty: correlation-id
+      applicationCorrelation:
+        payloadProperty: syncCorrelationId
+      fanout: false
+  traffic-signal.command:
+    description: Traffic signal command payloads (reused from TS004.0061:2010 Annex D).
+    x-sender: data-subscriber
+    subscribe:
+      message:
+        $ref: '#/components/messages/TrafficSignal0064Command'
+    publish:
+      message:
+        $ref: '#/components/messages/TrafficSignal0064Command'
+    x-amqp1-request-reply:
+      responseMessage:
+        $ref: '#/components/messages/TrafficSignal0064CommandResponse'
+      replyAddress:
+        requestProperty: reply-to
+        required: true
+        permittedTypes:
+        - dynamic
+        - provisioned
+        preferredType: dynamic
+      responseDestination:
+        messageProperty: to
+        valueFrom: request.reply-to
+      transportCorrelation:
+        requestProperty: message-id
+        responseProperty: correlation-id
+      applicationCorrelation:
+        payloadProperty: commandCorrelationId
+      fanout: false
+  traffic-signal.configuration:
+    description: Traffic signal operational configuration (TS004.0064bis:2017 §3.4).
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/TrafficSignal0064Configuration'
+    publish:
+      message:
+        $ref: '#/components/messages/TrafficSignal0064Configuration'
+  traffic-signal.definition:
+    description: Traffic signal equipment details.
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/TrafficSignal0064Definition'
+    publish:
+      message:
+        $ref: '#/components/messages/TrafficSignal0064Definition'
+  traffic-signal.fault:
+    description: Traffic signal fault reports with flattened DATEX II Fault base (TS004.0064bis:2017 §3.3, F6).
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/TrafficSignal0064Fault'
+    publish:
+      message:
+        $ref: '#/components/messages/TrafficSignal0064Fault'
+  traffic-signal.history:
+    description: Traffic signal history entries (reused from TS004.0061:2010 Annex D).
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/TrafficSignal0064History'
+    publish:
+      message:
+        $ref: '#/components/messages/TrafficSignal0064History'
+  traffic-signal.measurement:
+    description: Traffic signal dynamic state with PlanLine/SignalGroupTimings (TS004.0064bis:2017 §3.5).
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/TrafficSignal0064DynamicState'
+    publish:
+      message:
+        $ref: '#/components/messages/TrafficSignal0064DynamicState'
+  traffic-signal.sync-request:
+    description: 'Request the current state of traffic signal objects. The Data Publisher answers to the request''s reply-to
+      address, not the domain''s data channels: a sync batch (x-message-mode: sync, x-sync-id/-sequence/-total) followed by
+      a SyncComplete.'
+    x-sender: data-subscriber
+    subscribe:
+      message:
+        $ref: '#/components/messages/TrafficSignalSyncRequest'
+    publish:
+      message:
+        $ref: '#/components/messages/TrafficSignalSyncRequest'
+    x-amqp1-request-reply:
+      responseMessage:
+        $ref: '#/components/messages/TrafficSignalSyncComplete'
+      replyAddress:
+        requestProperty: reply-to
+        required: true
+        permittedTypes:
+        - dynamic
+        - provisioned
+        preferredType: dynamic
+      responseDestination:
+        messageProperty: to
+        valueFrom: request.reply-to
+      transportCorrelation:
+        requestProperty: message-id
+        responseProperty: correlation-id
+      applicationCorrelation:
+        payloadProperty: syncCorrelationId
+      fanout: false
+  traffic-signal.type:
+    description: Traffic signal type definitions (reused from TS004.0061:2010 Annex D).
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/TrafficSignal0064Type'
+    publish:
+      message:
+        $ref: '#/components/messages/TrafficSignal0064Type'
+  transport-link.command:
+    description: Transport link command payloads.
+    x-sender: data-subscriber
+    subscribe:
+      message:
+        $ref: '#/components/messages/TransportLinkCommand'
+    publish:
+      message:
+        $ref: '#/components/messages/TransportLinkCommand'
+    x-amqp1-request-reply:
+      responseMessage:
+        $ref: '#/components/messages/TransportLinkCommandResponse'
+      replyAddress:
+        requestProperty: reply-to
+        required: true
+        permittedTypes:
+        - dynamic
+        - provisioned
+        preferredType: dynamic
+      responseDestination:
+        messageProperty: to
+        valueFrom: request.reply-to
+      transportCorrelation:
+        requestProperty: message-id
+        responseProperty: correlation-id
+      applicationCorrelation:
+        payloadProperty: commandCorrelationId
+      fanout: false
+  transport-link.configuration:
+    description: Transport link operational configuration (SCOOT/GPS/ANPR discriminated union).
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/TransportLinkConfiguration'
+    publish:
+      message:
+        $ref: '#/components/messages/TransportLinkConfiguration'
+  transport-link.definition:
+    description: Transport link equipment details.
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/TransportLinkDefinition'
+    publish:
+      message:
+        $ref: '#/components/messages/TransportLinkDefinition'
+  transport-link.fault:
+    description: Transport link fault reports.
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/TransportLinkFault'
+    publish:
+      message:
+        $ref: '#/components/messages/TransportLinkFault'
+  transport-link.history:
+    description: Transport link history entries.
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/TransportLinkHistory'
+    publish:
+      message:
+        $ref: '#/components/messages/TransportLinkHistory'
+  transport-link.measurement:
+    description: Transport link dynamic measurement data.
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/TransportLinkMeasurement'
+    publish:
+      message:
+        $ref: '#/components/messages/TransportLinkMeasurement'
+  transport-link.sync-request:
+    description: 'Request the current state of transport link objects. The Data Publisher answers to the request''s reply-to
+      address, not the domain''s data channels: a sync batch (x-message-mode: sync, x-sync-id/-sequence/-total) followed by
+      a SyncComplete.'
+    x-sender: data-subscriber
+    subscribe:
+      message:
+        $ref: '#/components/messages/TransportLinkSyncRequest'
+    publish:
+      message:
+        $ref: '#/components/messages/TransportLinkSyncRequest'
+    x-amqp1-request-reply:
+      responseMessage:
+        $ref: '#/components/messages/TransportLinkSyncComplete'
+      replyAddress:
+        requestProperty: reply-to
+        required: true
+        permittedTypes:
+        - dynamic
+        - provisioned
+        preferredType: dynamic
+      responseDestination:
+        messageProperty: to
+        valueFrom: request.reply-to
+      transportCorrelation:
+        requestProperty: message-id
+        responseProperty: correlation-id
+      applicationCorrelation:
+        payloadProperty: syncCorrelationId
+      fanout: false
+  transport-link.type:
+    description: Transport link type definitions.
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/TransportLinkType'
+    publish:
+      message:
+        $ref: '#/components/messages/TransportLinkType'
+  transport-route.command:
+    description: Transport route command payloads.
+    x-sender: data-subscriber
+    subscribe:
+      message:
+        $ref: '#/components/messages/TransportRouteCommand'
+    publish:
+      message:
+        $ref: '#/components/messages/TransportRouteCommand'
+    x-amqp1-request-reply:
+      responseMessage:
+        $ref: '#/components/messages/TransportRouteCommandResponse'
+      replyAddress:
+        requestProperty: reply-to
+        required: true
+        permittedTypes:
+        - dynamic
+        - provisioned
+        preferredType: dynamic
+      responseDestination:
+        messageProperty: to
+        valueFrom: request.reply-to
+      transportCorrelation:
+        requestProperty: message-id
+        responseProperty: correlation-id
+      applicationCorrelation:
+        payloadProperty: commandCorrelationId
+      fanout: false
+  transport-route.configuration:
+    description: Transport route configuration and segment mapping.
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/TransportRouteConfiguration'
+    publish:
+      message:
+        $ref: '#/components/messages/TransportRouteConfiguration'
+  transport-route.definition:
+    description: Transport route equipment details.
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/TransportRouteDefinition'
+    publish:
+      message:
+        $ref: '#/components/messages/TransportRouteDefinition'
+  transport-route.fault:
+    description: Transport route fault reports.
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/TransportRouteFault'
+    publish:
+      message:
+        $ref: '#/components/messages/TransportRouteFault'
+  transport-route.history:
+    description: Transport route history entries.
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/TransportRouteHistory'
+    publish:
+      message:
+        $ref: '#/components/messages/TransportRouteHistory'
+  transport-route.measurement:
+    description: Transport route dynamic measurement data.
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/TransportRouteMeasurement'
+    publish:
+      message:
+        $ref: '#/components/messages/TransportRouteMeasurement'
+  transport-route.sync-request:
+    description: 'Request the current state of transport route objects. The Data Publisher answers to the request''s reply-to
+      address, not the domain''s data channels: a sync batch (x-message-mode: sync, x-sync-id/-sequence/-total) followed by
+      a SyncComplete.'
+    x-sender: data-subscriber
+    subscribe:
+      message:
+        $ref: '#/components/messages/TransportRouteSyncRequest'
+    publish:
+      message:
+        $ref: '#/components/messages/TransportRouteSyncRequest'
+    x-amqp1-request-reply:
+      responseMessage:
+        $ref: '#/components/messages/TransportRouteSyncComplete'
+      replyAddress:
+        requestProperty: reply-to
+        required: true
+        permittedTypes:
+        - dynamic
+        - provisioned
+        preferredType: dynamic
+      responseDestination:
+        messageProperty: to
+        valueFrom: request.reply-to
+      transportCorrelation:
+        requestProperty: message-id
+        responseProperty: correlation-id
+      applicationCorrelation:
+        payloadProperty: syncCorrelationId
+      fanout: false
+  transport-route.type:
+    description: Transport route type definitions.
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/TransportRouteType'
+    publish:
+      message:
+        $ref: '#/components/messages/TransportRouteType'
+  vms.command:
+    description: Variable message sign command payloads.
+    x-sender: data-subscriber
+    subscribe:
+      message:
+        $ref: '#/components/messages/VmsCommand'
+    publish:
+      message:
+        $ref: '#/components/messages/VmsCommand'
+    x-amqp1-request-reply:
+      responseMessage:
+        $ref: '#/components/messages/VmsCommandResponse'
+      replyAddress:
+        requestProperty: reply-to
+        required: true
+        permittedTypes:
+        - dynamic
+        - provisioned
+        preferredType: dynamic
+      responseDestination:
+        messageProperty: to
+        valueFrom: request.reply-to
+      transportCorrelation:
+        requestProperty: message-id
+        responseProperty: correlation-id
+      applicationCorrelation:
+        payloadProperty: commandCorrelationId
+      fanout: false
+  vms.configuration:
+    description: Variable message sign operational configuration.
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/VmsConfiguration'
+    publish:
+      message:
+        $ref: '#/components/messages/VmsConfiguration'
+  vms.definition:
+    description: Variable message sign equipment details.
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/VmsDefinition'
+    publish:
+      message:
+        $ref: '#/components/messages/VmsDefinition'
+  vms.fault:
+    description: Variable message sign fault reports.
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/VmsFault'
+    publish:
+      message:
+        $ref: '#/components/messages/VmsFault'
+  vms.history:
+    description: Variable message sign history entries.
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/VmsHistory'
+    publish:
+      message:
+        $ref: '#/components/messages/VmsHistory'
+  vms.measurement:
+    description: Variable message sign dynamic measurement data.
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/VmsMeasurement'
+    publish:
+      message:
+        $ref: '#/components/messages/VmsMeasurement'
+  vms.sync-request:
+    description: 'Request the current state of vms objects. The Data Publisher answers to the request''s reply-to address,
+      not the domain''s data channels: a sync batch (x-message-mode: sync, x-sync-id/-sequence/-total) followed by a SyncComplete.'
+    x-sender: data-subscriber
+    subscribe:
+      message:
+        $ref: '#/components/messages/VmsSyncRequest'
+    publish:
+      message:
+        $ref: '#/components/messages/VmsSyncRequest'
+    x-amqp1-request-reply:
+      responseMessage:
+        $ref: '#/components/messages/VmsSyncComplete'
+      replyAddress:
+        requestProperty: reply-to
+        required: true
+        permittedTypes:
+        - dynamic
+        - provisioned
+        preferredType: dynamic
+      responseDestination:
+        messageProperty: to
+        valueFrom: request.reply-to
+      transportCorrelation:
+        requestProperty: message-id
+        responseProperty: correlation-id
+      applicationCorrelation:
+        payloadProperty: syncCorrelationId
+      fanout: false
+  vms.type:
+    description: Variable message sign type definitions.
+    x-sender: data-publisher
+    subscribe:
+      message:
+        $ref: '#/components/messages/VmsType'
+    publish:
+      message:
+        $ref: '#/components/messages/VmsType'
+components:
+  securitySchemes:
+    mtls:
+      type: X509
+      description: 'Mutual TLS with X.509 client certificates, over TLS 1.3 only (TOPAS 3000A AC5-4). Both publisher and subscriber
+        authenticate via client certificate. VPN is not required (TOPAS 3000A AC5-2).
+
+        '
+  messageTraits:
+    topasEnvelope:
+      description: 'Standard TOPAS 3000A message envelope. Routing metadata is carried in AMQP application-properties (not
+        the JSON body) so brokers can filter without deserialising payloads.
+
+        '
+      headers:
+        type: object
+        properties:
+          x-message-mode:
+            type: string
+            enum:
+            - sync
+            - delta
+            description: 'Publication scope. ''sync'' = complete current state of all objects of this type; ''delta'' = only
+              what changed. Payload schema is identical for both (A3).
+
+              '
+          x-content-type:
+            type: string
+            description: 'Payload schema reference matching the channel name + version, e.g. ''detector.measurement-v1.0''.
+
+              '
+          x-geo-tile:
+            type: string
+            description: 'Geographic tile code for location-based filtering (A2). Publisher computes from object location
+              at publish time.
+
+              '
+          x-geo-tile-system:
+            type: string
+            enum:
+            - geohash
+            - s2
+            - intercor
+            description: 'Encoding system for x-geo-tile (A2). Required if x-geo-tile is set. Default recommendation: geohash.
+
+              '
+          x-sync-id:
+            type: string
+            format: uuid
+            description: 'Identifies a sync batch (A5). All messages in the same sync share this ID. Required when x-message-mode
+              is ''sync''.
+
+              '
+          x-sync-sequence:
+            type: integer
+            minimum: 1
+            description: '1-based position of this message within the sync batch (A5). Required when x-message-mode is ''sync''.
+
+              '
+          x-sync-total:
+            type: integer
+            minimum: 1
+            description: 'Total messages in the sync batch (A5). Consumer knows sync is complete when x-sync-sequence equals
+              x-sync-total. Required when x-message-mode is ''sync''.
+
+              '
+          x-sync-request-id:
+            type: integer
+            minimum: 0
+            description: 'Echoes the syncCorrelationId of the SyncRequest that triggered this batch. Present only on requested
+              syncs; a publisher-initiated republication — on restart, or after a disconnect longer than its delta buffer
+              — carries x-message-mode ''sync'' with no x-sync-request-id, which is how a subscriber tells the two apart.
+
+              '
+        required:
+        - x-message-mode
+        - x-content-type
+        dependencies:
+          x-geo-tile:
+          - x-geo-tile-system
+        if:
+          properties:
+            x-message-mode:
+              const: sync
+          required:
+          - x-message-mode
+        then:
+          required:
+          - x-sync-id
+          - x-sync-sequence
+          - x-sync-total
+      bindings:
+        amqp:
+          contentEncoding: utf-8
+          messageType: application/json
+    topasRequestReply:
+      description: 'Request/reply message. Carries no data-envelope headers. The only application property is the optional
+        audit label x-originator.
+
+        '
+      headers:
+        type: object
+        properties:
+          x-originator:
+            type: string
+            description: 'Identity of the system that sent the original command. Audit and tracing only (A11) — it is NOT
+              how a response reaches its requester. Responses are addressed to the reply-to node supplied on the command,
+              so they are delivered only to the requester rather than broadcast and filtered. This value is self-asserted
+              application data: a command gateway SHOULD derive it from the authenticated mTLS principal and MUST reject a
+              value that contradicts it. It MUST NOT be treated as a security primitive. Superseded A4.
+
+              '
+      bindings:
+        amqp:
+          contentEncoding: utf-8
+          messageType: application/json
+  messages:
+    DetectorCommand:
+      name: DetectorCommand
+      title: UTMC Detector Command
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasRequestReply'
+      payload:
+        $ref: Schemas_asyncapi/detector/detector_command-v1.0.json
+    DetectorCommandResponse:
+      name: DetectorCommandResponse
+      title: UTMC Detector Command Response
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasRequestReply'
+      payload:
+        $ref: Schemas_asyncapi/detector/detector_command_response-v1.0.json
+    DetectorConfiguration:
+      name: DetectorConfiguration
+      title: UTMC Detector Configuration
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/detector/detector_configuration-v1.0.json
+    DetectorDefinition:
+      name: DetectorDefinition
+      title: UTMC Detector Definition
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/detector/detector_definition-v1.0.json
+    DetectorFault:
+      name: DetectorFault
+      title: UTMC Detector Fault
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/detector/detector_fault-v1.0.json
+    DetectorHistory:
+      name: DetectorHistory
+      title: UTMC Detector History
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/detector/detector_history-v1.0.json
+    DetectorMeasurement:
+      name: DetectorMeasurement
+      title: UTMC Detector Measurement
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/detector/detector_measurement-v1.0.json
+    DetectorSyncComplete:
+      name: DetectorSyncComplete
+      title: UTMC Detector Sync Complete
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasRequestReply'
+      payload:
+        $ref: Schemas_asyncapi/detector/detector_sync_complete-v1.0.json
+    DetectorSyncRequest:
+      name: DetectorSyncRequest
+      title: UTMC Detector Sync Request
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasRequestReply'
+      payload:
+        $ref: Schemas_asyncapi/detector/detector_sync_request-v1.0.json
+    DetectorType:
+      name: DetectorType
+      title: UTMC Detector Type
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/detector/detector_type-v1.0.json
+    NetworkLink:
+      name: NetworkLink
+      title: UTMC Network Link
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/network/network_link-v1.0.json
+    NetworkNode:
+      name: NetworkNode
+      title: UTMC Network Node
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/network/network_node-v1.0.json
+    NetworkPath:
+      name: NetworkPath
+      title: UTMC Network Path
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/network/network_path-v1.0.json
+    NetworkTopologySyncComplete:
+      name: NetworkTopologySyncComplete
+      title: UTMC Network topology Sync Complete
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasRequestReply'
+      payload:
+        $ref: Schemas_asyncapi/network/network_sync_complete-v1.0.json
+    NetworkTopologySyncRequest:
+      name: NetworkTopologySyncRequest
+      title: UTMC Network topology Sync Request
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasRequestReply'
+      payload:
+        $ref: Schemas_asyncapi/network/network_sync_request-v1.0.json
+    NetworkTurn:
+      name: NetworkTurn
+      title: UTMC Network Turn
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/network/network_turn-v1.0.json
+    NetworkZone:
+      name: NetworkZone
+      title: UTMC Network Zone
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/network/network_zone-v1.0.json
+    StrategyCommand:
+      name: StrategyCommand
+      title: UTMC Strategy Command
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasRequestReply'
+      payload:
+        $ref: Schemas_asyncapi/strategy/strategy_command-v1.0.json
+    StrategyCommandResponse:
+      name: StrategyCommandResponse
+      title: UTMC Strategy Command Response
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasRequestReply'
+      payload:
+        $ref: Schemas_asyncapi/strategy/strategy_command_response-v1.0.json
+    StrategyDefinition:
+      name: StrategyDefinition
+      title: UTMC Strategy Definition
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/strategy/strategy_definition-v1.0.json
+    StrategyStatus:
+      name: StrategyStatus
+      title: UTMC Strategy Status
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/strategy/strategy_status-v1.0.json
+    StrategySyncComplete:
+      name: StrategySyncComplete
+      title: UTMC Strategy Sync Complete
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasRequestReply'
+      payload:
+        $ref: Schemas_asyncapi/strategy/strategy_sync_complete-v1.0.json
+    StrategySyncRequest:
+      name: StrategySyncRequest
+      title: UTMC Strategy Sync Request
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasRequestReply'
+      payload:
+        $ref: Schemas_asyncapi/strategy/strategy_sync_request-v1.0.json
+    TrafficEventAccident:
+      name: TrafficEventAccident
+      title: UTMC Traffic Event Accident
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/traffic_event/traffic_event_accident-v1.0.json
+    TrafficEventIncident:
+      name: TrafficEventIncident
+      title: UTMC Traffic Event Incident
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/traffic_event/traffic_event_incident-v1.0.json
+    TrafficEventPlannedEvent:
+      name: TrafficEventPlannedEvent
+      title: UTMC Traffic Event Planned Event
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/traffic_event/traffic_event_event-v1.0.json
+    TrafficEventRoadworks:
+      name: TrafficEventRoadworks
+      title: UTMC Traffic Event Roadworks
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/traffic_event/traffic_event_roadworks-v1.0.json
+    TrafficEventSyncComplete:
+      name: TrafficEventSyncComplete
+      title: UTMC Traffic event Sync Complete
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasRequestReply'
+      payload:
+        $ref: Schemas_asyncapi/traffic_event/traffic_event_sync_complete-v1.0.json
+    TrafficEventSyncRequest:
+      name: TrafficEventSyncRequest
+      title: UTMC Traffic event Sync Request
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasRequestReply'
+      payload:
+        $ref: Schemas_asyncapi/traffic_event/traffic_event_sync_request-v1.0.json
+    TrafficSignal0064Command:
+      name: TrafficSignal0064Command
+      title: UTMC Traffic Signal 0064 Command
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasRequestReply'
+      payload:
+        $ref: Schemas_asyncapi/traffic_signal/traffic_signal_command-v1.0.json
+    TrafficSignal0064CommandResponse:
+      name: TrafficSignal0064CommandResponse
+      title: UTMC Traffic Signal 0064 Command Response
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasRequestReply'
+      payload:
+        $ref: Schemas_asyncapi/traffic_signal/traffic_signal_command_response-v1.0.json
+    TrafficSignal0064Configuration:
+      name: TrafficSignal0064Configuration
+      title: UTMC Traffic Signal 0064 Configuration
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/traffic_signal/traffic_signal_configuration-v1.0.json
+    TrafficSignal0064Definition:
+      name: TrafficSignal0064Definition
+      title: UTMC Traffic Signal 0064 Definition
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/traffic_signal/traffic_signal_definition-v1.0.json
+    TrafficSignal0064DynamicState:
+      name: TrafficSignal0064DynamicState
+      title: UTMC Traffic Signal 0064 Dynamic State
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/traffic_signal/traffic_signal_measurement-v1.0.json
+    TrafficSignal0064Fault:
+      name: TrafficSignal0064Fault
+      title: UTMC Traffic Signal 0064 Fault
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/traffic_signal/traffic_signal_fault-v1.0.json
+    TrafficSignal0064History:
+      name: TrafficSignal0064History
+      title: UTMC Traffic Signal 0064 History
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/traffic_signal/traffic_signal_history-v1.0.json
+    TrafficSignal0064Type:
+      name: TrafficSignal0064Type
+      title: UTMC Traffic Signal 0064 Type
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/traffic_signal/traffic_signal_type-v1.0.json
+    TrafficSignalSyncComplete:
+      name: TrafficSignalSyncComplete
+      title: UTMC Traffic signal Sync Complete
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasRequestReply'
+      payload:
+        $ref: Schemas_asyncapi/traffic_signal/traffic_signal_sync_complete-v1.0.json
+    TrafficSignalSyncRequest:
+      name: TrafficSignalSyncRequest
+      title: UTMC Traffic signal Sync Request
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasRequestReply'
+      payload:
+        $ref: Schemas_asyncapi/traffic_signal/traffic_signal_sync_request-v1.0.json
+    TransportLinkCommand:
+      name: TransportLinkCommand
+      title: UTMC Transport Link Command
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasRequestReply'
+      payload:
+        $ref: Schemas_asyncapi/transport_link/transport_link_command-v1.0.json
+    TransportLinkCommandResponse:
+      name: TransportLinkCommandResponse
+      title: UTMC Transport Link Command Response
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasRequestReply'
+      payload:
+        $ref: Schemas_asyncapi/transport_link/transport_link_command_response-v1.0.json
+    TransportLinkConfiguration:
+      name: TransportLinkConfiguration
+      title: UTMC Transport Link Configuration
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/transport_link/transport_link_configuration-v1.0.json
+    TransportLinkDefinition:
+      name: TransportLinkDefinition
+      title: UTMC Transport Link Definition
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/transport_link/transport_link_definition-v1.0.json
+    TransportLinkFault:
+      name: TransportLinkFault
+      title: UTMC Transport Link Fault
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/transport_link/transport_link_fault-v1.0.json
+    TransportLinkHistory:
+      name: TransportLinkHistory
+      title: UTMC Transport Link History
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/transport_link/transport_link_history-v1.0.json
+    TransportLinkMeasurement:
+      name: TransportLinkMeasurement
+      title: UTMC Transport Link Measurement
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/transport_link/transport_link_measurement-v1.0.json
+    TransportLinkSyncComplete:
+      name: TransportLinkSyncComplete
+      title: UTMC Transport link Sync Complete
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasRequestReply'
+      payload:
+        $ref: Schemas_asyncapi/transport_link/transport_link_sync_complete-v1.0.json
+    TransportLinkSyncRequest:
+      name: TransportLinkSyncRequest
+      title: UTMC Transport link Sync Request
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasRequestReply'
+      payload:
+        $ref: Schemas_asyncapi/transport_link/transport_link_sync_request-v1.0.json
+    TransportLinkType:
+      name: TransportLinkType
+      title: UTMC Transport Link Type
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/transport_link/transport_link_type-v1.0.json
+    TransportRouteCommand:
+      name: TransportRouteCommand
+      title: UTMC Transport Route Command
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasRequestReply'
+      payload:
+        $ref: Schemas_asyncapi/transport_route/transport_route_command-v1.0.json
+    TransportRouteCommandResponse:
+      name: TransportRouteCommandResponse
+      title: UTMC Transport Route Command Response
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasRequestReply'
+      payload:
+        $ref: Schemas_asyncapi/transport_route/transport_route_command_response-v1.0.json
+    TransportRouteConfiguration:
+      name: TransportRouteConfiguration
+      title: UTMC Transport Route Configuration
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/transport_route/transport_route_configuration-v1.0.json
+    TransportRouteDefinition:
+      name: TransportRouteDefinition
+      title: UTMC Transport Route Definition
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/transport_route/transport_route_definition-v1.0.json
+    TransportRouteFault:
+      name: TransportRouteFault
+      title: UTMC Transport Route Fault
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/transport_route/transport_route_fault-v1.0.json
+    TransportRouteHistory:
+      name: TransportRouteHistory
+      title: UTMC Transport Route History
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/transport_route/transport_route_history-v1.0.json
+    TransportRouteMeasurement:
+      name: TransportRouteMeasurement
+      title: UTMC Transport Route Measurement
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/transport_route/transport_route_measurement-v1.0.json
+    TransportRouteSyncComplete:
+      name: TransportRouteSyncComplete
+      title: UTMC Transport route Sync Complete
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasRequestReply'
+      payload:
+        $ref: Schemas_asyncapi/transport_route/transport_route_sync_complete-v1.0.json
+    TransportRouteSyncRequest:
+      name: TransportRouteSyncRequest
+      title: UTMC Transport route Sync Request
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasRequestReply'
+      payload:
+        $ref: Schemas_asyncapi/transport_route/transport_route_sync_request-v1.0.json
+    TransportRouteType:
+      name: TransportRouteType
+      title: UTMC Transport Route Type
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/transport_route/transport_route_type-v1.0.json
+    VmsCommand:
+      name: VmsCommand
+      title: UTMC VMS Command
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasRequestReply'
+      payload:
+        $ref: Schemas_asyncapi/vms/vms_command-v1.0.json
+    VmsCommandResponse:
+      name: VmsCommandResponse
+      title: UTMC VMS Command Response
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasRequestReply'
+      payload:
+        $ref: Schemas_asyncapi/vms/vms_command_response-v1.0.json
+    VmsConfiguration:
+      name: VmsConfiguration
+      title: UTMC VMS Configuration
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/vms/vms_configuration-v1.0.json
+    VmsDefinition:
+      name: VmsDefinition
+      title: UTMC VMS Definition
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/vms/vms_definition-v1.0.json
+    VmsFault:
+      name: VmsFault
+      title: UTMC VMS Fault
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/vms/vms_fault-v1.0.json
+    VmsHistory:
+      name: VmsHistory
+      title: UTMC VMS History
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/vms/vms_history-v1.0.json
+    VmsMeasurement:
+      name: VmsMeasurement
+      title: UTMC VMS Measurement
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/vms/vms_measurement-v1.0.json
+    VmsSyncComplete:
+      name: VmsSyncComplete
+      title: UTMC VMS Sync Complete
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasRequestReply'
+      payload:
+        $ref: Schemas_asyncapi/vms/vms_sync_complete-v1.0.json
+    VmsSyncRequest:
+      name: VmsSyncRequest
+      title: UTMC VMS Sync Request
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasRequestReply'
+      payload:
+        $ref: Schemas_asyncapi/vms/vms_sync_request-v1.0.json
+    VmsType:
+      name: VmsType
+      title: UTMC VMS Type
+      schemaFormat: application/schema+json;version=draft-07
+      traits:
+      - $ref: '#/components/messageTraits/topasEnvelope'
+      payload:
+        $ref: Schemas_asyncapi/vms/vms_type-v1.0.json

@@ -1,0 +1,45 @@
+<!--
+  TopasSnippets.csproj — .NET 8 build for the asyncapi-clients C# smoke harness.
+
+  Compiles the generated C# snippets at ../../output/csharp/snippets/
+  in place (no copy) plus the hand-written Program.cs dispatcher, and
+  produces a single DLL the run_all.py orchestrator invokes per
+  scenario as `dotnet TopasSnippets.dll SN`.
+
+  Origin:    Hand-written for asyncapi-clients smoke testing
+  Author:    Christopher Kettell, TRL Software
+  Date:      2026-05-04
+  License:   Apache-2.0
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>Topas.Snippets</RootNamespace>
+    <AssemblyName>TopasSnippets</AssemblyName>
+    <!--
+      Each generated snippet (S1..S7) declares its own static Main, which
+      collides with Program.Main. Pin the dispatcher as the entry point.
+    -->
+    <StartupObject>Program</StartupObject>
+    <Nullable>disable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <!-- Snippet classes live in the global namespace; suppress the warning. -->
+    <NoWarn>CS8002</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AMQPNetLite.Core" Version="2.4.11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      Compile the generated snippets in place. The path is relative to
+      this csproj (asyncapi_clients/smoketest/csharp/), so two levels
+      up is asyncapi_clients/, and from there into output/csharp/snippets/.
+    -->
+    <Compile Include="..\..\output\csharp\snippets\*.cs" />
+  </ItemGroup>
+
+</Project>

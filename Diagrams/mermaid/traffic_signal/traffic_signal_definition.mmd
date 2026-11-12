@@ -1,0 +1,17 @@
+---
+title: UTMC Traffic Signal 0064 Definition
+---
+erDiagram
+    TRAFFIC_SIGNAL_DEFINITION {
+        ObjectId trafficSignalId PK
+        object location
+        TypeId controlMethodId
+        datetime creationDate
+        string shortDescription
+        string longDescription
+        ParticipantId participantId
+        ParticipantId originatingParticipantId
+        ObjectId originatingObjectId
+    }
+
+

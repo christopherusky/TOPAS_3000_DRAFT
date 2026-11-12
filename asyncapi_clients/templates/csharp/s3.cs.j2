@@ -1,0 +1,282 @@
+using System;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
+
+using Amqp;
+using Amqp.Framing;
+using Amqp.Types;
+
+/// <summary>
+/// Scenario S3 — Publish a command, await its response (A11).
+///
+/// Demonstrates AMQP 1.0 request/reply addressing. The requester creates a
+/// <b>dynamic reply node</b>, waits for the broker to assign its address,
+/// and puts that address in the command's <c>reply-to</c>. The processor
+/// answers that node and nobody else — no shared response channel, no
+/// broker-specific selector, no filtering after delivery.
+///
+/// The same six stages appear in every language's S3:
+///
+///   1. connect
+///   2. create the dynamic reply node
+///   3. wait for the broker-assigned address
+///   4. send the command with message-id and reply-to
+///   5. receive the response on the private node
+///   6. verify the three independent invariants — delivery isolation,
+///      transport correlation, application correlation
+///
+/// Stage 3 matters here: AMQPNetLite returns from the ReceiverLink
+/// constructor before the peer has attached, so the assigned address is
+/// only available from the onAttached callback. Reading it any earlier
+/// yields null, and a command sent then has nowhere to be answered.
+/// </summary>
+public class S3
+{
+    private const string CommandChannel = "{{ channels.vms_command }}";
+
+    public static async Task Main(string[] args)
+    {
+        string url = Environment.GetEnvironmentVariable("TOPAS_AMQP_URL")
+            ?? "{{ server_uri }}".Replace("{host}", "localhost").Replace("{port}", "5671");
+        // Audit/tracing only under A11 — not how the response is routed.
+        string originator = Environment.GetEnvironmentVariable("TOPAS_ORIGINATOR")
+            ?? "asyncapi-clients-s3-demo";
+        int commandCorrelationId = int.Parse(
+            Environment.GetEnvironmentVariable("TOPAS_COMMAND_CORRELATION_ID") ?? "3701");
+        int expectedResponses = int.Parse(
+            Environment.GetEnvironmentVariable("TOPAS_EXPECTED_RESPONSES") ?? "0");
+
+        // Transport identity of the request. Set explicitly rather than left
+        // to the library, so the value compared at stage 6 is the AMQP
+        // message-id itself and not a client-side rendering of one.
+        string messageId = Guid.NewGuid().ToString();
+
+        // Three independent invariants; none may compensate for another.
+        int received = 0;
+        int foreign = 0;      // routing: delivered here, addressed elsewhere
+        int missingTo = 0;    // absence
+        int missingCorr = 0;  // absence
+        int wrongCorr = 0;    // transformation: right node, wrong id
+        int missingApp = 0;   // absence
+        int wrongApp = 0;     // transformation
+
+        var address = new Address(url);
+        var connection = await Connection.Factory.CreateAsync(address);   // (1)
+        var session = new Session(connection);
+
+        var commandTarget = new Target
+        {
+            Address = CommandChannel,
+            Capabilities = new Symbol[] { new Symbol("topic") },
+        };
+        var sender = new SenderLink(session, "s3-sender", commandTarget, null);
+
+        // (2) Dynamic reply node. The broker creates it and names it; no
+        // address is supplied here because none exists yet.
+        var replySource = new Source { Dynamic = true };
+        var attached = new TaskCompletionSource<string>();
+        var receiver = new ReceiverLink(session, "s3-reply", replySource,
+            (link, attach) =>
+            {
+                // (3) The assigned address arrives with the peer's attach.
+                var remote = attach.Source as Source;
+                attached.TrySetResult(remote?.Address);
+            });
+
+        string replyAddress = await attached.Task;
+        Console.Error.WriteLine($"[reply-node] {replyAddress}");
+        Console.Error.WriteLine("[ready]");
+
+        try
+        {
+            string body = JsonSerializer.Serialize(new
+            {
+                kind = "DisplayMessage",
+                text = "HELLO TOPAS",
+                commandCorrelationId = commandCorrelationId,
+            });
+
+            var request = new Message
+            {
+                // A Data section, not `new Message(object)`. That convenience
+                // constructor wraps the body in an AmqpValue section
+                // containing binary, which disagrees with the content-type
+                // declared below and is what no other client here produces.
+                // fe2o3-amqp's typed receive could not decode it at all, and
+                // the C#/Rust pairings were the only two cells of the
+                // cross-language matrix to fail.
+                BodySection = new Data { Binary = Encoding.UTF8.GetBytes(body) },
+                Properties = new Properties
+                {
+                    MessageId = messageId,
+                    ReplyTo = replyAddress,
+                    ContentType = "application/json",
+                },
+                ApplicationProperties = new ApplicationProperties(),
+            };
+            request.ApplicationProperties["{{ headers.originator }}"] = originator;
+
+            await sender.SendAsync(request);                              // (4)
+            Console.WriteLine(
+                $"[S3] sent reply-to={replyAddress} message-id={messageId} originator={originator}");
+            // Machine-readable request identity, so the conformance harness can
+            // aim defective responses at this node and prove the checks below
+            // can actually fail.
+            Console.WriteLine($"[a11-request] node={replyAddress} messageId={messageId}");
+
+            DateTime deadline = DateTime.UtcNow.AddSeconds(30);
+            while (DateTime.UtcNow < deadline)
+            {
+                Message reply = await receiver.ReceiveAsync(TimeSpan.FromSeconds(2));  // (5)
+                if (reply == null)
+                {
+                    continue;
+                }
+
+                // The AMQP correlation-id is not necessarily a string: the
+                // spec allows ulong, uuid and binary too.
+                //
+                // GetCorrelationId(), not the CorrelationId property.
+                // AMQPNetLite exposes both, and the property is typed
+                // `string` — a lossy convenience that cannot represent the
+                // other three variants. Reading through it would report a
+                // uuid or ulong identifier as absent or wrong rather than
+                // as the transformation it is. Compared by
+                // AmqpIdEquals so neither side is flattened to text.
+                object replyCorrelationId = reply.Properties?.GetCorrelationId();
+                string to = reply.Properties?.To;
+
+                // (6a) correlation-id. Absence, transformation and routing are
+                // three different faults. `to` is the discriminator: a
+                // response bearing someone else's correlation-id was
+                // mis-delivered if addressed elsewhere, but merely
+                // mis-correlated if addressed here. There is no "ignore what
+                // isn't mine" branch — that is the A4 behaviour A11 replaced.
+                if (replyCorrelationId == null)
+                {
+                    missingCorr++;
+                    Console.Error.WriteLine("[absence] response carried no correlation-id");
+                }
+                else if (!AmqpIdEquals(replyCorrelationId, messageId))
+                {
+                    if (to == replyAddress)
+                    {
+                        wrongCorr++;
+                        Console.Error.WriteLine(
+                            $"[transformation] correlation-id={Describe(replyCorrelationId)} != "
+                            + $"request message-id {messageId}, but addressed to this node");
+                    }
+                    else
+                    {
+                        foreign++;
+                        Console.Error.WriteLine(
+                            $"[routing] response for correlation-id={Describe(replyCorrelationId)} "
+                            + $"(to={to}) reached our private reply node");
+                    }
+                    receiver.Accept(reply);
+                    continue;
+                }
+
+                // (6b) `to` — unconditional. A11 requires the response to be
+                // addressed, and it survives delivery to a dynamic node.
+                if (string.IsNullOrEmpty(to))
+                {
+                    missingTo++;
+                    Console.Error.WriteLine("[absence] response carried no `to`");
+                }
+
+                // Parsing does not degrade: an unparseable response is a
+                // failure, not a default-valued object.
+                string raw = BodyAsString(reply);
+                using JsonDocument doc = JsonDocument.Parse(raw);
+                string status = "success";
+                int? appId = null;
+                if (doc.RootElement.ValueKind == JsonValueKind.Object)
+                {
+                    if (doc.RootElement.TryGetProperty("status", out JsonElement statusEl)
+                        && statusEl.ValueKind == JsonValueKind.String)
+                    {
+                        status = statusEl.GetString() ?? "success";
+                    }
+                    if (doc.RootElement.TryGetProperty("commandCorrelationId", out JsonElement appEl)
+                        && appEl.ValueKind == JsonValueKind.Number)
+                    {
+                        appId = appEl.GetInt32();
+                    }
+                }
+
+                // (6c) Application correlation — mandatory in the schema, so
+                // absence fails even when transport correlation was perfect.
+                if (appId == null)
+                {
+                    missingApp++;
+                    Console.Error.WriteLine("[absence] response carried no commandCorrelationId");
+                }
+                else if (appId != commandCorrelationId)
+                {
+                    wrongApp++;
+                    Console.Error.WriteLine(
+                        $"[transformation] commandCorrelationId {appId} != {commandCorrelationId}");
+                }
+
+                received++;
+                receiver.Accept(reply);
+                Console.WriteLine($"[response] {status} {raw}");
+
+                // Any status other than "pending" is terminal.
+                if (status != "pending")
+                {
+                    break;
+                }
+            }
+
+            Console.WriteLine(
+                $"[a11] node={replyAddress} expected={expectedResponses} received={received} "
+                + $"foreign={foreign} missingTo={missingTo} missingCorr={missingCorr} "
+                + $"wrongCorr={wrongCorr} missingApp={missingApp} wrongApp={wrongApp}");
+        }
+        finally
+        {
+            await receiver.CloseAsync();
+            await sender.CloseAsync();
+            await session.CloseAsync();
+            await connection.CloseAsync();
+        }
+    }
+
+    /// <summary>
+    /// Compare an AMQP identifier against the string we sent, without
+    /// flattening either through ToString(). A textual match between two
+    /// pretty-printed values can hide a type conversion the peer performed.
+    /// </summary>
+    private static bool AmqpIdEquals(object actual, string expected) => actual switch
+    {
+        string s => s == expected,
+        Guid g => Guid.TryParse(expected, out Guid e) && g == e,
+        byte[] b => Encoding.UTF8.GetString(b) == expected,
+        _ => false,
+    };
+
+    private static string Describe(object id) =>
+        id == null ? "(null)" : $"{id.GetType().Name}:{id}";
+
+    /// <summary>
+    /// An explicit compatibility layer over the body representations clients
+    /// produce. It deliberately throws rather than degrading: an unrecognised
+    /// body must be a visible failure in a conformance test, not a plausible
+    /// looking placeholder.
+    /// </summary>
+    private static string BodyAsString(Message msg)
+    {
+        object body = msg.Body;
+        return body switch
+        {
+            string s => s,
+            byte[] bytes => Encoding.UTF8.GetString(bytes),
+            _ => throw new InvalidOperationException(
+                $"unhandled body representation {body?.GetType().Name ?? "null"}; "
+                + "add it here rather than degrading to a placeholder"),
+        };
+    }
+}

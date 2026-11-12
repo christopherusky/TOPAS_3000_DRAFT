@@ -1,0 +1,35 @@
+---
+title: UTMC Transport Link Command
+---
+erDiagram
+    RECALIBRATE_TRANSPORT_LINK_COMMAND {
+        ObjectId transportLinkId FK
+        int commandCorrelationId
+        datetime requestTime
+        string kind
+    }
+
+    REQUEST_TRANSPORT_LINK_STATUS_COMMAND {
+        ObjectId transportLinkId FK
+        int commandCorrelationId
+        datetime requestTime
+        string kind
+    }
+
+    SET_STOC_COMMAND {
+        ObjectId transportLinkId FK
+        int commandCorrelationId
+        datetime requestTime
+        string kind
+        string stocValue
+    }
+
+    TRANSPORT_LINK_COMMAND {
+        string kind
+    }
+
+    TRANSPORT_LINK_COMMAND ||--|| SET_STOC_COMMAND : "setStoc"
+    TRANSPORT_LINK_COMMAND ||--|| RECALIBRATE_TRANSPORT_LINK_COMMAND : "recalibrate"
+    TRANSPORT_LINK_COMMAND ||--|| REQUEST_TRANSPORT_LINK_STATUS_COMMAND : "requestStatus"
+
+

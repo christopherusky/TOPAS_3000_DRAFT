@@ -1,0 +1,13 @@
+{
+  "//": "Build stub — typecheck-only tsconfig for the quicktype-generated UTMC SDK.",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "node",
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  },
+  "include": ["**/*.ts"]
+}

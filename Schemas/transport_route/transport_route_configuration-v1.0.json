@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/transport_route/transport_route_configuration-v1.0.json",
+  "$ref": "#/$defs/TransportRouteConfiguration",
+  "$defs": {
+    "TransportRouteConfiguration": {
+      "additionalProperties": false,
+      "description": "Transport route configuration and segment mapping.",
+      "properties": {
+        "transportRouteId": {
+          "description": "Route this configuration applies to.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "configurationDate": {
+          "description": "When this configuration became effective.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "routeName": {
+          "type": "string",
+          "description": "Human-readable route name."
+        },
+        "routeStart": {
+          "type": "string",
+          "description": "Route start description."
+        },
+        "routeVia": {
+          "type": "string",
+          "description": "Via point description."
+        },
+        "routeEnd": {
+          "type": "string",
+          "description": "Route end description."
+        },
+        "routeLengthMeters": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Route length in meters."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions."
+        }
+      },
+      "required": [
+        "transportRouteId",
+        "configurationDate"
+      ],
+      "type": "object",
+      "title": "UTMC Transport Route Configuration"
+    },
+    "TransportRouteSegmentConfiguration": {
+      "additionalProperties": false,
+      "description": "Segment configuration \u2014 links a route segment to a transport link.\n\nSibling type in the configuration file.",
+      "properties": {
+        "transportRouteId": {
+          "description": "Route this segment belongs to.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "configurationDate": {
+          "description": "When effective.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "routeSegmentId": {
+          "description": "Ordered segment identifier within the route.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "transportLinkId": {
+          "description": "Cross-domain reference to a transport link.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions."
+        }
+      },
+      "required": [
+        "transportRouteId",
+        "configurationDate",
+        "routeSegmentId",
+        "transportLinkId"
+      ],
+      "type": "object"
+    }
+  }
+}

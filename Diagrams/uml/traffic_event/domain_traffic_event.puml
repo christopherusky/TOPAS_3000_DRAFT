@@ -1,0 +1,398 @@
+@startuml
+title UTMC Traffic Event Domain
+!pragma layout smetana
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam classFontSize 14
+skinparam classAttributeFontSize 11
+skinparam classFontStyle bold
+skinparam dpi 150
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam class {
+  BackgroundColor #FEFEFE
+  BorderColor #333333
+  ArrowColor #555555
+}
+scale max 4961*3508
+
+' ── traffic_event_accident ──
+class AccidentEvent {
+  +eventId: ObjectId
+  +accidentType: AccidentType
+  +status: EventStatus
+   publicDescription: string
+   locationDescription: string
+   location: Point
+   severity: SeverityType
+   phase: string
+   lanesAffected: LanesAffectedType
+   lanesRestricted: integer
+   lanesOperational: integer
+   diversionRoute: string
+   diversionInForce: boolean
+   reportedBy: string
+   confirmedBy: string
+   modifiedBy: string
+   accidentTime: datetime
+   endTime: datetime
+   vehicleCount: integer
+   lightConditions: string
+   roadConditions: string
+   weatherConditions: string
+   statisticDate: datetime
+   externalCountryCode: string
+   externalSystemCode: string
+   externalSituationId: string
+   externalSituationVersion: integer
+   extensions: object
+}
+
+enum AccidentType {
+  accident
+  busAccident
+  collision
+  investigationWork
+  chemicalSpillage
+  fuelSpillage
+  hazardousMaterials
+  heavyLorry
+  jackKnifedArticulatedLorry
+  jackKnifedCaravan
+  jackKnifedTrailer
+  multiVehicle
+  oilSpillage
+  overturnedHeavyLorry
+  overturnedTrailer
+  overturnedVehicle
+  secondaryAccident
+  seriousAccident
+  shedLoad
+  other
+}
+
+' ── traffic_event_common ──
+enum EventStatus {
+  active
+  planned
+  suspended
+  cleared
+}
+
+enum LanesAffectedType {
+  I
+  T
+  II
+  IT
+  TI
+  TT
+  III
+  IIT
+  ITI
+  ITT
+  TII
+  TIT
+  TTI
+  TTT
+  IIII
+  IIIT
+  IITT
+  ITTT
+  TIII
+  TTTT
+  allOpen
+}
+
+enum SeverityType {
+  unknown
+  low
+  medium
+  high
+}
+
+' ── traffic_event_event ──
+class PlannedEvent {
+  +eventId: ObjectId
+  +plannedEventType: PlannedEventType
+  +status: EventStatus
+   publicDescription: string
+   locationDescription: string
+   location: Point
+   severity: SeverityType
+   phase: string
+   lanesAffected: LanesAffectedType
+   lanesRestricted: integer
+   lanesOperational: integer
+   diversionRoute: string
+   diversionInForce: boolean
+   reportedBy: string
+   confirmedBy: string
+   modifiedBy: string
+   plannedStart: datetime
+   plannedEnd: datetime
+   actualStart: datetime
+   actualEnd: datetime
+   organiser: string
+   venueName: string
+   externalCountryCode: string
+   externalSystemCode: string
+   externalSituationId: string
+   externalSituationVersion: integer
+   extensions: object
+}
+
+enum PlannedEventType {
+  ballGame
+  boxing
+  athletics
+  cycleRace
+  demonstration
+  exhibition
+  fair
+  festival
+  football
+  funfair
+  golf
+  internationalSports
+  marathon
+  march
+  market
+  match
+  parade
+  procession
+  race
+  rugby
+  show
+  showJumping
+  sportsEvent
+  sportsMeeting
+  stateOccasion
+  strike
+  tennis
+  tournament
+  tradeFair
+  waterSports
+  winterSports
+  other
+}
+
+' ── traffic_event_incident ──
+class IncidentEvent {
+  +eventId: ObjectId
+  +incidentType: IncidentType
+  +status: EventStatus
+   publicDescription: string
+   locationDescription: string
+   location: Point
+   severity: SeverityType
+   phase: string
+   lanesAffected: LanesAffectedType
+   lanesRestricted: integer
+   lanesOperational: integer
+   diversionRoute: string
+   diversionInForce: boolean
+   reportedBy: string
+   confirmedBy: string
+   modifiedBy: string
+   incidentTime: datetime
+   endTime: datetime
+   externalCountryCode: string
+   externalSystemCode: string
+   externalSituationId: string
+   externalSituationVersion: integer
+   extensions: object
+}
+
+enum IncidentType {
+  abnormalLoad
+  airCrash
+  airRaid
+  animalsOnRoad
+  attackOnVehicle
+  avalanche
+  blasting
+  bridgeBlocked
+  bridgeClosed
+  bridgeDemolition
+  bridgeMaintenance
+  bridgeOpening
+  brokenDownBus
+  brokenDownLorry
+  brokenDownVehicle
+  burstPipe
+  burstWaterMain
+  busDisruption
+  busLaneBlocked
+  busLaneClosed
+  centreLaneBlocked
+  centreLaneClosed
+  chemicalSpillage
+  childrenOnRoad
+  civilEmergency
+  civilEmergencyCancelled
+  smogAlert
+  congestion
+  contraflow
+  convoy
+  crowd
+  cyclists
+  diversion
+  emergencyAlert
+  facilitiesClosed
+  fault
+  fire
+  flood
+  flow
+  fog
+  gawkingTraffic
+  gunfire
+  hail
+  heavyFlow
+  ice
+  laneClosure
+  lightFault
+  obstruction
+  peopleOnRoad
+  pollution
+  powerFailure
+  publicDisturbance
+  queue
+  radioactiveLeak
+  rain
+  riot
+  roadClosure
+  roadsideFire
+  sandstorms
+  securityAlert
+  securityIncident
+  sightseers
+  snow
+  speedRestriction
+  spillage
+  sprayHazard
+  structuralDamage
+  telephoneFault
+  temporarySignal
+  terroristIncident
+  tornadoes
+  trafficSignalFault
+  trainDisruption
+  unexplainedDamage
+  unexplainedEvent
+  washout
+  wind
+  other
+}
+
+' ── traffic_event_roadworks ──
+class RoadworksEvent {
+  +eventId: ObjectId
+  +roadworksType: RoadworksType
+  +status: EventStatus
+   publicDescription: string
+   locationDescription: string
+   location: Point
+   severity: SeverityType
+   phase: string
+   lanesAffected: LanesAffectedType
+   lanesRestricted: integer
+   lanesOperational: integer
+   diversionRoute: string
+   diversionInForce: boolean
+   reportedBy: string
+   confirmedBy: string
+   modifiedBy: string
+   plannedStart: datetime
+   plannedEnd: datetime
+   actualStart: datetime
+   actualEnd: datetime
+   contractor: string
+   trafficSignals: boolean
+   contraflow: boolean
+   confirmedDate: datetime
+   externalCountryCode: string
+   externalSystemCode: string
+   externalSituationId: string
+   externalSituationVersion: integer
+   extensions: object
+}
+
+enum RoadworksType {
+  centralReservation
+  general
+  overhead
+  surface
+  verge
+  waterMainWork
+  other
+}
+
+' ── traffic_event_sync_complete ──
+class SyncComplete {
+  +syncCorrelationId: integer
+   syncId: string
+  +status: SyncStatus
+  +objectCount: integer
+  +completedTime: datetime
+   message: string
+   extensions: object
+}
+
+enum SyncStatus {
+  success
+  rejected
+  failed
+}
+
+' ── traffic_event_sync_request ──
+class SyncRequest {
+  +syncCorrelationId: integer
+  +requestTime: datetime
+   categories: list<SyncCategoryEnum>
+   objectIds: list<ObjectId>
+   subArea: string
+   typeId: TypeId
+   activeOnly: boolean
+   since: datetime
+   extensions: object
+}
+
+enum SyncCategoryEnum {
+  definition
+  configuration
+  measurement
+  fault
+  type
+  status
+}
+
+' ── External types ──
+class EventStatus <<traffic_event_common>> #EEEEEE
+class LanesAffectedType <<traffic_event_common>> #EEEEEE
+class Point <<../common/common>> #EEEEEE
+class SeverityType <<traffic_event_common>> #EEEEEE
+
+AccidentEvent --> AccidentType : accidentType
+AccidentEvent ..> EventStatus : status
+AccidentEvent ..> Point : location
+AccidentEvent ..> SeverityType : severity
+AccidentEvent ..> LanesAffectedType : lanesAffected
+PlannedEvent --> PlannedEventType : plannedEventType
+PlannedEvent ..> EventStatus : status
+PlannedEvent ..> Point : location
+PlannedEvent ..> SeverityType : severity
+PlannedEvent ..> LanesAffectedType : lanesAffected
+IncidentEvent --> IncidentType : incidentType
+IncidentEvent ..> EventStatus : status
+IncidentEvent ..> Point : location
+IncidentEvent ..> SeverityType : severity
+IncidentEvent ..> LanesAffectedType : lanesAffected
+RoadworksEvent --> RoadworksType : roadworksType
+RoadworksEvent ..> EventStatus : status
+RoadworksEvent ..> Point : location
+RoadworksEvent ..> SeverityType : severity
+RoadworksEvent ..> LanesAffectedType : lanesAffected
+SyncComplete --> SyncStatus : status
+SyncRequest --> SyncCategoryEnum : categories
+
+@enduml

@@ -1,0 +1,121 @@
+@startuml
+title UTMC Network Domain
+!pragma layout smetana
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam classFontSize 14
+skinparam classAttributeFontSize 11
+skinparam classFontStyle bold
+skinparam dpi 150
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam class {
+  BackgroundColor #FEFEFE
+  BorderColor #333333
+  ArrowColor #555555
+}
+scale max 4961*3508
+
+' ── network_link ──
+class NetworkLink {
+  +linkId: ObjectId
+  +fromNodeId: ObjectId
+  +toNodeId: ObjectId
+   description: string
+   geometry: GeoJsonLineString
+   extensions: object
+}
+
+' ── network_node ──
+class NetworkNode {
+  +nodeId: ObjectId
+   description: string
+   location: GeoJsonPoint
+   extensions: object
+}
+
+' ── network_path ──
+class NetworkPath {
+  +pathId: ObjectId
+   typeId: TypeId
+   description: string
+   permanent: boolean
+   linkIds: list<ObjectId>
+   initialTrimMeters: number
+   finalTrimMeters: number
+   extensions: object
+}
+
+' ── network_sync_complete ──
+class SyncComplete {
+  +syncCorrelationId: integer
+   syncId: string
+  +status: SyncStatus
+  +objectCount: integer
+  +completedTime: datetime
+   message: string
+   extensions: object
+}
+
+enum SyncStatus {
+  success
+  rejected
+  failed
+}
+
+' ── network_sync_request ──
+class SyncRequest {
+  +syncCorrelationId: integer
+  +requestTime: datetime
+   categories: list<SyncCategoryEnum>
+   objectIds: list<ObjectId>
+   subArea: string
+   typeId: TypeId
+   activeOnly: boolean
+   since: datetime
+   extensions: object
+}
+
+enum SyncCategoryEnum {
+  definition
+  configuration
+  measurement
+  fault
+  type
+  status
+}
+
+' ── network_turn ──
+class NetworkTurn {
+  +turnId: ObjectId
+  +fromLinkId: ObjectId
+  +toLinkId: ObjectId
+  +allowed: boolean
+   description: string
+   geometry: GeoJsonLineString
+   extensions: object
+}
+
+' ── network_zone ──
+class NetworkZone {
+  +zoneId: ObjectId
+   typeId: TypeId
+   description: string
+   permanent: boolean
+   linkIds: list<ObjectId>
+   geometry: GeoJsonLineString
+   extensions: object
+}
+
+' ── External types ──
+class GeoJsonLineString <<../common/common>> #EEEEEE
+class GeoJsonPoint <<../common/common>> #EEEEEE
+
+NetworkLink ..> GeoJsonLineString : geometry
+NetworkNode ..> GeoJsonPoint : location
+SyncComplete --> SyncStatus : status
+SyncRequest --> SyncCategoryEnum : categories
+NetworkTurn ..> GeoJsonLineString : geometry
+NetworkZone ..> GeoJsonLineString : geometry
+
+@enduml

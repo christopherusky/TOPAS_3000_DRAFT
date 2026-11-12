@@ -1,0 +1,27 @@
+---
+title: UTMC VMS Measurement
+---
+erDiagram
+    VMS_DYNAMIC {
+        ObjectId vmsId FK
+        datetime timestamp
+        object quality
+        string currentMessage
+        string[] messageLines
+        uri graphicUrl
+        number brightnessPercent
+        datetime messageSetTime
+        datetime messageExpiryTime
+        object status
+    }
+
+    VMS_STATUS {
+        enum off
+        enum on
+        enum blank
+        enum displaying
+        enum fault
+        enum unknown
+    }
+
+

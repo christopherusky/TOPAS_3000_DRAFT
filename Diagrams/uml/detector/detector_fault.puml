@@ -1,0 +1,45 @@
+@startuml
+title UTMC Detector Fault
+!pragma layout smetana
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam classFontSize 14
+skinparam classAttributeFontSize 11
+skinparam classFontStyle bold
+skinparam dpi 150
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam class {
+  BackgroundColor #FEFEFE
+  BorderColor #333333
+  ArrowColor #555555
+}
+scale max 3508*2480
+
+class DetectorFault {
+  +detectorId: ObjectId
+  +faultId: integer
+  +faultTypeId: TypeId
+   supplierFaultNumber: string
+   subsystemTypeId: TypeId
+   equipmentFault: boolean
+   communicationsFault: boolean
+  +creationDate: datetime
+   lastUpdated: datetime
+   clearedDate: datetime
+   description: string
+   acknowledgementState: AcknowledgementState
+   acknowledgementDate: datetime
+   severity: integer
+   status: FaultStatus
+   parameters: list<string>
+   extensions: object
+}
+
+class AcknowledgementState <<../fault_support/fault_support>> #EEEEEE
+class FaultStatus <<../fault_support/fault_support>> #EEEEEE
+
+DetectorFault ..> AcknowledgementState : acknowledgementState
+DetectorFault ..> FaultStatus : status
+
+@enduml

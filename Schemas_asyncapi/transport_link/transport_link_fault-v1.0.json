@@ -1,0 +1,111 @@
+{
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/transport_link/transport_link_fault-v1.0.json",
+  "$ref": "#/$defs/TransportLinkFault",
+  "$defs": {
+    "TransportLinkFault": {
+      "additionalProperties": false,
+      "description": "Transport link fault reports.",
+      "properties": {
+        "transportLinkId": {
+          "description": "Identifier of the transport link this fault is about.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "faultId": {
+          "description": "Unique identifier of this fault report within the owning system.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "faultTypeId": {
+          "description": "Reference to a FaultTypeDefinition entry in the shared fault catalogue.",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^\\S(?:[\\s\\S]*\\S)?$",
+          "title": "TypeId",
+          "type": "string"
+        },
+        "supplierFaultNumber": {
+          "type": "string",
+          "description": "Fault identifier allocated by the supplier or configuration manager for maintenance purposes, if required."
+        },
+        "subsystemTypeId": {
+          "type": "string",
+          "description": "Reference to a SubsystemDefinition entry: the subsystem the fault arose in.",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^\\S(?:[\\s\\S]*\\S)?$",
+          "title": "TypeId"
+        },
+        "equipmentFault": {
+          "type": "boolean",
+          "description": "Whether this is an equipment fault. The fault type's catalogue category classifies the type; this flag classifies this fault."
+        },
+        "communicationsFault": {
+          "type": "boolean",
+          "description": "Whether this is a communications fault. See equipmentFault for how it relates to the catalogue category."
+        },
+        "creationDate": {
+          "description": "When the fault was first raised.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "lastUpdated": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the fault record was last modified."
+        },
+        "clearedDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the fault was cleared. If present, the fault is historical."
+        },
+        "description": {
+          "type": "string",
+          "description": "Free-text description of the fault."
+        },
+        "acknowledgementState": {
+          "$ref": "../fault_support/fault_support-v1.0.json#/$defs/AcknowledgementState",
+          "description": "Current acknowledgement state."
+        },
+        "acknowledgementDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the fault was acknowledged."
+        },
+        "severity": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Fault severity (higher = more severe)."
+        },
+        "status": {
+          "$ref": "../fault_support/fault_support-v1.0.json#/$defs/FaultStatus",
+          "description": "Whether this fault is still active or has been cleared."
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "description": "Values for the positional placeholders in the referenced FaultTypeDefinition's messageTemplate, in order. Rendered as text so a value carries whatever form the fault reports it in."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions. Open-content object."
+        }
+      },
+      "required": [
+        "transportLinkId",
+        "faultId",
+        "faultTypeId",
+        "creationDate"
+      ],
+      "type": "object",
+      "title": "UTMC Transport Link Fault"
+    }
+  }
+}

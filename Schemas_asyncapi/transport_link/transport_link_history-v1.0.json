@@ -1,0 +1,55 @@
+{
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/transport_link/transport_link_history-v1.0.json",
+  "$ref": "#/$defs/TransportLinkHistoryEntry",
+  "$defs": {
+    "TransportLinkHistoryEntry": {
+      "additionalProperties": false,
+      "description": "Transport link history entries.",
+      "properties": {
+        "transportLinkId": {
+          "description": "Identifier of the transport link this log entry is about.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "logId": {
+          "description": "Unique identifier of this log entry within the owning system.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "logDate": {
+          "description": "When the log entry was recorded.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "logEntry": {
+          "description": "Equipment log data (free-form text).",
+          "type": "string"
+        },
+        "logUser": {
+          "type": "string",
+          "description": "User who created the log entry."
+        },
+        "eventType": {
+          "type": "string",
+          "description": "Category or type of the history event (e.g. 'reconfiguration', 'capacity_update')."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions. Open-content object."
+        }
+      },
+      "required": [
+        "transportLinkId",
+        "logId",
+        "logDate",
+        "logEntry"
+      ],
+      "type": "object",
+      "title": "UTMC Transport Link History"
+    }
+  }
+}

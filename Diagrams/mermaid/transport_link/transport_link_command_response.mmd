@@ -1,0 +1,14 @@
+---
+title: UTMC Transport Link Command Response
+---
+erDiagram
+    TRANSPORT_LINK_COMMAND_RESPONSE {
+        ObjectId transportLinkId FK
+        int commandCorrelationId
+        object status
+        datetime responseTime
+        string code
+        string message
+    }
+
+

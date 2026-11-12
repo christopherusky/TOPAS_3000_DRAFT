@@ -1,0 +1,66 @@
+@startuml
+title UTMC VMS Command
+!pragma layout smetana
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam classFontSize 14
+skinparam classAttributeFontSize 11
+skinparam classFontStyle bold
+skinparam dpi 150
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam class {
+  BackgroundColor #FEFEFE
+  BorderColor #333333
+  ArrowColor #555555
+}
+scale max 3508*2480
+
+class ClearSignCommand {
+  +vmsId: ObjectId
+  +commandCorrelationId: integer
+  +requestTime: datetime
+  +kind: "clearSign"
+   extensions: object
+}
+
+class DisplayGraphicCommand {
+  +vmsId: ObjectId
+  +commandCorrelationId: integer
+  +requestTime: datetime
+  +kind: "displayGraphic"
+  +graphicUrl: uri
+   displayDurationSeconds: integer
+   extensions: object
+}
+
+class DisplayMessageCommand {
+  +vmsId: ObjectId
+  +commandCorrelationId: integer
+  +requestTime: datetime
+  +kind: "displayMessage"
+  +message: string
+   messageLines: list<string>
+   displayDurationSeconds: integer
+   extensions: object
+}
+
+class SetBrightnessCommand {
+  +vmsId: ObjectId
+  +commandCorrelationId: integer
+  +requestTime: datetime
+  +kind: "setBrightness"
+  +brightnessPercent: number
+   extensions: object
+}
+
+class VmsCommand <<union>> {
+  discriminator: kind
+}
+
+VmsCommand <|-- DisplayMessageCommand
+VmsCommand <|-- DisplayGraphicCommand
+VmsCommand <|-- SetBrightnessCommand
+VmsCommand <|-- ClearSignCommand
+
+@enduml

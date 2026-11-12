@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/vms/vms_definition-v1.0.json",
+  "$ref": "#/$defs/VmsDefinition",
+  "$defs": {
+    "VmsColourCapability": {
+      "description": "Colour capability of a variable message sign.",
+      "enum": [
+        "monochrome",
+        "amber",
+        "multiColour",
+        "fullColour"
+      ],
+      "type": "string"
+    },
+    "VmsDefinition": {
+      "additionalProperties": false,
+      "description": "Variable message sign equipment details.",
+      "properties": {
+        "vmsId": {
+          "description": "Unique identifier of this VMS.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "typeId": {
+          "description": "Unique identifier for a VMS type (sign type catalogue entry).",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^\\S(?:[\\s\\S]*\\S)?$",
+          "title": "TypeId",
+          "type": "string"
+        },
+        "creationDate": {
+          "description": "When this definition was created.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "location": {
+          "$ref": "../common/common-v1.0.json#/$defs/Point",
+          "description": "Physical location."
+        },
+        "transportLinkId": {
+          "type": "string",
+          "description": "Transport link this sign monitors or sits on. Optional.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId"
+        },
+        "linkDistanceMetres": {
+          "type": "number",
+          "description": "Distance along that transport link, in metres. Optional."
+        },
+        "networkLinkId": {
+          "type": "string",
+          "description": "Network link the sign stands on. At most one of this and networkPathId. Optional.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId"
+        },
+        "networkPathId": {
+          "type": "string",
+          "description": "Network path the sign stands on. At most one of this and networkLinkId. Optional.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId"
+        },
+        "shortDescription": {
+          "type": "string",
+          "maxLength": 32,
+          "minLength": 1,
+          "description": "Short name."
+        },
+        "longDescription": {
+          "type": "string",
+          "maxLength": 2000,
+          "minLength": 1,
+          "description": "Longer description."
+        },
+        "signHeight": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Sign height in pixels/units."
+        },
+        "signWidth": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Sign width in pixels/units."
+        },
+        "numberOfLines": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Number of text lines."
+        },
+        "charactersPerLine": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Characters per line."
+        },
+        "supportsGraphics": {
+          "type": "boolean",
+          "description": "Whether the sign supports graphics."
+        },
+        "colourCapability": {
+          "$ref": "#/$defs/VmsColourCapability",
+          "description": "Colour capability."
+        },
+        "participantId": {
+          "type": "string",
+          "description": "Owning system.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ParticipantId"
+        },
+        "ownerOperator": {
+          "type": "string",
+          "description": "Owner or operator."
+        },
+        "originatingParticipantId": {
+          "type": "string",
+          "description": "Upstream system.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ParticipantId"
+        },
+        "originatingObjectId": {
+          "type": "string",
+          "description": "ID on originating system.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId"
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions."
+        }
+      },
+      "required": [
+        "vmsId",
+        "typeId",
+        "creationDate"
+      ],
+      "type": "object",
+      "title": "UTMC VMS Definition"
+    }
+  }
+}

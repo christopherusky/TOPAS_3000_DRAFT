@@ -1,0 +1,428 @@
+name: AsyncAPI Clients Smoke Test
+
+# Runs each language's S1-S7 snippets end-to-end against a throw-away Apache ActiveMQ Artemis broker,
+# exercising the AMQP 1.0 envelope conventions (originator,
+# sync/delta, sync-batch sequencing, wildcard channels,
+# request/response, discriminated unions, multi-channel snapshot).
+#
+# Triggers include 'trunk' because that is the active working branch
+# in this repo.
+#
+# Note: this workflow does NOT consume any untrusted input
+# (github.event.*, head_ref, etc.) in any run: command — all run
+# steps are static commands against checked-out files.
+
+on:
+  pull_request:
+    branches: [trunk, main, master]
+  push:
+    branches: [trunk, main, master]
+
+jobs:
+  smoketest:
+    name: smoketest (${{ matrix.language }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [python, java, csharp, typescript, rust]
+
+    services:
+      artemis:
+        # Same image as the local docker-compose harness so behaviour
+        # in CI matches what developers see on their laptop. Each
+        # matrix leg gets its own broker — no cross-leg state
+        # leakage.
+        image: apache/activemq-artemis:2.31.2-alpine
+        env:
+          ARTEMIS_USER: admin
+          ARTEMIS_PASSWORD: admin
+          ANONYMOUS_LOGIN: "true"
+        ports:
+          - 5672:5672
+        options: >-
+          --health-cmd "sh -c 'nc -z localhost 5672'"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 24
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Set up Java (JDK 11, Temurin) with Maven cache
+        if: matrix.language == 'java'
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "11"
+          cache: maven
+
+      - name: Set up .NET 8 SDK
+        if: matrix.language == 'csharp'
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "8.0.x"
+        # NuGet caching intentionally not enabled: setup-dotnet@v4's
+        # `cache: true` requires a packages.lock.json which the
+        # smoke harness deliberately does not ship (KISS). The
+        # cold-restore cost is ~15s per leg, acceptable for a smoke
+        # test that runs on every push.
+
+      - name: Set up Node.js 22
+        if: matrix.language == 'typescript'
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: asyncapi_clients/smoketest/typescript/package-lock.json
+
+      - name: Set up Rust toolchain
+        if: matrix.language == 'rust'
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          # Pinned, like the other generators and tools: `stable` moves under
+          # us and can turn this job red on a day nothing here changed. Matches
+          # the toolchain the Rust SDK was verified against locally.
+          toolchain: 1.97.0
+
+      - name: Cache Rust build artefacts
+        if: matrix.language == 'rust'
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: asyncapi_clients/smoketest/rust
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Sync dependencies (incl. python-qpid-proton from dev group)
+        run: uv sync
+
+      # `test`, not `compile`: the SDK ships a hand-written tagged-union
+      # regression test alongside the generated classes.
+      - name: Build and test Java SDK (quicktype POJOs + tagged unions)
+        if: matrix.language == 'java'
+        run: mvn -f asyncapi_clients/output/java/sdk/pom.xml -B -q test
+
+      # `test`, not `build`: the SDK ships a hand-written regression test
+      # asserting that serialisation produces wire names and wire enum
+      # values, which it could not do before the fix.
+      - name: Build and test C# SDK (quicktype POCOs + tagged unions)
+        if: matrix.language == 'csharp'
+        run: dotnet test asyncapi_clients/output/csharp/sdk/UtmcSdk.csproj --nologo --verbosity quiet
+
+      - name: Typecheck TypeScript SDK (quicktype-generated interfaces)
+        if: matrix.language == 'typescript'
+        working-directory: asyncapi_clients/output/typescript/sdk
+        run: npx -y -p typescript@5.4.5 tsc --noEmit
+
+      # The Rust SDK ships a hand-written regression test alongside the
+      # generated modules: typify renders a union as `#[serde(untagged)]`,
+      # which only discriminates while each variant's `kind` is a typed unit
+      # rather than a bare String.
+      - name: Build and test Rust SDK (typify-generated types)
+        if: matrix.language == 'rust'
+        working-directory: asyncapi_clients/output/rust/sdk
+        run: cargo test
+
+      - name: Build Java snippets (mvn package -> shaded jar)
+        if: matrix.language == 'java'
+        run: mvn -f asyncapi_clients/smoketest/java/pom.xml -B -q package
+
+      - name: Build C# snippets (dotnet publish -> TopasSnippets.dll)
+        if: matrix.language == 'csharp'
+        run: dotnet publish -c Release asyncapi_clients/smoketest/csharp/TopasSnippets.csproj --nologo
+
+      - name: Build TypeScript snippets (npm ci -> tsc -> dist/snippets/*.js)
+        if: matrix.language == 'typescript'
+        working-directory: asyncapi_clients/smoketest/typescript
+        run: |
+          npm ci
+          npm run build
+
+      - name: Build Rust snippets (cargo build --release -> target/release/sN)
+        if: matrix.language == 'rust'
+        working-directory: asyncapi_clients/smoketest/rust
+        run: cargo build --release
+
+      # A11 conformance gates every language in the matrix. There is no
+      # longer an `if`: all five are converted, so a new language is
+      # expected to pass this from the moment it is added rather than being
+      # opted in later.
+      - name: A11 isolation conformance
+        run: uv run python asyncapi_clients/smoketest/a11_isolation.py --lang ${{ matrix.language }}
+        env:
+          PYTHONPATH: .
+          TOPAS_AMQP_URL: amqp://localhost:5672
+
+      # A11.2 idempotency. Python-only: the responder is the thing under
+      # test here, not the client language, so running it once is enough
+      # - name: A11 idempotency conformance
+        if: matrix.language == 'python'
+        run: uv run python asyncapi_clients/smoketest/a11_idempotency.py
+        env:
+          PYTHONPATH: .
+          TOPAS_AMQP_URL: amqp://localhost:5672
+
+      # A12 requested sync and the data-message envelope. Python-only,
+      # like idempotency: the mock publisher and the publishers are the things
+      # under test, not the client language, so running them once is enough.
+      - name: A12 sync conformance
+        if: matrix.language == 'python'
+        run: uv run python asyncapi_clients/smoketest/a12_sync.py
+        env:
+          PYTHONPATH: .
+          TOPAS_AMQP_URL: amqp://localhost:5672
+
+      - name: requestStatus conformance
+        if: matrix.language == 'python'
+        run: uv run python asyncapi_clients/smoketest/a13_request_status.py
+        env:
+          PYTHONPATH: .
+          TOPAS_AMQP_URL: amqp://localhost:5672
+
+      - name: Envelope conformance
+        if: matrix.language == 'python'
+        run: uv run python asyncapi_clients/smoketest/envelope_conformance.py
+        env:
+          PYTHONPATH: .
+          TOPAS_AMQP_URL: amqp://localhost:5672
+
+      - name: Run S1-S7 (${{ matrix.language }}) against the Artemis service
+        env:
+          PYTHONPATH: .
+          TOPAS_AMQP_URL: amqp://localhost:5672
+        run: uv run python asyncapi_clients/smoketest/run_all.py --lang ${{ matrix.language }}
+
+  # Every requester against every responder. Deliberately gated on the
+  # per-language legs: a cross-language failure is much easier to read
+  # when both halves are already known good on their own, and this job
+  # needs all five toolchains in one runner so it is the expensive one.
+  cross-language-matrix:
+    name: A11 cross-language matrix
+    runs-on: ubuntu-latest
+    needs: smoketest
+
+    services:
+      artemis:
+        image: apache/activemq-artemis:2.31.2-alpine
+        env:
+          ARTEMIS_USER: admin
+          ARTEMIS_PASSWORD: admin
+          ANONYMOUS_LOGIN: "true"
+        ports:
+          - 5672:5672
+        options: >-
+          --health-cmd "sh -c 'nc -z localhost 5672'"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 24
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Set up Java (JDK 11, Temurin) with Maven cache
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "11"
+          cache: maven
+
+      - name: Set up .NET 8 SDK
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: asyncapi_clients/smoketest/typescript/package-lock.json
+
+      - name: Set up Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          # Pinned, like the other generators and tools: `stable` moves under
+          # us and can turn this job red on a day nothing here changed. Matches
+          # the toolchain the Rust SDK was verified against locally.
+          toolchain: 1.97.0
+
+      - name: Cache Rust build artefacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: asyncapi_clients/smoketest/rust
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      # Plain `uv sync`, matching every other job: uv.lock is not tracked
+      # in this repo, so --frozen has nothing to freeze against.
+      - name: Sync dependencies (incl. python-qpid-proton from dev group)
+        run: uv sync
+
+      - name: Build Java snippets and responder
+        run: mvn -f asyncapi_clients/smoketest/java/pom.xml -B -q package
+
+      - name: Build C# snippets and responder
+        run: dotnet publish -c Release asyncapi_clients/smoketest/csharp/TopasSnippets.csproj --nologo
+
+      - name: Build TypeScript snippets and responder
+        working-directory: asyncapi_clients/smoketest/typescript
+        run: |
+          npm ci
+          npm run build
+
+      - name: Build Rust snippets and responder
+        working-directory: asyncapi_clients/smoketest/rust
+        run: cargo build --release
+
+      - name: A11 cross-language matrix (5 requesters x 5 responders)
+        env:
+          PYTHONPATH: .
+          TOPAS_AMQP_URL: amqp://localhost:5672
+        run: uv run python asyncapi_clients/smoketest/a11_matrix.py
+
+  # The authenticated-identity leg. It cannot use `services:` — that
+  # container is created before checkout, so the repository's broker.xml
+  # is not available to bind-mount. Compose after checkout gives control
+  # over configuration, which is the whole point here.
+  authenticated-identity:
+    name: A11 authenticated identity
+    runs-on: ubuntu-latest
+    needs: smoketest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Sync dependencies
+        run: uv sync
+
+      - name: Start the authenticated broker
+        run: docker compose -f asyncapi_clients/smoketest/docker-compose.auth.yml up -d
+
+      # Not just "port 5672 accepts TCP": the broker answers TCP before
+      # its security configuration is loaded, so readiness means an
+      # authenticated AMQP attach succeeds.
+      - name: Wait for authenticated readiness
+        env:
+          PYTHONPATH: .
+        run: |
+          for i in $(seq 1 40); do
+            if uv run python - <<'EOF'
+          from proton.reactor import Container
+          from proton.handlers import MessagingHandler
+          import sys
+          class P(MessagingHandler):
+              def on_start(self, e):
+                  self.c = e.container
+                  e.container.create_receiver(
+                      e.container.connect("amqp://user-a:pw-a@localhost:5674",
+                                          reconnect=False), "readiness.probe")
+              def on_link_opened(self, e):
+                  print("ready"); e.connection.close(); self.c.stop()
+              def on_transport_error(self, e):
+                  sys.exit(1)
+              def on_connection_error(self, e):
+                  sys.exit(1)
+          Container(P()).run()
+          EOF
+            then echo "broker ready"; exit 0; fi
+            sleep 3
+          done
+          echo "::error::authenticated broker never became ready"
+          docker compose -f asyncapi_clients/smoketest/docker-compose.auth.yml logs --tail 50
+          exit 1
+
+      - name: A11 authenticated identity conformance
+        env:
+          PYTHONPATH: .
+        run: uv run python asyncapi_clients/smoketest/a11_authenticated.py
+
+      - name: Broker logs on failure
+        if: failure()
+        run: docker compose -f asyncapi_clients/smoketest/docker-compose.auth.yml logs --tail 200
+
+      - name: Stop the authenticated broker
+        if: always()
+        run: docker compose -f asyncapi_clients/smoketest/docker-compose.auth.yml down
+
+  # The TLS leg: a broker that offers TLS 1.3 only, with a client certificate
+  # required, against which tls_conformance.py proves AC5-4. It needs its
+  # own compose file for the same reason as the authenticated broker above: the
+  # configuration and the certificates are in the repository, so they cannot be
+  # bind-mounted into a `services:` container created before checkout.
+  tls-version:
+    name: TLS 1.3 only
+    runs-on: ubuntu-latest
+    needs: smoketest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Sync dependencies
+        run: uv sync
+
+      - name: Generate throwaway certificates
+        run: bash asyncapi_clients/smoketest/tls/make_certs.sh asyncapi_clients/smoketest/tls/certs
+
+      - name: Start the TLS broker
+        run: docker compose -f asyncapi_clients/smoketest/docker-compose.tls.yml up -d
+
+      # Ready means a trusted client completed the handshake AND the broker answered the
+      # AMQP header. The earlier check grepped s_client for "TLSv1.3", which it prints even
+      # when the connection was closed before any handshake: it passed 0.07 s after the
+      # container started, before Artemis was listening, so it could not fail.
+      - name: Wait for the TLS broker
+        run: |
+          for i in $(seq 1 60); do
+            answer=$(printf 'AMQP\000\001\000\000' | timeout 5 openssl s_client -quiet -ign_eof \
+                 -connect localhost:5675 -tls1_3 \
+                 -cert asyncapi_clients/smoketest/tls/certs/client.pem \
+                 -key asyncapi_clients/smoketest/tls/certs/client.key \
+                 -CAfile asyncapi_clients/smoketest/tls/certs/ca.pem 2>/dev/null | head -c 4)
+            if [ "$answer" = "AMQP" ]; then echo "TLS broker ready after attempt $i"; exit 0; fi
+            sleep 3
+          done
+          echo "::error::the TLS broker never became ready"
+          docker compose -f asyncapi_clients/smoketest/docker-compose.tls.yml logs --tail 50
+          exit 1
+
+      - name: TLS conformance
+        env:
+          PYTHONPATH: .
+        run: uv run python asyncapi_clients/smoketest/tls_conformance.py
+
+      - name: Broker logs on failure
+        if: failure()
+        run: docker compose -f asyncapi_clients/smoketest/docker-compose.tls.yml logs --tail 200
+
+      - name: Stop the TLS broker
+        if: always()
+        run: docker compose -f asyncapi_clients/smoketest/docker-compose.tls.yml down

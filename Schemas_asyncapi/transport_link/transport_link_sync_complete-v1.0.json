@@ -1,0 +1,65 @@
+{
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/transport_link/transport_link_sync_complete-v1.0.json",
+  "$ref": "#/$defs/SyncComplete",
+  "$defs": {
+    "SyncComplete": {
+      "additionalProperties": false,
+      "description": "Terminal message ending a transport link sync batch. Sent to the requester's reply node after the last object, or instead of any objects when the filter matched none.",
+      "properties": {
+        "syncCorrelationId": {
+          "description": "Copied unchanged from the SyncRequest this completes, so a requester with several syncs in flight can tell them apart.",
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "syncId": {
+          "type": "string",
+          "maxLength": 64,
+          "minLength": 1,
+          "description": "The x-sync-id shared by the messages of this batch. Normally absent when no objects matched, since there was no batch to identify. Only a rejected sync is required to omit it; a success or a failed sync may carry one (a failed sync began a batch)."
+        },
+        "status": {
+          "$ref": "#/$defs/SyncStatus",
+          "description": "Outcome of the sync."
+        },
+        "objectCount": {
+          "description": "Number of objects delivered in this batch. Zero is a valid answer and is the reason this message exists.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "completedTime": {
+          "description": "When the publisher finished the sync.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable explanation, for rejected or failed."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or forward-compatibility extensions."
+        }
+      },
+      "required": [
+        "syncCorrelationId",
+        "status",
+        "objectCount",
+        "completedTime"
+      ],
+      "type": "object",
+      "title": "UTMC Transport link Sync Complete"
+    },
+    "SyncStatus": {
+      "description": "Outcome of a sync request (A12).",
+      "enum": [
+        "success",
+        "rejected",
+        "failed"
+      ],
+      "type": "string"
+    }
+  }
+}

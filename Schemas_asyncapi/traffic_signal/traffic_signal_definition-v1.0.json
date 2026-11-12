@@ -1,0 +1,83 @@
+{
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/traffic_signal/traffic_signal_definition-v1.0.json",
+  "$ref": "#/$defs/TrafficSignalDefinition",
+  "$defs": {
+    "TrafficSignalDefinition": {
+      "additionalProperties": false,
+      "description": "Traffic signal equipment details.",
+      "properties": {
+        "trafficSignalId": {
+          "description": "Human readable identifier for the Traffic Signal.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "location": {
+          "$ref": "../common/common-v1.0.json#/$defs/GeoJsonPoint",
+          "description": "Location of traffic signal."
+        },
+        "controlMethodId": {
+          "type": "string",
+          "description": "Optional reference into the TrafficSignalType catalogue identifying the operational control method (MOVA, SCOOT, fixed-time, ...). Orthogonal to TrafficSignalConfiguration.trafficSignalType, which classifies the junction kind (intersection, pelican, puffin, ...).",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^\\S(?:[\\s\\S]*\\S)?$",
+          "title": "TypeId"
+        },
+        "creationDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When this definition record was created."
+        },
+        "shortDescription": {
+          "type": "string",
+          "maxLength": 32,
+          "minLength": 1,
+          "description": "Short human-readable name (e.g. 'Main St / High St junction')."
+        },
+        "longDescription": {
+          "type": "string",
+          "maxLength": 2000,
+          "minLength": 1,
+          "description": "Longer description (context, commissioning notes, etc.)."
+        },
+        "participantId": {
+          "type": "string",
+          "description": "System that owns this traffic signal definition. Often implicit from context.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ParticipantId"
+        },
+        "originatingParticipantId": {
+          "type": "string",
+          "description": "Identifier of the upstream system that originally created this object (comparable to the UML DataSourceTypeId).",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ParticipantId"
+        },
+        "originatingObjectId": {
+          "type": "string",
+          "description": "Identifier of this object on the originating (upstream) system. Enables cross-system traceability.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId"
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or forward-compatibility extensions. Open-content object."
+        }
+      },
+      "required": [
+        "trafficSignalId"
+      ],
+      "type": "object",
+      "title": "UTMC Traffic Signal 0064 Definition"
+    }
+  }
+}

@@ -1,0 +1,18 @@
+---
+title: UTMC Transport Route Command
+---
+erDiagram
+    REQUEST_TRANSPORT_ROUTE_STATUS_COMMAND {
+        ObjectId transportRouteId FK
+        int commandCorrelationId
+        datetime requestTime
+        string kind
+    }
+
+    TRANSPORT_ROUTE_COMMAND {
+        string kind
+    }
+
+    TRANSPORT_ROUTE_COMMAND ||--|| REQUEST_TRANSPORT_ROUTE_STATUS_COMMAND : "requestStatus"
+
+

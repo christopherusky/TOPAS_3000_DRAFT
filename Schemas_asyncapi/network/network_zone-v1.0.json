@@ -1,0 +1,63 @@
+{
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/network/network_zone-v1.0.json",
+  "$ref": "#/$defs/NetworkZone",
+  "$defs": {
+    "NetworkZone": {
+      "additionalProperties": false,
+      "description": "Road network zone (area grouping of links/nodes).",
+      "properties": {
+        "zoneId": {
+          "description": "Unique identifier of this zone.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "typeId": {
+          "type": "string",
+          "description": "Zone type classification (e.g. electoral ward, incident area).",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^\\S(?:[\\s\\S]*\\S)?$",
+          "title": "TypeId"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable name."
+        },
+        "permanent": {
+          "type": "boolean",
+          "description": "Whether this is a permanent or temporary zone. Absent means permanent (the v1 default for a zone)."
+        },
+        "linkIds": {
+          "type": "array",
+          "items": {
+            "description": "Unique identifier of an object. String of 1-32 characters from A-Z, a-z, 0-9 and . _ : - (no spaces), unique within object type within system.",
+            "maxLength": 32,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9._:-]+$",
+            "title": "ObjectId",
+            "type": "string"
+          },
+          "minItems": 1,
+          "description": "The links that make up the zone, as a set: the order of the array carries no meaning (v1 describes a zone as an unordered sequence of links). Omit the field rather than send an empty list. Each link appears at most once."
+        },
+        "geometry": {
+          "$ref": "../common/common-v1.0.json#/$defs/GeoJsonLineString",
+          "description": "Zone boundary geometry as GeoJSON LineString."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions."
+        }
+      },
+      "required": [
+        "zoneId"
+      ],
+      "type": "object",
+      "title": "UTMC Network Zone"
+    }
+  }
+}

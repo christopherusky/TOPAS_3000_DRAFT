@@ -1,0 +1,175 @@
+/*
+ * File:        output/rust/snippets/s4.rs
+ * Origin:      Generated from asyncapi.yaml by asyncapi_clients/generator/generate.py
+ * Changes:     Do not hand-edit; re-run `make asyncapi-clients` to regenerate
+ * Author:      Christopher Kettell, TRL Software
+ * Date:        2026-11-12
+ * Generator:   asyncapi_clients/generator v0.1.0
+ * License:     Apache-2.0  (https://opensource.org/license/Apache-2.0)
+ */
+//! Scenario S4 — Distinguish sync vs delta messages and reassemble a sync batch.
+//!
+//! Demonstrates: reading the x-message-mode AMQP application
+//! property (A3) to tell snapshot data from change events; using the
+//! x-sync-id / x-sync-sequence /
+//! x-sync-total triple (A5) to detect when a sync batch is
+//! complete.
+//!
+//! Sync progress is tracked in a `HashMap<String, HashSet<i64>>` keyed
+//! by x-sync-id; the inner set holds each
+//! x-sync-sequence value seen on the wire.
+
+use std::collections::{HashMap, HashSet};
+use std::env;
+use std::time::Duration;
+
+use fe2o3_amqp::types::messaging::{ApplicationProperties, Body, Source};
+use fe2o3_amqp::types::primitives::{SimpleValue, Symbol};
+use fe2o3_amqp::{Connection, Receiver, Session};
+use serde_json::Value;
+use tokio::time::timeout;
+
+const CHANNEL: &str = "detector.measurement";
+const RECV_TIMEOUT: Duration = Duration::from_secs(5);
+
+fn server_url() -> String {
+    env::var("TOPAS_AMQP_URL")
+        .unwrap_or_else(|_| "amqps://{host}:{port}".replace("{host}", "localhost").replace("{port}", "5671"))
+}
+
+fn max_messages() -> usize {
+    env::var("TOPAS_MAX_MESSAGES")
+        .ok()
+        .and_then(|v| v.parse::<usize>().ok())
+        .unwrap_or(20)
+}
+
+fn body_as_string(body: &Body<Value>) -> String {
+    match body {
+        Body::Data(batch) => {
+            let mut out = String::new();
+            for data in batch.iter() {
+                out.push_str(&String::from_utf8_lossy(data.0.as_ref()));
+            }
+            out
+        }
+        Body::Value(v) => match &v.0 {
+            Value::String(s) => s.clone(),
+            other => other.to_string(),
+        },
+        Body::Sequence(_) | Body::Empty => String::new(),
+    }
+}
+
+// ApplicationProperties wraps `OrderedMap<String, SimpleValue>` (NOT
+// the broader primitives::Value); SimpleValue's unsigned-int variants
+// are spelt `Ubyte` / `Ushort` / `Uint` / `Ulong` in 0.14.0 (single
+// capital after the U, unlike e.g. AMQP.NET / qpid-jms's UByte).
+fn string_prop(props: Option<&ApplicationProperties>, key: &str) -> Option<String> {
+    let entry = props?.get(key)?;
+    Some(match entry {
+        SimpleValue::String(s) => s.clone(),
+        other => format!("{other:?}"),
+    })
+}
+
+fn int_prop(props: Option<&ApplicationProperties>, key: &str) -> i64 {
+    let Some(entry) = props.and_then(|p| p.get(key)) else {
+        return 0;
+    };
+    match entry {
+        SimpleValue::Int(n) => *n as i64,
+        SimpleValue::Long(n) => *n,
+        SimpleValue::Uint(n) => *n as i64,
+        SimpleValue::Ulong(n) => *n as i64,
+        SimpleValue::Short(n) => *n as i64,
+        SimpleValue::Ushort(n) => *n as i64,
+        SimpleValue::Byte(n) => *n as i64,
+        SimpleValue::Ubyte(n) => *n as i64,
+        SimpleValue::String(s) => s.parse::<i64>().unwrap_or(0),
+        _ => 0,
+    }
+}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let url = server_url();
+    let max = max_messages();
+
+    let mut connection = Connection::open("topas-s4", url.as_str()).await?;
+    let mut session = Session::begin(&mut connection).await?;
+    let source = Source::builder()
+        .address(CHANNEL)
+        .capabilities(vec![Symbol::from("topic")])
+        .build();
+    let mut receiver = Receiver::builder()
+        .name("s4-receiver")
+        .source(source)
+        .attach(&mut session)
+        .await?;
+    // Readiness handshake — the link is attached, so a burst
+    // published from here on will be delivered rather than discarded.
+    eprintln!("[ready]");  // readiness handshake
+
+    // sync-id -> set of sequence numbers received so far.
+    let mut sync_progress: HashMap<String, HashSet<i64>> = HashMap::new();
+
+    for _ in 0..max {
+        let delivery = match timeout(RECV_TIMEOUT, receiver.recv::<Body<Value>>()).await {
+            Ok(Ok(d)) => d,
+            Ok(Err(e)) => {
+                eprintln!("[S4] receive failed: {e}");
+                break;
+            }
+            Err(_) => {
+                eprintln!("[S4] receive timed out — broker idle? aborting.");
+                break;
+            }
+        };
+
+        let props = delivery.message().application_properties.as_ref();
+        let mode = string_prop(props, "x-message-mode").unwrap_or_else(|| "delta".to_string());
+
+        let raw = body_as_string(delivery.body());
+        let payload: Value = match serde_json::from_str(&raw) {
+            Ok(v) => v,
+            Err(e) => {
+                eprintln!("[S4] JSON parse failed: {e}");
+                let _ = receiver.accept(&delivery).await;
+                continue;
+            }
+        };
+
+        if mode == "delta" {
+            println!("[delta] {payload}");
+            let _ = receiver.accept(&delivery).await;
+            continue;
+        }
+
+        // mode == "sync" — track batch completion.
+        let sync_id = string_prop(props, "x-sync-id").unwrap_or_default();
+        let seq = int_prop(props, "x-sync-sequence");
+        let total = int_prop(props, "x-sync-total");
+
+        if sync_id.is_empty() || total == 0 {
+            println!("[sync*] {payload}  (incomplete sync metadata)");
+            let _ = receiver.accept(&delivery).await;
+            continue;
+        }
+
+        let seen = sync_progress.entry(sync_id.clone()).or_default();
+        seen.insert(seq);
+        let progress = seen.len() as i64;
+        println!("[sync {sync_id} {progress}/{total}] {payload}");
+        if progress == total {
+            println!("[sync {sync_id}] complete");
+            sync_progress.remove(&sync_id);
+        }
+        let _ = receiver.accept(&delivery).await;
+    }
+
+    receiver.close().await?;
+    session.end().await?;
+    connection.close().await?;
+    Ok(())
+}

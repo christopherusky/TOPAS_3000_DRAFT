@@ -1,0 +1,21 @@
+---
+title: UTMC Detector Definition
+---
+erDiagram
+    DETECTOR_DEFINITION {
+        ObjectId detectorId PK
+        TypeId typeId FK
+        datetime creationDate
+        object location
+        ObjectId transportLinkId
+        number linkDistanceMetres
+        ObjectId networkLinkId
+        ObjectId networkPathId
+        string shortDescription
+        string longDescription
+        ParticipantId participantId
+        ParticipantId originatingParticipantId
+        ObjectId originatingObjectId
+    }
+
+

@@ -1,0 +1,41 @@
+{
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/strategy/strategy_definition-v1.0.json",
+  "$ref": "#/$defs/StrategyDefinition",
+  "$defs": {
+    "StrategyDefinition": {
+      "additionalProperties": false,
+      "description": "Traffic management strategy static metadata.",
+      "properties": {
+        "strategyId": {
+          "description": "Strategy identifier (e.g. 'STR00000001').",
+          "minLength": 1,
+          "type": "string"
+        },
+        "strategyName": {
+          "description": "Human-readable name of the strategy.",
+          "minLength": 1,
+          "type": "string"
+        },
+        "strategyDescription": {
+          "type": "string",
+          "description": "Longer description of what the strategy does."
+        },
+        "location": {
+          "$ref": "../common/common-v1.0.json#/$defs/GeoJsonPoint",
+          "description": "Geographic centre of the strategy area as WGS84 GeoJSON Point."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions."
+        }
+      },
+      "required": [
+        "strategyId",
+        "strategyName"
+      ],
+      "type": "object",
+      "title": "UTMC Strategy Definition"
+    }
+  }
+}

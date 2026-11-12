@@ -1,0 +1,73 @@
+@startuml
+title UTMC Traffic Signal 0064 Command
+!pragma layout smetana
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam classFontSize 14
+skinparam classAttributeFontSize 11
+skinparam classFontStyle bold
+skinparam dpi 150
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam class {
+  BackgroundColor #FEFEFE
+  BorderColor #333333
+  ArrowColor #555555
+}
+scale max 3508*2480
+
+class ForceStageCommand {
+  +trafficSignalId: ObjectId
+  +commandCorrelationId: integer
+  +requestTime: datetime
+  +kind: "forceStage"
+  +stageNumber: integer
+   extensions: object
+}
+
+class HoldStageCommand {
+  +trafficSignalId: ObjectId
+  +commandCorrelationId: integer
+  +requestTime: datetime
+  +kind: "holdStage"
+  +stageNumber: integer
+   extensions: object
+}
+
+class RequestStatusCommand {
+  +trafficSignalId: ObjectId
+  +commandCorrelationId: integer
+  +requestTime: datetime
+  +kind: "requestStatus"
+   extensions: object
+}
+
+class SetPlanCommand {
+  +trafficSignalId: ObjectId
+  +commandCorrelationId: integer
+  +requestTime: datetime
+  +kind: "setPlan"
+  +planNumber: integer
+   extensions: object
+}
+
+class SynchronizeClockCommand {
+  +trafficSignalId: ObjectId
+  +commandCorrelationId: integer
+  +requestTime: datetime
+  +kind: "synchronizeClock"
+  +targetTime: datetime
+   extensions: object
+}
+
+class TrafficSignalCommand <<union>> {
+  discriminator: kind
+}
+
+TrafficSignalCommand <|-- SetPlanCommand
+TrafficSignalCommand <|-- ForceStageCommand
+TrafficSignalCommand <|-- HoldStageCommand
+TrafficSignalCommand <|-- SynchronizeClockCommand
+TrafficSignalCommand <|-- RequestStatusCommand
+
+@enduml

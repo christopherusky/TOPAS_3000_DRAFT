@@ -1,0 +1,34 @@
+<!--
+     Build stub — minimum .NET project to compile the quicktype-generated
+    UTMC SDK. Hand-written; not regenerated. Bump Newtonsoft.Json here when the
+    quicktype output stops matching its API.
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Topas.Utmc</RootNamespace>
+    <!--
+      quicktype's `attributes-only` mode omits `using` directives (System,
+      System.Collections.Generic, ...). ImplicitUsings supplies them
+      globally so the generated files compile as-is. Disable warnings that
+      don't apply to generated code:
+        CS8618 — non-nullable property must be initialised (POCO model)
+        CS8625 — null literal to non-nullable (Newtonsoft default)
+    -->
+    <NoWarn>$(NoWarn);CS8618;CS8625</NoWarn>
+    <!-- Hand-written tests live under tests/, copied in from
+         templates/sdk_stubs/csharp/tests/. The SDK-style default
+         globs already compile them. -->
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,315 @@
+//! Scenario S3 — Publish a command, await its response (A11).
+//!
+//! Demonstrates AMQP 1.0 request/reply addressing. The requester creates a
+//! **dynamic reply node**, obtains the broker-assigned address, and puts it
+//! in the command's `reply-to`. The processor answers that node and nobody
+//! else — no shared response channel, no broker-specific selector, no
+//! filtering after delivery.
+//!
+//! The same six stages appear in every language's S3:
+//!
+//!   1. connect
+//!   2. create the dynamic reply receiver
+//!   3. obtain the broker-assigned reply address
+//!   4. send the command with message-id and reply-to
+//!   5. receive responses on that node
+//!   6. independently verify delivery isolation, transport correlation
+//!      and application correlation
+//!
+//! Stage 3 is the simplest of any client here: `attach()` is awaited, and
+//! the negotiated source is readable from the receiver as soon as it
+//! returns. Proton, AMQPNetLite and rhea all require a callback or event
+//! first. That is a client-library difference, not a protocol one — see
+//! the implementation note in the specification.
+//!
+//! Rust is also the only client in this suite where the AMQP identifier
+//! union is visible in the type system: `MessageId` is an enum of
+//! `Ulong`/`Uuid`/`Binary`/`String` deriving `Eq`, so the transport
+//! assertion is direct typed equality. Elsewhere the identifier arrives as
+//! `object`, a `Buffer`, or behind a provider API, and comparing it
+//! correctly takes deliberate work. Formatting is not identity: rendering
+//! both sides as text can silently equate values of different types — and
+//! in one client a uuid renders as the empty string.
+
+use std::env;
+use std::time::{Duration, Instant};
+
+use fe2o3_amqp::types::messaging::{
+    ApplicationProperties, Body, Message, MessageId, Properties, Source, Target,
+};
+use fe2o3_amqp::types::primitives::{SimpleValue, Symbol};
+use fe2o3_amqp::{Connection, Receiver, Sender, Session};
+use serde_json::{json, Value};
+use tokio::time::timeout;
+use uuid::Uuid;
+
+const COMMAND_CHANNEL: &str = "{{ channels.vms_command }}";
+const TOTAL_DEADLINE: Duration = Duration::from_secs(30);
+const PER_RECV_TIMEOUT: Duration = Duration::from_secs(2);
+
+fn server_url() -> String {
+    env::var("TOPAS_AMQP_URL")
+        .unwrap_or_else(|_| "{{ server_uri }}".replace("{host}", "localhost").replace("{port}", "5671"))
+}
+
+fn originator() -> String {
+    env::var("TOPAS_ORIGINATOR").unwrap_or_else(|_| "asyncapi-clients-s3-demo".to_string())
+}
+
+fn env_i64(key: &str, default: i64) -> i64 {
+    env::var(key).ok().and_then(|v| v.parse().ok()).unwrap_or(default)
+}
+
+/// An explicit compatibility layer over the body representations clients
+/// produce — a data section from most, an AMQP value string from others.
+///
+/// It returns `None` rather than a placeholder for anything else. The
+/// previous version of this suite degraded an unrecognised body to
+/// `{"raw": "..."}`, which turned a real defect into a plausible-looking
+/// object and let a conformance check pass vacuously.
+fn body_as_string(body: &Body<Value>) -> Option<String> {
+    match body {
+        Body::Data(batch) => {
+            let mut out = String::new();
+            for data in batch.iter() {
+                out.push_str(&String::from_utf8_lossy(data.0.as_ref()));
+            }
+            Some(out)
+        }
+        Body::Value(v) => match &v.0 {
+            Value::String(s) => Some(s.clone()),
+            _ => None,
+        },
+        Body::Sequence(_) | Body::Empty => None,
+    }
+}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let url = server_url();
+    let originator = originator();
+    let command_correlation_id = env_i64("TOPAS_COMMAND_CORRELATION_ID", 3701);
+    // How many responses this requester expects, terminal one included. A
+    // pending->success progression is 2. The conformance harness sets this
+    // so a short delivery is a failure rather than a quiet pass.
+    let expected_responses = env_i64("TOPAS_EXPECTED_RESPONSES", 0);
+
+    // Transport identity of the request. Held as a `MessageId`, not a
+    // string, so the comparison at stage 6 is between AMQP identifiers.
+    let request_message_id = MessageId::String(Uuid::new_v4().to_string());
+
+    // Three independent invariants, counted by failure kind. None may
+    // compensate for another: a response on the right node with the right
+    // commandCorrelationId but no correlation-id is still a failure.
+    let mut received: i64 = 0;
+    let mut foreign = 0; // routing: delivered here, addressed elsewhere
+    let mut missing_to = 0; // absence
+    let mut missing_corr = 0; // absence
+    let mut wrong_corr = 0; // transformation: right node, wrong id
+    let mut missing_app = 0; // absence
+    let mut wrong_app = 0; // transformation
+
+    // (1) connect
+    let mut connection = Connection::open("topas-s3", url.as_str()).await?;
+    let mut session = Session::begin(&mut connection).await?;
+
+    // Artemis needs the "topic" capability to route the command on a
+    // MULTICAST address (see s1.rs). The reply node is a different thing
+    // entirely — broker-created and private — so it carries no capability.
+    let target = Target::builder()
+        .address(COMMAND_CHANNEL)
+        .capabilities(vec![Symbol::from("topic")])
+        .build();
+    let mut sender = Sender::builder()
+        .name("s3-sender")
+        .target(target)
+        .attach(&mut session)
+        .await?;
+
+    // (2) dynamic reply node — the broker creates it and names it, so no
+    // address is supplied here because none exists yet.
+    let reply_source = Source::builder().dynamic(true).build();
+    let mut receiver = Receiver::builder()
+        .name("s3-reply")
+        .source(reply_source)
+        .attach(&mut session)
+        .await?;
+
+    // (3) the negotiated source carries the broker's assignment, and is
+    // readable as soon as the awaited attach returns.
+    let reply_address = receiver
+        .source()
+        .as_ref()
+        .and_then(|s| s.address.clone())
+        .ok_or("broker did not assign a dynamic reply address")?;
+    eprintln!("[reply-node] {reply_address}");
+    eprintln!("[ready]");
+
+    let payload = json!({
+        "kind": "DisplayMessage",
+        "text": "HELLO TOPAS",
+        "commandCorrelationId": command_correlation_id,
+    });
+    let body_bytes = serde_json::to_vec(&payload)?;
+
+    // Audit/tracing only under A11 — it is not how the response is routed.
+    // ApplicationProperties wraps `OrderedMap<String, SimpleValue>` in
+    // 0.14.0 (NOT the broader primitives::Value).
+    let mut app_props = ApplicationProperties::default();
+    app_props.insert(
+        "{{ headers.originator }}".to_string(),
+        SimpleValue::String(originator.clone()),
+    );
+
+    // (4) reply-to tells the processor where to answer; message-id is what
+    // its correlation-id must mirror.
+    let mut properties = Properties::default();
+    properties.message_id = Some(request_message_id.clone());
+    properties.reply_to = Some(reply_address.clone());
+    properties.content_type = Some("application/json".into());
+
+    let request = Message::builder()
+        .properties(properties)
+        .application_properties(app_props)
+        .data(body_bytes)
+        .build();
+
+    sender.send(request).await?;
+    println!("[S3] sent reply-to={reply_address} message-id={request_message_id:?} originator={originator}");
+    // Machine-readable request identity, so the conformance harness can aim
+    // defective responses at this node and prove the checks below can
+    // actually fail.
+    let request_message_id_text = match &request_message_id {
+        MessageId::String(s) => s.clone(),
+        other => format!("{other:?}"),
+    };
+    println!("[a11-request] node={reply_address} messageId={request_message_id_text}");
+
+    let deadline = Instant::now() + TOTAL_DEADLINE;
+    let mut got_terminal = false;
+    while Instant::now() < deadline {
+        // (5) this arrives on the private reply node. Anything not
+        // correlated to our request should never have been delivered here
+        // at all — under A11 that is an isolation failure, not a routine
+        // filtering step.
+        let delivery = match timeout(PER_RECV_TIMEOUT, receiver.recv::<Body<Value>>()).await {
+            Ok(Ok(d)) => d,
+            Ok(Err(e)) => {
+                eprintln!("[S3] receive failed: {e}");
+                break;
+            }
+            Err(_) => continue,
+        };
+
+        let props = delivery.message().properties.as_ref();
+        let correlation = props.and_then(|p| p.correlation_id.as_ref());
+        let to = props.and_then(|p| p.to.as_ref());
+
+        // (6a) correlation-id. Absence, transformation and routing are
+        // three different faults, counted as such. `to` is the
+        // discriminator: a response bearing someone else's correlation-id
+        // was mis-delivered if addressed elsewhere, but merely
+        // mis-correlated if addressed here. There is no "ignore what isn't
+        // mine" branch — that is the A4 behaviour A11 replaced.
+        //
+        // The comparison is `MessageId == MessageId`, which is exact in
+        // both value and variant. A uuid stays a uuid and a ulong stays a
+        // ulong, so a peer that changed the representation is reported as
+        // a transformation rather than quietly matching on its rendering.
+        match correlation {
+            None => {
+                missing_corr += 1;
+                eprintln!("[absence] response carried no correlation-id");
+            }
+            Some(actual) if *actual == request_message_id => {}
+            Some(actual) => {
+                if to.map(|t| t == &reply_address).unwrap_or(false) {
+                    wrong_corr += 1;
+                    eprintln!(
+                        "[transformation] correlation-id={actual:?} != request \
+                         message-id {request_message_id:?}, but addressed to this node"
+                    );
+                } else {
+                    foreign += 1;
+                    eprintln!(
+                        "[routing] response for correlation-id={actual:?} (to={to:?}) \
+                         reached our private reply node"
+                    );
+                }
+                let _ = receiver.accept(&delivery).await;
+                continue;
+            }
+        }
+
+        // (6b) `to` — unconditional. A11 requires the response to be
+        // addressed, and it survives delivery to a dynamic node, so
+        // absence is a fault rather than a broker quirk.
+        if to.map(|t| t.is_empty()).unwrap_or(true) {
+            missing_to += 1;
+            eprintln!("[absence] response carried no `to`");
+        }
+
+        let raw = match body_as_string(delivery.body()) {
+            Some(s) => s,
+            None => {
+                eprintln!("[S3] unhandled body representation — not degrading to a placeholder");
+                let _ = receiver.accept(&delivery).await;
+                break;
+            }
+        };
+        let parsed: Value = serde_json::from_str(&raw)?;
+        let status = parsed
+            .get("status")
+            .and_then(|s| s.as_str())
+            .unwrap_or("success")
+            .to_string();
+
+        // (6c) application correlation — mandatory in the schema, so
+        // absence fails even when the transport correlation was perfect.
+        // Matched on `Option` rather than tested for truthiness: 0 is a
+        // legitimate commandCorrelationId.
+        match parsed.get("commandCorrelationId").and_then(|v| v.as_i64()) {
+            None => {
+                missing_app += 1;
+                eprintln!("[absence] response carried no commandCorrelationId");
+            }
+            Some(app_id) if app_id == command_correlation_id => {}
+            Some(app_id) => {
+                wrong_app += 1;
+                eprintln!(
+                    "[transformation] commandCorrelationId {app_id} != {command_correlation_id}"
+                );
+            }
+        }
+        received += 1;
+
+        println!("[response] {status} {raw}");
+        let _ = receiver.accept(&delivery).await;
+        // Any status other than "pending" is terminal.
+        if status != "pending" {
+            got_terminal = true;
+            break;
+        }
+    }
+
+    if !got_terminal {
+        eprintln!(
+            "[S3] no terminal response within {}s — aborting.",
+            TOTAL_DEADLINE.as_secs()
+        );
+    }
+    // Machine-readable summary for the conformance harness. Printed before
+    // shutdown, because the close/end/close sequence below can block and a
+    // summary that never reaches the harness reads as a failed run
+    // println!(
+        "[a11] node={reply_address} expected={expected_responses} received={received} \
+         foreign={foreign} missingTo={missing_to} missingCorr={missing_corr} \
+         wrongCorr={wrong_corr} missingApp={missing_app} wrongApp={wrong_app}"
+    );
+
+    receiver.close().await?;
+    sender.close().await?;
+    session.end().await?;
+    connection.close().await?;
+    Ok(())
+}

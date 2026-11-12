@@ -1,0 +1,46 @@
+---
+title: UTMC Traffic Event Roadworks
+---
+erDiagram
+    ROADWORKS_EVENT {
+        ObjectId eventId
+        object roadworksType
+        object status
+        string publicDescription
+        string locationDescription
+        object location
+        object severity
+        string phase
+        object lanesAffected
+        int lanesRestricted
+        int lanesOperational
+        string diversionRoute
+        bool diversionInForce
+        string reportedBy
+        string confirmedBy
+        string modifiedBy
+        datetime plannedStart
+        datetime plannedEnd
+        datetime actualStart
+        datetime actualEnd
+        string contractor
+        bool trafficSignals
+        bool contraflow
+        datetime confirmedDate
+        string externalCountryCode
+        string externalSystemCode
+        string externalSituationId
+        int externalSituationVersion
+    }
+
+    ROADWORKS_TYPE {
+        enum centralReservation
+        enum general
+        enum overhead
+        enum surface
+        enum verge
+        enum waterMainWork
+        enum other
+    }
+
+

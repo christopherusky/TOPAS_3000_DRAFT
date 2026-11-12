@@ -1,0 +1,58 @@
+---
+title: UTMC Traffic Event Accident
+---
+erDiagram
+    ACCIDENT_EVENT {
+        ObjectId eventId
+        object accidentType
+        object status
+        string publicDescription
+        string locationDescription
+        object location
+        object severity
+        string phase
+        object lanesAffected
+        int lanesRestricted
+        int lanesOperational
+        string diversionRoute
+        bool diversionInForce
+        string reportedBy
+        string confirmedBy
+        string modifiedBy
+        datetime accidentTime
+        datetime endTime
+        int vehicleCount
+        string lightConditions
+        string roadConditions
+        string weatherConditions
+        datetime statisticDate
+        string externalCountryCode
+        string externalSystemCode
+        string externalSituationId
+        int externalSituationVersion
+    }
+
+    ACCIDENT_TYPE {
+        enum accident
+        enum busAccident
+        enum collision
+        enum investigationWork
+        enum chemicalSpillage
+        enum fuelSpillage
+        enum hazardousMaterials
+        enum heavyLorry
+        enum jackKnifedArticulatedLorry
+        enum jackKnifedCaravan
+        enum jackKnifedTrailer
+        enum multiVehicle
+        enum oilSpillage
+        enum overturnedHeavyLorry
+        enum overturnedTrailer
+        enum overturnedVehicle
+        enum secondaryAccident
+        enum seriousAccident
+        enum shedLoad
+        enum other
+    }
+
+

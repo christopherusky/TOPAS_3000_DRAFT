@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/traffic_signal/traffic_signal_command_response-v1.0.json",
+  "$ref": "#/$defs/TrafficSignalCommandResponse",
+  "$defs": {
+    "TrafficSignalCommandResponse": {
+      "additionalProperties": false,
+      "description": "Traffic signal command response (reused from TS004.0061:2010 Annex D).",
+      "properties": {
+        "trafficSignalId": {
+          "description": "Identifier of the traffic signal the command targeted.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "commandCorrelationId": {
+          "description": "Correlation identifier copied verbatim from the originating command request. Not an identifier of the command itself.",
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "status": {
+          "$ref": "../common/common-v1.0.json#/$defs/CommandResponseStatus",
+          "description": "Outcome of the command execution."
+        },
+        "responseTime": {
+          "description": "When the response was generated.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "code": {
+          "type": "string",
+          "description": "Machine-readable response code for programmatic handling."
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable response message with details."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions."
+        }
+      },
+      "required": [
+        "trafficSignalId",
+        "commandCorrelationId",
+        "status",
+        "responseTime"
+      ],
+      "type": "object",
+      "title": "UTMC Traffic Signal 0064 Command Response"
+    }
+  }
+}

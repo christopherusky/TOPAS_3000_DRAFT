@@ -1,0 +1,61 @@
+---
+title: UTMC Detector Measurement
+---
+erDiagram
+    FLOW_DYNAMIC {
+        ObjectId detectorId FK
+        datetime timestamp
+        object quality
+        string kind
+        int totalFlow
+        int periodSeconds
+        any[] classCounts
+    }
+
+    HEADWAY_DYNAMIC {
+        ObjectId detectorId FK
+        datetime timestamp
+        object quality
+        string kind
+        number meanHeadwaySeconds
+        int periodSeconds
+    }
+
+    OCCUPANCY_DYNAMIC {
+        ObjectId detectorId FK
+        datetime timestamp
+        object quality
+        string kind
+        number occupancyPercent
+        int periodSeconds
+    }
+
+    QUEUE_DYNAMIC {
+        ObjectId detectorId FK
+        datetime timestamp
+        object quality
+        string kind
+        bool queuePresent
+        enum severity
+    }
+
+    SPEED_DYNAMIC {
+        ObjectId detectorId FK
+        datetime timestamp
+        object quality
+        string kind
+        number meanSpeedKph
+        int periodSeconds
+    }
+
+    DETECTOR_MEASUREMENT {
+        string kind
+    }
+
+    DETECTOR_MEASUREMENT ||--|| FLOW_DYNAMIC : "flow"
+    DETECTOR_MEASUREMENT ||--|| OCCUPANCY_DYNAMIC : "occupancy"
+    DETECTOR_MEASUREMENT ||--|| QUEUE_DYNAMIC : "queue"
+    DETECTOR_MEASUREMENT ||--|| SPEED_DYNAMIC : "speed"
+    DETECTOR_MEASUREMENT ||--|| HEADWAY_DYNAMIC : "headway"
+
+

@@ -1,0 +1,18 @@
+---
+title: UTMC Transport Link Definition
+---
+erDiagram
+    TRANSPORT_LINK_DEFINITION {
+        ObjectId transportLinkId PK
+        TypeId typeId FK
+        datetime creationDate
+        object location
+        object endPoint
+        string shortDescription
+        string longDescription
+        ParticipantId participantId
+        ParticipantId originatingParticipantId
+        ObjectId originatingObjectId
+    }
+
+

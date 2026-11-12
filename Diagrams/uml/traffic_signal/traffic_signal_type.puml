@@ -1,0 +1,27 @@
+@startuml
+title UTMC Traffic Signal 0064 Type
+!pragma layout smetana
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam classFontSize 14
+skinparam classAttributeFontSize 11
+skinparam classFontStyle bold
+skinparam dpi 150
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam class {
+  BackgroundColor #FEFEFE
+  BorderColor #333333
+  ArrowColor #555555
+}
+scale max 3508*2480
+
+class TrafficSignalType {
+  +typeId: TypeId
+  +description: string
+   notes: string
+   specificationLink: uri
+   extensions: object
+}
+
+@enduml

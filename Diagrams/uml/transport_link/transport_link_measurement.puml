@@ -1,0 +1,75 @@
+@startuml
+title UTMC Transport Link Measurement
+!pragma layout smetana
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam classFontSize 14
+skinparam classAttributeFontSize 11
+skinparam classFontStyle bold
+skinparam dpi 150
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam class {
+  BackgroundColor #FEFEFE
+  BorderColor #333333
+  ArrowColor #555555
+}
+scale max 3508*2480
+
+class TransportLinkANPRDynamic {
+  +transportLinkId: ObjectId
+  +timestamp: datetime
+   quality: Quality
+   averageSpeedKph: number
+   linkTravelTimeSeconds: number
+  +kind: "anpr"
+   numberPlatesIn: integer
+   numberPlatesOut: integer
+   numberPlatesMatches: integer
+   numberPlatesMatchesUsed: integer
+   extensions: object
+}
+
+class TransportLinkGPSDynamic {
+  +transportLinkId: ObjectId
+  +timestamp: datetime
+   quality: Quality
+   averageSpeedKph: number
+   linkTravelTimeSeconds: number
+  +kind: "gps"
+   currentJourneyTimeSeconds: number
+   meanTravelTimeSeconds: number
+   medianTravelTimeSeconds: number
+   varianceTravelTimeSeconds: number
+   numberOfVehicles: integer
+   reservedLaneFlowVehicles: number
+   extensions: object
+}
+
+class TransportLinkSCOOTDynamic {
+  +transportLinkId: ObjectId
+  +timestamp: datetime
+   quality: Quality
+   averageSpeedKph: number
+   linkTravelTimeSeconds: number
+  +kind: "scoot"
+   congestionPercent: number
+   currentFlowVehicles: number
+   occupancyPercent: number
+   extensions: object
+}
+
+class TransportLinkMeasurement <<union>> {
+  discriminator: kind
+}
+
+class Quality <<../common/common>> #EEEEEE
+
+TransportLinkMeasurement <|-- TransportLinkSCOOTDynamic
+TransportLinkMeasurement <|-- TransportLinkANPRDynamic
+TransportLinkMeasurement <|-- TransportLinkGPSDynamic
+TransportLinkANPRDynamic ..> Quality : quality
+TransportLinkGPSDynamic ..> Quality : quality
+TransportLinkSCOOTDynamic ..> Quality : quality
+
+@enduml

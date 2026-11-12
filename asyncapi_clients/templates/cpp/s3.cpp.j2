@@ -1,0 +1,162 @@
+#include <cstdlib>
+#include <iostream>
+#include <random>
+#include <sstream>
+#include <string>
+
+#include <proton/connection.hpp>
+#include <proton/container.hpp>
+#include <proton/delivery.hpp>
+#include <proton/message.hpp>
+#include <proton/messaging_handler.hpp>
+#include <proton/receiver.hpp>
+#include <proton/sender.hpp>
+
+#include <nlohmann/json.hpp>
+
+/**
+ * Scenario S3 — Publish a command, await its response.
+ *
+ * Demonstrates: publishing a VMS DisplayMessage command to
+ * {{ channels.vms_command }} with the {{ headers.originator }} AMQP
+ * application property set so the broker routes the response back to
+ * this client; subscribing to {{ channels.vms_command_response }} and
+ * matching the reply by AMQP correlation_id (A4 + A6).
+ */
+class S3 : public proton::messaging_handler {
+    std::string url_;
+    std::string originator_;
+    std::string correlation_id_;
+    proton::sender sender_;
+    bool sent_ = false;
+
+public:
+    S3(std::string url, std::string originator, std::string correlation_id)
+        : url_(std::move(url)),
+          originator_(std::move(originator)),
+          correlation_id_(std::move(correlation_id)) {}
+
+    void on_container_start(proton::container& c) override {
+        c.connect(url_);
+    }
+
+    void on_connection_open(proton::connection& conn) override {
+        sender_ = conn.open_sender("{{ channels.vms_command }}");
+        // In production, the receiver below would be created with a
+        // header filter on {{ headers.originator }} = originator_ (A4).
+        // Filter syntax is broker-specific; matching on correlation_id
+        // alone is enough for this round-trip demo.
+        conn.open_receiver("{{ channels.vms_command_response }}");
+        // Readiness handshake: the harness waits for this
+        // before starting the publisher.
+        std::cerr << "[ready]" << std::endl;
+    }
+
+    void on_sendable(proton::sender& s) override {
+        if (sent_ || s.credit() <= 0) {
+            return;
+        }
+        // Tip: a typed SDK is not yet generated for C++; build the
+        // JSON body with nlohmann/json or by hand. The schema ships in
+        // Schemas/vms/vms_command-v1.0.json.
+        nlohmann::json command = {
+            {"kind", "DisplayMessage"},
+            {"text", "HELLO TOPAS"},
+        };
+        std::string body = command.dump();
+
+        proton::message msg;
+        msg.body(body);
+        msg.content_type("application/json");
+        msg.correlation_id(correlation_id_);
+        msg.properties().put("{{ headers.originator }}", originator_);
+
+        s.send(msg);
+        sent_ = true;
+        std::cout << "[S3] sent command correlationId=" << correlation_id_
+                  << " originator=" << originator_ << std::endl;
+    }
+
+    void on_message(proton::delivery& d, proton::message& msg) override {
+        std::string reply_corr;
+        try {
+            reply_corr = proton::get<std::string>(msg.correlation_id());
+        } catch (const proton::conversion_error&) {
+            reply_corr = proton::to_string(msg.correlation_id());
+        }
+        if (reply_corr != correlation_id_) {
+            return;  // not our response
+        }
+        const std::string body = body_as_string(msg);
+        // Loop until the responder sends a terminal-status frame
+        // Any status other than "pending" is terminal — the
+        // inclusive check also treats the legacy responder's "OK"
+        // status as terminal so this template stays
+        // backwards-compatible. Status extraction here uses
+        // nlohmann/json (already a dependency for sending) so it's
+        // robust against escaped quotes inside other string fields.
+        std::string status = "success";
+        try {
+            auto parsed = nlohmann::json::parse(body);
+            if (parsed.is_object() && parsed.contains("status")
+                    && parsed["status"].is_string()) {
+                status = parsed["status"].get<std::string>();
+            }
+        } catch (const nlohmann::json::parse_error&) {
+            // Fall through with status="success".
+        }
+        std::cout << "[response] " << status << " " << body << std::endl;
+        if (status != "pending") {
+            d.connection().close();
+        }
+    }
+
+private:
+    static std::string body_as_string(const proton::message& msg) {
+        const proton::value& body = msg.body();
+        if (body.empty()) {
+            return std::string();
+        }
+        try {
+            return proton::get<std::string>(body);
+        } catch (const proton::conversion_error&) {
+            try {
+                proton::binary b = proton::get<proton::binary>(body);
+                return std::string(b.begin(), b.end());
+            } catch (const proton::conversion_error&) {
+                return proton::to_string(body);
+            }
+        }
+    }
+};
+
+/** Small helper to mint a UUID-ish string without an external dep. */
+static std::string make_correlation_id() {
+    std::random_device rd;
+    std::mt19937_64 gen(rd());
+    std::uniform_int_distribution<uint64_t> dist;
+    std::ostringstream os;
+    os << std::hex << dist(gen) << "-" << dist(gen);
+    return os.str();
+}
+
+int main(int argc, char* argv[]) {
+    (void)argc;
+    (void)argv;
+
+    const char* env_url = std::getenv("TOPAS_AMQP_URL");
+    std::string url = env_url ? env_url : "amqps://localhost:5671";
+
+    const char* env_orig = std::getenv("TOPAS_ORIGINATOR");
+    std::string originator = env_orig ? env_orig : "asyncapi-clients-s3-demo";
+
+    S3 handler(url, originator, make_correlation_id());
+    proton::container c(handler);
+    try {
+        c.run();
+    } catch (const std::exception& e) {
+        std::cerr << "[S3] AMQP error: " << e.what() << std::endl;
+        return 1;
+    }
+    return 0;
+}

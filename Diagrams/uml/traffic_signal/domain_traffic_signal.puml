@@ -1,0 +1,292 @@
+@startuml
+title UTMC Traffic Signal Domain
+!pragma layout smetana
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam classFontSize 14
+skinparam classAttributeFontSize 11
+skinparam classFontStyle bold
+skinparam dpi 150
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam class {
+  BackgroundColor #FEFEFE
+  BorderColor #333333
+  ArrowColor #555555
+}
+scale max 4961*3508
+
+' ── traffic_signal_command ──
+class ForceStageCommand {
+  +trafficSignalId: ObjectId
+  +commandCorrelationId: integer
+  +requestTime: datetime
+  +kind: "forceStage"
+  +stageNumber: integer
+   extensions: object
+}
+
+class HoldStageCommand {
+  +trafficSignalId: ObjectId
+  +commandCorrelationId: integer
+  +requestTime: datetime
+  +kind: "holdStage"
+  +stageNumber: integer
+   extensions: object
+}
+
+class RequestStatusCommand {
+  +trafficSignalId: ObjectId
+  +commandCorrelationId: integer
+  +requestTime: datetime
+  +kind: "requestStatus"
+   extensions: object
+}
+
+class SetPlanCommand {
+  +trafficSignalId: ObjectId
+  +commandCorrelationId: integer
+  +requestTime: datetime
+  +kind: "setPlan"
+  +planNumber: integer
+   extensions: object
+}
+
+class SynchronizeClockCommand {
+  +trafficSignalId: ObjectId
+  +commandCorrelationId: integer
+  +requestTime: datetime
+  +kind: "synchronizeClock"
+  +targetTime: datetime
+   extensions: object
+}
+
+class TrafficSignalCommand <<union>> {
+  discriminator: kind
+}
+
+' ── traffic_signal_command_response ──
+class TrafficSignalCommandResponse {
+  +trafficSignalId: ObjectId
+  +commandCorrelationId: integer
+  +status: CommandResponseStatus
+  +responseTime: datetime
+   code: string
+   message: string
+   extensions: object
+}
+
+' ── traffic_signal_configuration ──
+class TrafficSignalConfiguration {
+  +trafficSignalId: ObjectId
+   controllerType: string
+   supplier: string
+   trafficSignalType: TrafficSignalTypeEnum
+   configurationDate: datetime
+   subArea: string
+   userCodeNumber: string
+   extensions: object
+}
+
+enum TrafficSignalTypeEnum {
+  intersection
+  pegasus
+  pelican
+  puffin
+  toucan
+  tramCrossing
+  wigWag
+  other
+}
+
+' ── traffic_signal_definition ──
+class TrafficSignalDefinition {
+  +trafficSignalId: ObjectId
+   location: GeoJsonPoint
+   controlMethodId: TypeId
+   creationDate: datetime
+   shortDescription: string
+   longDescription: string
+   participantId: ParticipantId
+   originatingParticipantId: ParticipantId
+   originatingObjectId: ObjectId
+   extensions: object
+}
+
+' ── traffic_signal_fault ──
+class TrafficSignalFault {
+  +trafficSignalId: ObjectId
+   faultTypeId: TypeId
+   trafficSignalFaultType: TrafficSignalFaultEnum
+  +faultLastUpdateTime: datetime
+   faultIdentifier: string
+   faultDescription: string
+   faultCreationTime: datetime
+   faultSeverity: FaultSeverityEnum
+   trafficSignalFaultClearanceTime: datetime
+   trafficSignalFaultUrgency: UrgencyEnum
+   trafficSignalManufacturerFaultCode: string
+   parameters: list<string>
+   extensions: object
+}
+
+enum FaultSeverityEnum {
+  low
+  medium
+  high
+  unknown
+}
+
+enum TrafficSignalFaultEnum {
+  detectorFault
+  electronicsFault
+  indicatorFault
+  lampFault
+  mechanicalFault
+  utilityFault
+  other
+}
+
+enum UrgencyEnum {
+  extremelyUrgent
+  urgent
+  normalUrgency
+  unknown
+}
+
+' ── traffic_signal_history ──
+class TrafficSignalHistoryEntry {
+  +trafficSignalId: ObjectId
+  +logId: integer
+  +logDate: datetime
+  +logEntry: string
+   logUser: string
+   eventType: string
+   extensions: object
+}
+
+' ── traffic_signal_measurement ──
+class PlanLine {
+  +planNumber: integer
+   planStartTime: datetime
+   cycleTime: integer
+   planDescription: string
+   offset: integer
+   signalGroupTimings: list<SignalGroupTimings>
+   extensions: object
+}
+
+class SignalGroupTimings {
+  +primarySignalGroup: string
+  +primarySignalGroupDuration: integer
+   alternateSignalGroup: string
+   extensions: object
+}
+
+class TrafficSignalDynamicState {
+  +trafficSignalId: ObjectId
+  +timestamp: datetime
+  +trafficSignalMode: TrafficSignalModeEnum
+   trafficSignalSubMode: TrafficSignalSubModeEnum
+   subArea: string
+   planLine: PlanLine
+   extensions: object
+}
+
+enum TrafficSignalModeEnum {
+  localMode
+  centralMode
+  signalsOffMode
+  startUpMode
+  unknownMode
+}
+
+enum TrafficSignalSubModeEnum {
+  cablelessLinking
+  fixedModeSimpleOrLinked
+  fixedModeToCurrentMax
+  manualMode
+  manualStepOn
+  movaMode
+  otherDistributedMode
+  preEmptLevel1
+  preEmptLevel2
+  preEmptLevel3
+  utcFixedTime
+  utcOtherCentralControlMethod
+  utcScoot
+  vehicleActuated
+  wardenControl
+}
+
+' ── traffic_signal_sync_complete ──
+class SyncComplete {
+  +syncCorrelationId: integer
+   syncId: string
+  +status: SyncStatus
+  +objectCount: integer
+  +completedTime: datetime
+   message: string
+   extensions: object
+}
+
+enum SyncStatus {
+  success
+  rejected
+  failed
+}
+
+' ── traffic_signal_sync_request ──
+class SyncRequest {
+  +syncCorrelationId: integer
+  +requestTime: datetime
+   categories: list<SyncCategoryEnum>
+   objectIds: list<ObjectId>
+   subArea: string
+   typeId: TypeId
+   activeOnly: boolean
+   since: datetime
+   extensions: object
+}
+
+enum SyncCategoryEnum {
+  definition
+  configuration
+  measurement
+  fault
+  type
+  status
+}
+
+' ── traffic_signal_type ──
+class TrafficSignalType {
+  +typeId: TypeId
+  +description: string
+   notes: string
+   specificationLink: uri
+   extensions: object
+}
+
+' ── External types ──
+class CommandResponseStatus <<../common/common>> #EEEEEE
+class GeoJsonPoint <<../common/common>> #EEEEEE
+
+TrafficSignalCommand <|-- SetPlanCommand
+TrafficSignalCommand <|-- ForceStageCommand
+TrafficSignalCommand <|-- HoldStageCommand
+TrafficSignalCommand <|-- SynchronizeClockCommand
+TrafficSignalCommand <|-- RequestStatusCommand
+TrafficSignalCommandResponse ..> CommandResponseStatus : status
+TrafficSignalConfiguration --> TrafficSignalTypeEnum : trafficSignalType
+TrafficSignalDefinition ..> GeoJsonPoint : location
+TrafficSignalFault --> TrafficSignalFaultEnum : trafficSignalFaultType
+TrafficSignalFault --> FaultSeverityEnum : faultSeverity
+TrafficSignalFault --> UrgencyEnum : trafficSignalFaultUrgency
+PlanLine --> SignalGroupTimings : signalGroupTimings
+TrafficSignalDynamicState --> TrafficSignalModeEnum : trafficSignalMode
+TrafficSignalDynamicState --> TrafficSignalSubModeEnum : trafficSignalSubMode
+TrafficSignalDynamicState --> PlanLine : planLine
+SyncComplete --> SyncStatus : status
+SyncRequest --> SyncCategoryEnum : categories
+
+@enduml

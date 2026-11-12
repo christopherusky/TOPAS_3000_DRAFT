@@ -1,0 +1,90 @@
+{
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/vms/vms_sync_request-v1.0.json",
+  "$ref": "#/$defs/SyncRequest",
+  "$defs": {
+    "SyncCategoryEnum": {
+      "description": "Data categories a sync may be restricted to.\n\nMirrors the schema-per-category pattern: a subscriber that only holds\na fault dashboard asks for ``fault`` alone rather than provoking a\nfull republication of every definition and configuration it already\nhas.",
+      "enum": [
+        "definition",
+        "configuration",
+        "measurement",
+        "fault",
+        "type",
+        "status"
+      ],
+      "type": "string"
+    },
+    "SyncRequest": {
+      "additionalProperties": false,
+      "description": "Request the current state of vms objects. The Data Publisher answers to the request's reply-to address, not the domain's data channels: a sync batch (x-message-mode: sync, x-sync-id/-sequence/-total) followed by a SyncComplete.",
+      "properties": {
+        "syncCorrelationId": {
+          "description": "Caller-assigned identifier correlating this request with the sync batch that answers it. The Data Publisher echoes it in the batch's x-sync-request-id header. Not an identifier of the sync itself \u2014 that is x-sync-id. Named to avoid collision with the AMQP 1.0 correlation-id message property, as for commandCorrelationId.",
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "requestTime": {
+          "description": "When the request was issued.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "categories": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SyncCategoryEnum"
+          },
+          "minItems": 1,
+          "description": "Restrict the sync to these data categories. Omitted means every category the domain publishes."
+        },
+        "objectIds": {
+          "type": "array",
+          "items": {
+            "description": "Unique identifier of an object. String of 1-32 characters from A-Z, a-z, 0-9 and . _ : - (no spaces), unique within object type within system.",
+            "maxLength": 32,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9._:-]+$",
+            "title": "ObjectId",
+            "type": "string"
+          },
+          "minItems": 1,
+          "description": "Restrict the sync to these objects. Omitted means every object of the requested categories."
+        },
+        "subArea": {
+          "type": "string",
+          "maxLength": 32,
+          "minLength": 1,
+          "description": "Restrict the sync to objects in this sub-area. Omitted means every sub-area."
+        },
+        "typeId": {
+          "type": "string",
+          "description": "Restrict the sync to objects of this type. Omitted means every type.",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^\\S(?:[\\s\\S]*\\S)?$",
+          "title": "TypeId"
+        },
+        "activeOnly": {
+          "type": "boolean",
+          "description": "Restrict the sync to objects in an active state \u2014 for faults, those not yet cleared. Omitted is equivalent to false. This is the filter behind \"send me every active fault\": without it a subscriber would receive the full fault history it does not want."
+        },
+        "since": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Restrict the sync to objects changed at or after this time. Intended for a subscriber recovering from a known-length outage; omitted means no lower bound."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or forward-compatibility extensions."
+        }
+      },
+      "required": [
+        "syncCorrelationId",
+        "requestTime"
+      ],
+      "type": "object",
+      "title": "UTMC VMS Sync Request"
+    }
+  }
+}

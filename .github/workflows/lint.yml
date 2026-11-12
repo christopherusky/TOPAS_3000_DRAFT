@@ -1,0 +1,60 @@
+# lint.yml — metaschema validation for the generated JSON Schemas.
+#
+# This workflow existed but had never checked anything.
+#
+# It triggered on pull_request only, and the repo is trunk-based — changes
+# land by direct push, so it never fired. That alone was enough.
+#
+# It also carried a second, latent fault: the glob was `Schemas/*.json`,
+# but the schemas live in per-domain subdirectories, so it matched nothing
+# and bash passed the pattern through literally. That would have crashed
+# with FileNotFoundError and failed the job the first time it ran — a loud
+# failure nobody was ever shown, not a silent pass.
+#
+# The `find`-based form below cannot crash that way, which is exactly why
+# the file count is asserted: an empty result here really would pass
+# vacuously if these paths ever move.
+#
+# Origin:    Hand-written; repaired 2026-08-28
+# Author:    Christopher Kettell, TRL Software
+# License:   Apache-2.0
+name: Lint JSON Schemas
+
+on:
+  pull_request:
+    branches: [trunk, main, master]
+  push:
+    branches: [trunk, main, master]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # Pinned: the metaschema checks tighten between releases, and an
+          # unpinned lint can go red on a day nothing in this repo changed.
+          # Same reasoning as the datamodel-code-generator pin.
+          pip install 'check-jsonschema==0.38.0'
+
+      - name: Lint JSON Schemas (Draft 2020-12 metaschema)
+        run: |
+          set -euo pipefail
+          # find, not a shell glob: `Schemas/**/*.json` needs globstar and
+          # fails open without it, which is how this workflow came to lint
+          # nothing at all.
+          mapfile -t schemas < <(find Schemas Schemas_asyncapi -name '*.json' | sort)
+          echo "Found ${#schemas[@]} schema file(s)"
+          if [ "${#schemas[@]}" -eq 0 ]; then
+            echo "::error::no schema files found — the lint would pass vacuously"
+            exit 1
+          fi
+          check-jsonschema --check-metaschema "${schemas[@]}"

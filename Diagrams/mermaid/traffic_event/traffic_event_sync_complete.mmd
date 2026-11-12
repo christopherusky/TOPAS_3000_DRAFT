@@ -1,0 +1,20 @@
+---
+title: UTMC Traffic event Sync Complete
+---
+erDiagram
+    SYNC_COMPLETE {
+        int syncCorrelationId
+        string syncId
+        object status
+        int objectCount
+        datetime completedTime
+        string message
+    }
+
+    SYNC_STATUS {
+        enum success
+        enum rejected
+        enum failed
+    }
+
+

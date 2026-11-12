@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2008 (http://www.altova.com) by Nicholas Knowles Knowles (Kizoom Ltd) -->
+<xsd:schema xmlns="http://localhost/services/utmc/v1" xmlns:siri="http://www.siri.org.uk/siri" xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://localhost/services/utmc/v1" elementFormDefault="qualified" attributeFormDefault="unqualified" version="1.0" id="utmc_all_quantiseds">
+	<!-- ===Dependencies ======================================= -->
+	<xsd:include schemaLocation="utmc_quantised_transport_route-v1.0.xsd"/>
+	<xsd:include schemaLocation="utmc_quantised_transport_link-v1.0.xsd"/>
+	<xsd:include schemaLocation="utmc_quantised_access_control-v1.0.xsd"/>
+	<xsd:include schemaLocation="utmc_quantised_air_quality-v1.0.xsd"/>
+	<xsd:include schemaLocation="utmc_quantised_cctv-v1.0.xsd"/>
+	<xsd:include schemaLocation="utmc_quantised_car_park-v1.0.xsd"/>
+	<xsd:include schemaLocation="utmc_quantised_detector-v1.0.xsd"/>
+	<xsd:include schemaLocation="utmc_quantised_traffic_signal-v1.0.xsd"/>
+	<!-- ======================================================================= -->
+	<!-- ===eGIF/GovTalk Documentation ======================================= -->
+	<xsd:annotation>
+		<xsd:appinfo>
+			<Metadata xmlns="http://www.govtalk.gov.uk/CM/gms-xs">
+				<Aggregation>main schema</Aggregation>
+				<Audience>e-service developers</Audience>
+				<Contributor>Freeflow Project. UTMC XML working Group. See main package headers </Contributor>
+				<Coverage>United Kingdom</Coverage>
+				<Creator>Drafted for version 1.0   FREEFLOW. Nick Knowles Kizoom mailto:schemer@/www.utmc.uk.com/</Creator>
+				<Date>
+					<Created>2009-04-01</Created>
+					<!-- Documentation headers added -->
+				</Date>
+				<Description>
+					<p>UtmcXml is an XML representation of the Urban Traffic Management Control model that can be used to exchange data objects between UTMC databases and other services.</p>. 
+					<p>This subschema aggregates all  the    UTMC Prediction  and Profile Data  Objects. </p>
+				</Description>
+				<Format>
+					<MediaType>text/xml</MediaType>
+					<Syntax>http://www.w3.org/2001/XMLSchema</Syntax>
+					<Description>XML schema, W3C Recommendation 2001</Description>
+				</Format>
+				<Identifier>{http://www.utmc.uk.com/schemas/1.0/utmc/}utmc_all_quantiseds-v1.0.xsd</Identifier>
+				<Language>[ISO 639-2/B] ENG</Language>
+				<Publisher>Kizoom, 109-123 Clifton Street, London EC4A 4LD </Publisher>
+				<Relation>
+					<Requires>http://www.utmc.uk.com/schemas/1.0/utmc/utmc_quantised_transport_route-v1.0.xsd</Requires>
+					<Requires>http://www.utmc.uk.com/schemas/1.0/utmc/utmc_quantised_transport_link-v1.0.xsd</Requires>
+					<Requires>http://www.utmc.uk.com/schemas/1.0/utmc/utmc_quantised_access_control-v1.0.xsd</Requires>
+					<Requires>http://www.utmc.uk.com/schemas/1.0/utmc/utmc_quantised_air_quality-v1.0.xsd</Requires>
+					<Requires>http://www.utmc.uk.com/schemas/1.0/utmc/utmc_quantised_detector-v1.0.xsd</Requires>
+					<Requires>http://www.utmc.uk.com/schemas/1.0/utmc/utmc_quantised_car_park-v1.0.xsd</Requires>
+					<Requires>http://www.utmc.uk.com/schemas/1.0/utmc/utmc_quantised_cctv-v1.0.xsd</Requires>
+					<Requires>http://www.utmc.uk.com/schemas/1.0/utmc/utmc_quantised_traffic_signal-v1.0.xsd</Requires>
+				</Relation>
+				<Rights>Unclassified
+                            <Copyright>Freeflow, UTMC  2009</Copyright>
+				</Rights>
+				<Source>
+					<p>Derived from the UTMC specification and SIRI standards.
+							<ul>
+							<li>UTMC Data Object specification: ts004.003annexdapr07.xls</li>
+							<li>UTMC UML specification: ts004-004a-annexd-sep08.pdf  - </li>
+						</ul>
+					</p>
+				</Source>
+				<Status>Version 1.0 Draft for approval</Status>
+				<Subject>
+					<Category>Arts, recreation and travel, Tourism, Travel (tourism), Transport,
+Public transport, Bus services, Coach services, Bus stops and stations,
+Business and industry, Transport, 
+Roads and road transport
+</Category>
+					<Project>Freeflow UtmcXml Interface</Project>
+				</Subject>
+				<Title>UTMC XML schema.   Subschema  aggregating  all UTMC Prediction and Profile Data Objects.</Title>
+				<Type>Standard</Type>
+			</Metadata>
+		</xsd:appinfo>
+	</xsd:annotation>
+	<!-- === Root Element for conversion compatibility === -->
+	<xsd:element name="AllQuantiseds">
+		<xsd:annotation>
+			<xsd:documentation>Root element aggregating all UTMC prediction and profile data objects.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:any namespace="##targetNamespace" minOccurs="0" maxOccurs="unbounded"/>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+</xsd:schema>

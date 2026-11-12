@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+uv.lock
+node_modules/
+
+# Throwaway TLS certificates for the conformance broker (make_certs.sh)
+asyncapi_clients/smoketest/tls/certs/

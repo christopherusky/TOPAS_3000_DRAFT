@@ -1,0 +1,112 @@
+#include <cstdlib>
+#include <iostream>
+#include <string>
+
+#include <proton/connection.hpp>
+#include <proton/connection_options.hpp>
+#include <proton/container.hpp>
+#include <proton/delivery.hpp>
+#include <proton/message.hpp>
+#include <proton/messaging_handler.hpp>
+#include <proton/receiver.hpp>
+
+#include <nlohmann/json.hpp>
+
+/**
+ * Scenario S1 — Subscribe to {{ channels.detector_measurement }} and print each message.
+ *
+ * Demonstrates: connect over AMQP 1.0 + mTLS, subscribe to a single
+ * channel, parse the JSON payload, print, exit after the first N
+ * messages.
+ *
+ * Tip: a typed SDK is not yet generated for C++ (deferred
+ * to a follow-up sub-project); deserialize the JSON to a struct of
+ * your choosing — nlohmann/json's `j.get<T>()` is the usual bridge
+ * once the SDK ships.
+ */
+class S1 : public proton::messaging_handler {
+    std::string url_;
+    std::string channel_;
+    int max_messages_;
+    int received_ = 0;
+
+public:
+    S1(std::string url, std::string channel, int max_messages)
+        : url_(std::move(url)),
+          channel_(std::move(channel)),
+          max_messages_(max_messages) {}
+
+    void on_container_start(proton::container& c) override {
+        c.connect(url_);
+    }
+
+    void on_connection_open(proton::connection& conn) override {
+        conn.open_receiver(channel_);
+        // Readiness handshake: the harness waits for this
+        // before starting the publisher.
+        std::cerr << "[ready]" << std::endl;
+    }
+
+    void on_message(proton::delivery& d, proton::message& msg) override {
+        std::string body = body_as_string(msg);
+        try {
+            auto payload = nlohmann::json::parse(body);
+            std::cout << "[" << (received_ + 1) << "] " << payload.dump()
+                      << std::endl;
+        } catch (const nlohmann::json::parse_error& e) {
+            std::cerr << "[S1] JSON parse error: " << e.what() << std::endl;
+        }
+        ++received_;
+        if (received_ >= max_messages_) {
+            d.connection().close();
+        }
+    }
+
+private:
+    /**
+     * Read the AMQP message body as a UTF-8 string. TOPAS 3000A puts
+     * JSON in the AMQP value/data section by default (A1) — usually as
+     * a string body, occasionally as binary; tolerant readers across
+     * both encodings are cheap insurance.
+     */
+    static std::string body_as_string(const proton::message& msg) {
+        const proton::value& body = msg.body();
+        if (body.empty()) {
+            return std::string();
+        }
+        try {
+            return proton::get<std::string>(body);
+        } catch (const proton::conversion_error&) {
+            try {
+                proton::binary b = proton::get<proton::binary>(body);
+                return std::string(b.begin(), b.end());
+            } catch (const proton::conversion_error&) {
+                return proton::to_string(body);
+            }
+        }
+    }
+};
+
+int main(int argc, char* argv[]) {
+    (void)argc;
+    (void)argv;
+
+    const char* env_url = std::getenv("TOPAS_AMQP_URL");
+    std::string url = env_url ? env_url : "amqps://localhost:5671";
+
+    const char* env_max = std::getenv("TOPAS_MAX_MESSAGES");
+    int max_messages = env_max ? std::atoi(env_max) : 5;
+    if (max_messages <= 0) {
+        max_messages = 5;
+    }
+
+    S1 handler(url, "{{ channels.detector_measurement }}", max_messages);
+    proton::container c(handler);
+    try {
+        c.run();
+    } catch (const std::exception& e) {
+        std::cerr << "[S1] AMQP error: " << e.what() << std::endl;
+        return 1;
+    }
+    return 0;
+}

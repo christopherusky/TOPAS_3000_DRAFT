@@ -1,0 +1,37 @@
+@startuml
+title UTMC VMS Sync Complete
+!pragma layout smetana
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam classFontSize 14
+skinparam classAttributeFontSize 11
+skinparam classFontStyle bold
+skinparam dpi 150
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam class {
+  BackgroundColor #FEFEFE
+  BorderColor #333333
+  ArrowColor #555555
+}
+scale max 3508*2480
+
+class SyncComplete {
+  +syncCorrelationId: integer
+   syncId: string
+  +status: SyncStatus
+  +objectCount: integer
+  +completedTime: datetime
+   message: string
+   extensions: object
+}
+
+enum SyncStatus {
+  success
+  rejected
+  failed
+}
+
+SyncComplete --> SyncStatus : status
+
+@enduml

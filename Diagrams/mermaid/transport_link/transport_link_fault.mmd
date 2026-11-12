@@ -1,0 +1,24 @@
+---
+title: UTMC Transport Link Fault
+---
+erDiagram
+    TRANSPORT_LINK_FAULT {
+        ObjectId transportLinkId FK
+        int faultId PK
+        TypeId faultTypeId FK
+        string supplierFaultNumber
+        TypeId subsystemTypeId
+        bool equipmentFault
+        bool communicationsFault
+        datetime creationDate
+        datetime lastUpdated
+        datetime clearedDate
+        string description
+        object acknowledgementState
+        datetime acknowledgementDate
+        int severity
+        object status
+        string[] parameters
+    }
+
+

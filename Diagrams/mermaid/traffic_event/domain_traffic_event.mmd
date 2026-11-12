@@ -1,0 +1,357 @@
+---
+title: UTMC Traffic Event Domain
+---
+erDiagram
+    ACCIDENT_TYPE {
+        enum accident
+        enum busAccident
+        enum collision
+        enum investigationWork
+        enum chemicalSpillage
+        enum fuelSpillage
+        enum hazardousMaterials
+        enum heavyLorry
+        enum jackKnifedArticulatedLorry
+        enum jackKnifedCaravan
+        enum jackKnifedTrailer
+        enum multiVehicle
+        enum oilSpillage
+        enum overturnedHeavyLorry
+        enum overturnedTrailer
+        enum overturnedVehicle
+        enum secondaryAccident
+        enum seriousAccident
+        enum shedLoad
+        enum other
+    }
+
+    TRAFFIC_EVENT_ACCIDENT {
+        ObjectId eventId
+        object accidentType
+        object status
+        string publicDescription
+        string locationDescription
+        object location
+        object severity
+        string phase
+        object lanesAffected
+        int lanesRestricted
+        int lanesOperational
+        string diversionRoute
+        bool diversionInForce
+        string reportedBy
+        string confirmedBy
+        string modifiedBy
+        datetime accidentTime
+        datetime endTime
+        int vehicleCount
+        string lightConditions
+        string roadConditions
+        string weatherConditions
+        datetime statisticDate
+        string externalCountryCode
+        string externalSystemCode
+        string externalSituationId
+        int externalSituationVersion
+    }
+
+    ref1__EVENT_STATUS {
+        enum active
+        enum planned
+        enum suspended
+        enum cleared
+    }
+
+    ref3__LANES_AFFECTED_TYPE {
+        enum I
+        enum T
+        enum II
+        enum IT
+        enum TI
+        enum TT
+        enum III
+        enum IIT
+        enum ITI
+        enum ITT
+        enum TII
+        enum TIT
+        enum TTI
+        enum TTT
+        enum IIII
+        enum IIIT
+        enum IITT
+        enum ITTT
+        enum TIII
+        enum TTTT
+        enum allOpen
+    }
+
+    ref2__SEVERITY_TYPE {
+        enum unknown
+        enum low
+        enum medium
+        enum high
+    }
+
+    PLANNED_EVENT_TYPE {
+        enum ballGame
+        enum boxing
+        enum athletics
+        enum cycleRace
+        enum demonstration
+        enum exhibition
+        enum fair
+        enum festival
+        enum football
+        enum funfair
+        enum golf
+        enum internationalSports
+        enum marathon
+        enum march
+        enum market
+        enum match
+        enum parade
+        enum procession
+        enum race
+        enum rugby
+        enum show
+        enum showJumping
+        enum sportsEvent
+        enum sportsMeeting
+        enum stateOccasion
+        enum strike
+        enum tennis
+        enum tournament
+        enum tradeFair
+        enum waterSports
+        enum winterSports
+        enum other
+    }
+
+    TRAFFIC_EVENT_EVENT {
+        ObjectId eventId
+        object plannedEventType
+        object status
+        string publicDescription
+        string locationDescription
+        object location
+        object severity
+        string phase
+        object lanesAffected
+        int lanesRestricted
+        int lanesOperational
+        string diversionRoute
+        bool diversionInForce
+        string reportedBy
+        string confirmedBy
+        string modifiedBy
+        datetime plannedStart
+        datetime plannedEnd
+        datetime actualStart
+        datetime actualEnd
+        string organiser
+        string venueName
+        string externalCountryCode
+        string externalSystemCode
+        string externalSituationId
+        int externalSituationVersion
+    }
+
+    INCIDENT_TYPE {
+        enum abnormalLoad
+        enum airCrash
+        enum airRaid
+        enum animalsOnRoad
+        enum attackOnVehicle
+        enum avalanche
+        enum blasting
+        enum bridgeBlocked
+        enum bridgeClosed
+        enum bridgeDemolition
+        enum bridgeMaintenance
+        enum bridgeOpening
+        enum brokenDownBus
+        enum brokenDownLorry
+        enum brokenDownVehicle
+        enum burstPipe
+        enum burstWaterMain
+        enum busDisruption
+        enum busLaneBlocked
+        enum busLaneClosed
+        enum centreLaneBlocked
+        enum centreLaneClosed
+        enum chemicalSpillage
+        enum childrenOnRoad
+        enum civilEmergency
+        enum civilEmergencyCancelled
+        enum smogAlert
+        enum congestion
+        enum contraflow
+        enum convoy
+        enum crowd
+        enum cyclists
+        enum diversion
+        enum emergencyAlert
+        enum facilitiesClosed
+        enum fault
+        enum fire
+        enum flood
+        enum flow
+        enum fog
+        enum gawkingTraffic
+        enum gunfire
+        enum hail
+        enum heavyFlow
+        enum ice
+        enum laneClosure
+        enum lightFault
+        enum obstruction
+        enum peopleOnRoad
+        enum pollution
+        enum powerFailure
+        enum publicDisturbance
+        enum queue
+        enum radioactiveLeak
+        enum rain
+        enum riot
+        enum roadClosure
+        enum roadsideFire
+        enum sandstorms
+        enum securityAlert
+        enum securityIncident
+        enum sightseers
+        enum snow
+        enum speedRestriction
+        enum spillage
+        enum sprayHazard
+        enum structuralDamage
+        enum telephoneFault
+        enum temporarySignal
+        enum terroristIncident
+        enum tornadoes
+        enum trafficSignalFault
+        enum trainDisruption
+        enum unexplainedDamage
+        enum unexplainedEvent
+        enum washout
+        enum wind
+        enum other
+    }
+
+    TRAFFIC_EVENT_INCIDENT {
+        ObjectId eventId
+        object incidentType
+        object status
+        string publicDescription
+        string locationDescription
+        object location
+        object severity
+        string phase
+        object lanesAffected
+        int lanesRestricted
+        int lanesOperational
+        string diversionRoute
+        bool diversionInForce
+        string reportedBy
+        string confirmedBy
+        string modifiedBy
+        datetime incidentTime
+        datetime endTime
+        string externalCountryCode
+        string externalSystemCode
+        string externalSituationId
+        int externalSituationVersion
+    }
+
+    ROADWORKS_TYPE {
+        enum centralReservation
+        enum general
+        enum overhead
+        enum surface
+        enum verge
+        enum waterMainWork
+        enum other
+    }
+
+    TRAFFIC_EVENT_ROADWORKS {
+        ObjectId eventId
+        object roadworksType
+        object status
+        string publicDescription
+        string locationDescription
+        object location
+        object severity
+        string phase
+        object lanesAffected
+        int lanesRestricted
+        int lanesOperational
+        string diversionRoute
+        bool diversionInForce
+        string reportedBy
+        string confirmedBy
+        string modifiedBy
+        datetime plannedStart
+        datetime plannedEnd
+        datetime actualStart
+        datetime actualEnd
+        string contractor
+        bool trafficSignals
+        bool contraflow
+        datetime confirmedDate
+        string externalCountryCode
+        string externalSystemCode
+        string externalSituationId
+        int externalSituationVersion
+    }
+
+    SYNC_STATUS {
+        enum success
+        enum rejected
+        enum failed
+    }
+
+    TRAFFIC_EVENT_SYNC_COMPLETE {
+        int syncCorrelationId
+        string syncId
+        object status
+        int objectCount
+        datetime completedTime
+        string message
+    }
+
+    SYNC_CATEGORY_ENUM {
+        enum definition
+        enum configuration
+        enum measurement
+        enum fault
+        enum type
+        enum status
+    }
+
+    TRAFFIC_EVENT_SYNC_REQUEST {
+        int syncCorrelationId
+        datetime requestTime
+        object[] categories
+        ObjectId[] objectIds
+        string subArea
+        TypeId typeId FK
+        bool activeOnly
+        datetime since
+    }
+
+    TRAFFIC_EVENT_SHARED_FIELDS {
+    }
+
+    TRAFFIC_EVENT_SHARED_FIELDS ||--|| TRAFFIC_EVENT_ACCIDENT : extends
+    TRAFFIC_EVENT_SHARED_FIELDS ||--|| TRAFFIC_EVENT_EVENT : extends
+    TRAFFIC_EVENT_SHARED_FIELDS ||--|| TRAFFIC_EVENT_INCIDENT : extends
+    TRAFFIC_EVENT_SHARED_FIELDS ||--|| TRAFFIC_EVENT_ROADWORKS : extends
+    TRAFFIC_EVENT_SHARED_FIELDS ||--|| TRAFFIC_EVENT_SYNC_COMPLETE : extends
+    TRAFFIC_EVENT_SHARED_FIELDS ||--|| TRAFFIC_EVENT_SYNC_REQUEST : extends
+    TRAFFIC_EVENT_ACCIDENT }o--|| ACCIDENT_TYPE : classifiedBy
+    TRAFFIC_EVENT_EVENT }o--|| PLANNED_EVENT_TYPE : classifiedBy
+    TRAFFIC_EVENT_INCIDENT }o--|| INCIDENT_TYPE : classifiedBy
+    TRAFFIC_EVENT_ROADWORKS }o--|| ROADWORKS_TYPE : classifiedBy
+    TRAFFIC_EVENT_SYNC_COMPLETE }o--|| SYNC_STATUS : classifiedBy
+    TRAFFIC_EVENT_SYNC_REQUEST }o--|| SYNC_CATEGORY_ENUM : classifiedBy
+

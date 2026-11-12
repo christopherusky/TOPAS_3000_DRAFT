@@ -1,0 +1,86 @@
+"""
+File:        output/python/snippets/s4.py
+Origin:      Generated from asyncapi.yaml by asyncapi_clients/generator/generate.py
+Changes:     Do not hand-edit; re-run `make asyncapi-clients` to regenerate
+Author:      Christopher Kettell, TRL Software
+Date:        2026-11-12
+Generator:   asyncapi_clients/generator v0.1.0
+License:     Apache-2.0  (https://opensource.org/license/Apache-2.0)
+"""
+"""Scenario S4 — Distinguish sync vs delta messages and reassemble a sync batch.
+
+Demonstrates: reading the x-message-mode AMQP application
+property (A3) to tell snapshot data from change events; using the
+x-sync-id / x-sync-sequence /
+x-sync-total triple (A5) to detect when a sync batch is
+complete.
+"""
+import json
+import os
+import sys
+from collections import defaultdict
+
+from proton.handlers import MessagingHandler
+from proton.reactor import Container
+
+
+CHANNEL = "detector.measurement"
+SERVER = os.environ.get(
+    "TOPAS_AMQP_URL",
+    "amqps://{host}:{port}".format(host="localhost", port="5671"),
+)
+
+
+class SyncDeltaReader(MessagingHandler):
+    def __init__(self, url: str) -> None:
+        super().__init__()
+        self.url = url
+        # sync_id -> set of sequence numbers received
+        self.sync_progress: dict[str, set[int]] = defaultdict(set)
+
+    def on_start(self, event):
+        conn = event.container.connect(self.url)
+        event.container.create_receiver(conn, CHANNEL)
+
+    def on_link_opened(self, event):
+        # Readiness handshake: the harness waits for this before
+        # starting the publisher. Every publisher sends a fixed burst and
+        # exits, so anything published before this link is attached is
+        # discarded by the broker and the subscriber then waits for messages
+        # that no longer exist. on_link_opened fires when the peer confirms
+        # the attach, which is the earliest point it is safe to publish.
+        if event.receiver is None:
+            return
+        self._links_open = getattr(self, "_links_open", 0) + 1
+        if self._links_open == 1:
+            print("[ready]", file=sys.stderr, flush=True)
+
+    def on_message(self, event):
+        props = event.message.properties or {}
+        mode = props.get("x-message-mode", "delta")
+        body = json.loads(event.message.body)
+        if mode == "delta":
+            print(f"[delta] {body}", flush=True)
+            return
+        # mode == "sync" — track batch completion.
+        sync_id = props.get("x-sync-id")
+        seq = int(props.get("x-sync-sequence", 0))
+        total = int(props.get("x-sync-total", 0))
+        if not sync_id or total == 0:
+            print(f"[sync*] {body}  (incomplete sync metadata)", flush=True)
+            return
+        self.sync_progress[sync_id].add(seq)
+        progress = len(self.sync_progress[sync_id])
+        print(f"[sync {sync_id} {progress}/{total}] {body}", flush=True)
+        if progress == total:
+            print(f"[sync {sync_id}] complete", flush=True)
+            del self.sync_progress[sync_id]
+
+
+def main() -> int:
+    Container(SyncDeltaReader(SERVER)).run()
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

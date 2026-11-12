@@ -1,0 +1,59 @@
+# tests.yml — the pytest suite for the Pydantic source of truth.
+#
+# Until 2abfb0d most of this suite existed only in one working copy: 91
+# test files were never committed, so a clean checkout collected 239 tests
+# where the developer's machine ran 854. No workflow invoked pytest at all,
+# so nothing noticed.
+#
+# This job is the guard. It runs on a clean checkout, which is the whole
+# point: a test that is not committed does not run here, and a suite that
+# does not run here is not verified by anything.
+#
+# Runs on push as well as pull_request — the repo is trunk-based and
+# changes usually land by direct push, so a pull_request-only trigger
+# would mean this effectively never fires.
+#
+# Origin:    Hand-written
+# Author:    Christopher Kettell, TRL Software
+# License:   Apache-2.0
+name: Tests
+
+on:
+  pull_request:
+    branches: [trunk, main, master]
+  push:
+    branches: [trunk, main, master]
+
+jobs:
+  pytest:
+    name: pytest (${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # pyproject requires >= 3.11. Both ends of the supported range are
+        # exercised, because the models lean on typing behaviour that has
+        # moved between releases.
+        python-version: ["3.11", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Sync dependencies
+        run: uv sync
+
+      # No generation step on purpose. Schemas/ and asyncapi.yaml are
+      # committed artefacts and the tests read them as they are; whether
+      # they are stale relative to topas_3000_model/ is a separate question,
+      # already answered by the AsyncAPI Clients Drift workflow.
+      - name: Run pytest
+        run: uv run pytest tests -q

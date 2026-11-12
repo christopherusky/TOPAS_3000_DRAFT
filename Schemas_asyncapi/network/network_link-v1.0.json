@@ -1,0 +1,56 @@
+{
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/network/network_link-v1.0.json",
+  "$ref": "#/$defs/NetworkLink",
+  "$defs": {
+    "NetworkLink": {
+      "additionalProperties": false,
+      "description": "Road network link between two nodes.",
+      "properties": {
+        "linkId": {
+          "description": "Unique identifier of this link.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "fromNodeId": {
+          "description": "Start node reference.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "toNodeId": {
+          "description": "End node reference.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable name."
+        },
+        "geometry": {
+          "$ref": "../common/common-v1.0.json#/$defs/GeoJsonLineString",
+          "description": "Polyline shape of the link as GeoJSON LineString."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions."
+        }
+      },
+      "required": [
+        "linkId",
+        "fromNodeId",
+        "toNodeId"
+      ],
+      "type": "object",
+      "title": "UTMC Network Link"
+    }
+  }
+}

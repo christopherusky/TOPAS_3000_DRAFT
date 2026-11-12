@@ -1,0 +1,202 @@
+{
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/transport_link/transport_link_configuration-v1.0.json",
+  "$ref": "#/$defs/TransportLinkConfiguration",
+  "$defs": {
+    "TransportLinkANPRConfiguration": {
+      "additionalProperties": false,
+      "description": "Operational configuration for an ANPR-monitored transport link.",
+      "properties": {
+        "transportLinkId": {
+          "description": "Identifier of the transport link this configuration applies to.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "configurationDate": {
+          "description": "When this configuration record became effective.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "lengthMetres": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Distance from detector to stop line in metres."
+        },
+        "fullLengthMetres": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Distance from stop line to stop line in metres."
+        },
+        "numberOfLanes": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Number of lanes on the link."
+        },
+        "maximumSpeedKph": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Maximum speed associated with the link in kilometres per hour."
+        },
+        "capacityVehiclesPerHour": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Maximum flow in vehicles per hour."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions. Open-content object."
+        },
+        "kind": {
+          "const": "anpr",
+          "description": "Discriminator for the tagged union. The fixed value \"anpr\" selects the TransportLinkANPRConfiguration payload; it is not free-text command content.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "configurationDate",
+        "kind",
+        "transportLinkId"
+      ],
+      "type": "object"
+    },
+    "TransportLinkConfiguration": {
+      "discriminator": "kind",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/TransportLinkSCOOTConfiguration"
+        },
+        {
+          "$ref": "#/$defs/TransportLinkGPSConfiguration"
+        },
+        {
+          "$ref": "#/$defs/TransportLinkANPRConfiguration"
+        }
+      ],
+      "title": "UTMC Transport Link Configuration",
+      "description": "Transport link operational configuration (SCOOT/GPS/ANPR discriminated union)."
+    },
+    "TransportLinkGPSConfiguration": {
+      "additionalProperties": false,
+      "description": "Operational configuration for a GPS-monitored transport link.",
+      "properties": {
+        "transportLinkId": {
+          "description": "Identifier of the transport link this configuration applies to.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "configurationDate": {
+          "description": "When this configuration record became effective.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "lengthMetres": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Distance from detector to stop line in metres."
+        },
+        "fullLengthMetres": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Distance from stop line to stop line in metres."
+        },
+        "numberOfLanes": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Number of lanes on the link."
+        },
+        "maximumSpeedKph": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Maximum speed associated with the link in kilometres per hour."
+        },
+        "capacityVehiclesPerHour": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Maximum flow in vehicles per hour."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions. Open-content object."
+        },
+        "kind": {
+          "const": "gps",
+          "description": "Discriminator for the tagged union. The fixed value \"gps\" selects the TransportLinkGPSConfiguration payload; it is not free-text command content.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "configurationDate",
+        "kind",
+        "transportLinkId"
+      ],
+      "type": "object"
+    },
+    "TransportLinkSCOOTConfiguration": {
+      "additionalProperties": false,
+      "description": "Operational configuration for a SCOOT-modelled transport link.",
+      "properties": {
+        "transportLinkId": {
+          "description": "Identifier of the transport link this configuration applies to.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "configurationDate": {
+          "description": "When this configuration record became effective.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "lengthMetres": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Distance from detector to stop line in metres."
+        },
+        "fullLengthMetres": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Distance from stop line to stop line in metres."
+        },
+        "numberOfLanes": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Number of lanes on the link."
+        },
+        "maximumSpeedKph": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Maximum speed associated with the link in kilometres per hour."
+        },
+        "capacityVehiclesPerHour": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Maximum flow in vehicles per hour."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions. Open-content object."
+        },
+        "kind": {
+          "const": "scoot",
+          "description": "Discriminator for the tagged union. The fixed value \"scoot\" selects the TransportLinkSCOOTConfiguration payload; it is not free-text command content.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "configurationDate",
+        "kind",
+        "transportLinkId"
+      ],
+      "type": "object"
+    }
+  }
+}

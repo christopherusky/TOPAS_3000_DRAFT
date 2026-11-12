@@ -1,0 +1,14 @@
+---
+title: UTMC Network Zone
+---
+erDiagram
+    NETWORK_ZONE {
+        ObjectId zoneId
+        TypeId typeId FK
+        string description
+        bool permanent
+        ObjectId[] linkIds
+        object geometry
+    }
+
+

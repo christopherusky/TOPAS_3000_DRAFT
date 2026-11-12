@@ -1,0 +1,19 @@
+---
+title: UTMC Transport Route Measurement
+---
+erDiagram
+    TRANSPORT_ROUTE_DYNAMIC {
+        ObjectId transportRouteId FK
+        datetime timestamp
+        object quality
+        number currentJourneyTimeSeconds
+        number estimatedSpeedKph
+        object routeStatus
+    }
+
+    TRANSPORT_ROUTE_STATUS {
+        enum inRange
+        enum outOfRange
+    }
+
+

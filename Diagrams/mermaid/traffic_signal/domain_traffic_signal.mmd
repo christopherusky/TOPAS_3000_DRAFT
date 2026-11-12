@@ -1,0 +1,255 @@
+---
+title: UTMC Traffic Signal Domain
+---
+erDiagram
+    TRAFFIC_SIGNAL_TYPE {
+        TypeId typeId PK
+        string description
+        string notes
+        uri specificationLink
+    }
+
+    TRAFFIC_SIGNAL {
+        ObjectId trafficSignalId PK
+        object location
+        TypeId controlMethodId
+        datetime creationDate
+        string shortDescription
+        string longDescription
+        ParticipantId participantId
+        ParticipantId originatingParticipantId
+        ObjectId originatingObjectId
+    }
+
+    TRAFFIC_SIGNAL_TYPE_ENUM {
+        enum intersection
+        enum pegasus
+        enum pelican
+        enum puffin
+        enum toucan
+        enum tramCrossing
+        enum wigWag
+        enum other
+    }
+
+    TRAFFIC_SIGNAL_CONFIGURATION {
+        ObjectId trafficSignalId FK
+        string controllerType
+        string supplier
+        object trafficSignalType
+        datetime configurationDate
+        string subArea
+        string userCodeNumber
+    }
+
+    TRAFFIC_SIGNAL_MODE_ENUM {
+        enum localMode
+        enum centralMode
+        enum signalsOffMode
+        enum startUpMode
+        enum unknownMode
+    }
+
+    TRAFFIC_SIGNAL_SUB_MODE_ENUM {
+        enum cablelessLinking
+        enum fixedModeSimpleOrLinked
+        enum fixedModeToCurrentMax
+        enum manualMode
+        enum manualStepOn
+        enum movaMode
+        enum otherDistributedMode
+        enum preEmptLevel1
+        enum preEmptLevel2
+        enum preEmptLevel3
+        enum utcFixedTime
+        enum utcOtherCentralControlMethod
+        enum utcScoot
+        enum vehicleActuated
+        enum wardenControl
+    }
+
+    TRAFFIC_SIGNAL_MEASUREMENT {
+        ObjectId trafficSignalId FK
+        datetime timestamp
+        object trafficSignalMode
+        object trafficSignalSubMode
+        string subArea
+        object planLine
+    }
+
+    PLAN_LINE {
+        int planNumber
+        datetime planStartTime
+        int cycleTime
+        string planDescription
+        int offset
+        object[] signalGroupTimings
+    }
+
+    SIGNAL_GROUP_TIMINGS {
+        string primarySignalGroup
+        int primarySignalGroupDuration
+        string alternateSignalGroup
+    }
+
+    TRAFFIC_SIGNAL_COMMAND {
+        ObjectId trafficSignalId FK
+        int commandCorrelationId
+        datetime requestTime
+        string kind
+    }
+
+    SET_PLAN_COMMAND {
+        ObjectId trafficSignalId FK
+        int commandCorrelationId
+        datetime requestTime
+        string kind
+        int planNumber
+    }
+
+    FORCE_STAGE_COMMAND {
+        ObjectId trafficSignalId FK
+        int commandCorrelationId
+        datetime requestTime
+        string kind
+        int stageNumber
+    }
+
+    HOLD_STAGE_COMMAND {
+        ObjectId trafficSignalId FK
+        int commandCorrelationId
+        datetime requestTime
+        string kind
+        int stageNumber
+    }
+
+    SYNCHRONIZE_CLOCK_COMMAND {
+        ObjectId trafficSignalId FK
+        int commandCorrelationId
+        datetime requestTime
+        string kind
+        datetime targetTime
+    }
+
+    REQUEST_STATUS_COMMAND {
+        ObjectId trafficSignalId FK
+        int commandCorrelationId
+        datetime requestTime
+        string kind
+    }
+
+    TRAFFIC_SIGNAL_COMMAND_RESPONSE {
+        ObjectId trafficSignalId FK
+        int commandCorrelationId
+        object status
+        datetime responseTime
+        string code
+        string message
+    }
+
+    FAULT_SEVERITY_ENUM {
+        enum low
+        enum medium
+        enum high
+        enum unknown
+    }
+
+    TRAFFIC_SIGNAL_FAULT_ENUM {
+        enum detectorFault
+        enum electronicsFault
+        enum indicatorFault
+        enum lampFault
+        enum mechanicalFault
+        enum utilityFault
+        enum other
+    }
+
+    URGENCY_ENUM {
+        enum extremelyUrgent
+        enum urgent
+        enum normalUrgency
+        enum unknown
+    }
+
+    TRAFFIC_SIGNAL_FAULT {
+        ObjectId trafficSignalId FK
+        TypeId faultTypeId FK
+        object trafficSignalFaultType
+        datetime faultLastUpdateTime
+        string faultIdentifier
+        string faultDescription
+        datetime faultCreationTime
+        object faultSeverity
+        datetime trafficSignalFaultClearanceTime
+        object trafficSignalFaultUrgency
+        string trafficSignalManufacturerFaultCode
+        string[] parameters
+    }
+
+    TRAFFIC_SIGNAL_HISTORY {
+        ObjectId trafficSignalId FK
+        int logId
+        datetime logDate
+        string logEntry
+        string logUser
+        string eventType
+    }
+
+    SYNC_STATUS {
+        enum success
+        enum rejected
+        enum failed
+    }
+
+    TRAFFIC_SIGNAL_SYNC_COMPLETE {
+        int syncCorrelationId
+        string syncId
+        object status
+        int objectCount
+        datetime completedTime
+        string message
+    }
+
+    SYNC_CATEGORY_ENUM {
+        enum definition
+        enum configuration
+        enum measurement
+        enum fault
+        enum type
+        enum status
+    }
+
+    TRAFFIC_SIGNAL_SYNC_REQUEST {
+        int syncCorrelationId
+        datetime requestTime
+        object[] categories
+        ObjectId[] objectIds
+        string subArea
+        TypeId typeId FK
+        bool activeOnly
+        datetime since
+    }
+
+    TRAFFIC_SIGNAL_TYPE ||--o{ TRAFFIC_SIGNAL : "classifies (controlMethodId)"
+    TRAFFIC_SIGNAL ||--o| TRAFFIC_SIGNAL_CONFIGURATION : "has (trafficSignalId)"
+    TRAFFIC_SIGNAL ||--o{ TRAFFIC_SIGNAL_MEASUREMENT : "emits (trafficSignalId)"
+    TRAFFIC_SIGNAL ||--o{ TRAFFIC_SIGNAL_COMMAND : "receives (trafficSignalId)"
+    TRAFFIC_SIGNAL ||--o{ TRAFFIC_SIGNAL_FAULT : "raises (trafficSignalId)"
+    TRAFFIC_SIGNAL ||--o{ TRAFFIC_SIGNAL_HISTORY : "records (trafficSignalId)"
+    TRAFFIC_SIGNAL_COMMAND ||--o{ TRAFFIC_SIGNAL_COMMAND_RESPONSE : "produces (commandCorrelationId, status-progression)"
+    TRAFFIC_SIGNAL_CONFIGURATION }o--|| TRAFFIC_SIGNAL_TYPE_ENUM : trafficSignalType
+    TRAFFIC_SIGNAL_FAULT }o--|| FAULT_SEVERITY_ENUM : faultSeverity
+    TRAFFIC_SIGNAL_FAULT }o--|| TRAFFIC_SIGNAL_FAULT_ENUM : trafficSignalFaultType
+    TRAFFIC_SIGNAL_FAULT }o--|| URGENCY_ENUM : trafficSignalFaultUrgency
+    TRAFFIC_SIGNAL_MEASUREMENT }o--|| TRAFFIC_SIGNAL_MODE_ENUM : trafficSignalMode
+    TRAFFIC_SIGNAL_MEASUREMENT }o--|| TRAFFIC_SIGNAL_SUB_MODE_ENUM : trafficSignalSubMode
+    TRAFFIC_SIGNAL_SYNC_COMPLETE }o--|| SYNC_STATUS : status
+    TRAFFIC_SIGNAL_SYNC_REQUEST }o--|| SYNC_CATEGORY_ENUM : categories
+    PLAN_LINE ||--o{ SIGNAL_GROUP_TIMINGS : signalGroupTimings
+    TRAFFIC_SIGNAL_MEASUREMENT ||--|| PLAN_LINE : planLine
+    TRAFFIC_SIGNAL_COMMAND ||--|| SET_PLAN_COMMAND : "setPlan"
+    TRAFFIC_SIGNAL_COMMAND ||--|| FORCE_STAGE_COMMAND : "forceStage"
+    TRAFFIC_SIGNAL_COMMAND ||--|| HOLD_STAGE_COMMAND : "holdStage"
+    TRAFFIC_SIGNAL_COMMAND ||--|| SYNCHRONIZE_CLOCK_COMMAND : "synchronizeClock"
+    TRAFFIC_SIGNAL_COMMAND ||--|| REQUEST_STATUS_COMMAND : "requestStatus"
+

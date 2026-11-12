@@ -1,0 +1,4 @@
+# Build artefacts from compiling the generated SDK. The generated sources
+# under src/ ARE committed; these are not.
+target/
+Cargo.lock

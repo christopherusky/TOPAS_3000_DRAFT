@@ -1,0 +1,23 @@
+---
+title: UTMC Strategy Command Response
+---
+erDiagram
+    STRATEGY_COMMAND_RESPONSE {
+        string strategyId FK
+        int commandCorrelationId
+        string serviceRequester
+        object status
+        datetime responseTime
+        string code
+        object errorCode
+        string message
+    }
+
+    TRIGGER_UPDATE_ERROR_ENUM {
+        enum accessDenied
+        enum notAuthenticated
+        enum strategyIdDoesNotExist
+        enum other
+    }
+
+

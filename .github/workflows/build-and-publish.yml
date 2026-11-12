@@ -1,0 +1,110 @@
+name: Build Diagrams
+
+# Builds the full schemas/asyncapi/validate/diagrams pipeline as a CI
+# guard on every push and pull request. The Pages publish/deploy steps are intentionally
+# omitted: Pages requires the repo to be public (or a paid plan for
+# private Pages). When that changes, re-add:
+#
+#   permissions: { contents: read, pages: write, id-token: write }
+#   concurrency: { group: "pages", cancel-in-progress: false }
+#   - uses: actions/configure-pages@v4   (no node24 release exists yet;
+#         v5 still declares node20, so it will emit a deprecation warning)
+#   - uses: actions/upload-pages-artifact@v4 (path: 'Diagrams') — composite
+#   deploy job: actions/deploy-pages@v5  (v5 is the first declaring node24)
+
+# Runs on pull requests as well as pushes: the repo changes by direct push to
+# trunk, but a pull request is the only point before a merge at which this gate
+# can stop a stale schema, so a push-only trigger left PRs ungated.
+on:
+  pull_request:
+    branches: [trunk, main, master]
+  push:
+    branches: [trunk, main, master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Set up Node.js 22 (mermaid-cli needs it for PNG rendering)
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Sync dependencies
+        run: uv sync
+
+      # Regenerate from empty, not over the top. `git diff` compares content,
+      # so a file the generators no longer produce stays on disk unchanged
+      # and the gate never sees it — an obsolete schema could survive
+      # indefinitely. Verified: with a stale schema committed, regenerating
+      # in place passes the gate; wiping first surfaces it as a deletion.
+      #
+      # emit_asyncapi.py already rmtree's Schemas_asyncapi/, and emit.py
+      # clears stale files at the *root* of Schemas/ — a migration helper for
+      # the old flat layout that does not touch the per-domain
+      # subdirectories. generate_diagrams.py clears nothing.
+      - name: Clear generated trees so drift means regeneration, not overwrite
+        run: rm -rf Schemas/* Schemas_asyncapi/* Diagrams/mermaid/* Diagrams/uml/* Diagrams/png/*
+
+      - name: Emit JSON Schemas (Pydantic → Schemas/)
+        run: make schemas
+
+      - name: Emit AsyncAPI documents
+        run: make asyncapi
+
+      - name: Validate $ref integrity
+        run: make validate
+
+      - name: Generate diagrams (mermaid/uml/png)
+        run: make diagrams
+
+      # The pipeline's committed output must match what the committed source
+      # produces. The asyncapi-clients-drift workflow already guards
+      # asyncapi_clients/output; nothing guarded Schemas/, Schemas_asyncapi/,
+      # asyncapi.yaml or Diagrams/, so those could drift from the models
+      # indefinitely without a workflow failing — as they did when a
+      # regeneration was left unstaged.
+      #
+      # PNGs are deliberately excluded from the gate. They are rendered by
+      # `npx @mermaid-js/mermaid-cli@10`, a major-version range rather than an
+      # exact pin, through headless Chromium — so byte-equality across a
+      # developer's machine and a CI runner is not something this repo
+      # controls. They are reported below instead, so the information is
+      # visible without being a false failure.
+      #
+      # The check reports modified, deleted and untracked files. `git diff`
+      # alone reports only the first, so a newly generated schema that was
+      # never committed passed (bin/check_drift.py, tests/test_check_drift.py).
+      - name: Verify no drift in committed pipeline output
+        run: |
+          if ! uv run python bin/check_drift.py \
+               Schemas/ Schemas_asyncapi/ asyncapi.yaml \
+               Diagrams/mermaid/ Diagrams/uml/; then
+            echo "::error::Committed pipeline output is out of date with the models."
+            echo "Run 'make schemas asyncapi diagrams' locally and commit the result, including new files."
+            exit 1
+          fi
+          echo "Schemas, AsyncAPI and text diagrams match the models."
+
+      - name: Report PNG differences (informational)
+        if: always()
+        run: |
+          if git diff --quiet -- Diagrams/png/; then
+            echo "Rendered PNGs are byte-identical to the committed ones."
+          else
+            echo "::notice::Rendered PNGs differ from the committed ones."
+            echo "Expected when the mermaid-cli or Chromium build differs from"
+            echo "whoever last committed them. Not a failure; see the workflow"
+            echo "comment above."
+            git diff --stat -- Diagrams/png/ | tail -5
+          fi

@@ -1,0 +1,99 @@
+---
+title: UTMC Strategy Domain
+---
+erDiagram
+    STRATEGY {
+        string strategyId PK
+        string strategyName
+        string strategyDescription
+        object location
+    }
+
+    TRIGGER_STATE_ENUM {
+        enum enabled
+        enum disabled
+    }
+
+    STRATEGY_COMMAND {
+        string strategyId FK
+        int commandCorrelationId
+        datetime requestTime
+        string serviceRequester
+        object triggerState
+    }
+
+    TRIGGER_UPDATE_ERROR_ENUM {
+        enum accessDenied
+        enum notAuthenticated
+        enum strategyIdDoesNotExist
+        enum other
+    }
+
+    STRATEGY_COMMAND_RESPONSE {
+        string strategyId FK
+        int commandCorrelationId
+        string serviceRequester
+        object status
+        datetime responseTime
+        string code
+        object errorCode
+        string message
+    }
+
+    STRATEGY_STATUS_ENUM {
+        enum active
+        enum inactive
+    }
+
+    STRATEGY_STATUS {
+        string strategyId FK
+        object strategyStatus
+        string statusMessage
+        string errorMessage
+        datetime strategyChangeStateTime
+    }
+
+    SYNC_STATUS {
+        enum success
+        enum rejected
+        enum failed
+    }
+
+    STRATEGY_SYNC_COMPLETE {
+        int syncCorrelationId
+        string syncId
+        object status
+        int objectCount
+        datetime completedTime
+        string message
+    }
+
+    SYNC_CATEGORY_ENUM {
+        enum definition
+        enum configuration
+        enum measurement
+        enum fault
+        enum type
+        enum status
+    }
+
+    STRATEGY_SYNC_REQUEST {
+        int syncCorrelationId
+        datetime requestTime
+        object[] categories
+        ObjectId[] objectIds
+        string subArea
+        TypeId typeId FK
+        bool activeOnly
+        datetime since
+    }
+
+    STRATEGY ||--o{ STRATEGY_STATUS : "publishes (strategyId)"
+    STRATEGY ||--o{ STRATEGY_COMMAND : "receives (strategyId)"
+    STRATEGY_COMMAND ||--o{ STRATEGY_COMMAND_RESPONSE : "produces (commandCorrelationId, status-progression)"
+    STRATEGY_COMMAND }o--|| TRIGGER_STATE_ENUM : triggerState
+    STRATEGY_COMMAND_RESPONSE }o--|| TRIGGER_UPDATE_ERROR_ENUM : errorCode
+    STRATEGY_STATUS }o--|| STRATEGY_STATUS_ENUM : strategyStatus
+    STRATEGY_SYNC_COMPLETE }o--|| SYNC_STATUS : status
+    STRATEGY_SYNC_REQUEST }o--|| SYNC_CATEGORY_ENUM : categories
+

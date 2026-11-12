@@ -1,0 +1,210 @@
+{
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/traffic_event/traffic_event_incident-v1.0.json",
+  "$ref": "#/$defs/IncidentEvent",
+  "$defs": {
+    "IncidentEvent": {
+      "additionalProperties": false,
+      "dependentRequired": {
+        "externalSituationVersion": [
+          "externalSituationId"
+        ]
+      },
+      "description": "Incident traffic event payload.",
+      "properties": {
+        "eventId": {
+          "description": "Unique identifier of this event.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "incidentType": {
+          "$ref": "#/$defs/IncidentType",
+          "description": "Classification of the incident."
+        },
+        "status": {
+          "$ref": "traffic_event_common-v1.0.json#/$defs/EventStatus"
+        },
+        "publicDescription": {
+          "type": "string",
+          "description": "Public-facing summary for journey planners."
+        },
+        "locationDescription": {
+          "type": "string",
+          "description": "Free-text location description."
+        },
+        "location": {
+          "$ref": "../common/common-v1.0.json#/$defs/Point",
+          "description": "WGS84 point location."
+        },
+        "severity": {
+          "$ref": "traffic_event_common-v1.0.json#/$defs/SeverityType",
+          "description": "Event severity."
+        },
+        "phase": {
+          "type": "string",
+          "description": "Event phase (unconstrained)."
+        },
+        "lanesAffected": {
+          "$ref": "traffic_event_common-v1.0.json#/$defs/LanesAffectedType",
+          "description": "Lane closure pattern."
+        },
+        "lanesRestricted": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Count of closed/restricted lanes."
+        },
+        "lanesOperational": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Count of operational lanes."
+        },
+        "diversionRoute": {
+          "type": "string",
+          "description": "Diversion route description."
+        },
+        "diversionInForce": {
+          "type": "boolean",
+          "description": "Whether diversion is active."
+        },
+        "reportedBy": {
+          "type": "string",
+          "description": "Who reported the event."
+        },
+        "confirmedBy": {
+          "type": "string",
+          "description": "Who confirmed."
+        },
+        "modifiedBy": {
+          "type": "string",
+          "description": "Who last modified."
+        },
+        "incidentTime": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the incident was reported. Optional: unknown when first reported."
+        },
+        "endTime": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When cleared."
+        },
+        "externalCountryCode": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "description": "Cross-ref country code (an XML NMTOKEN: no whitespace)."
+        },
+        "externalSystemCode": {
+          "type": "string",
+          "description": "Cross-ref system code."
+        },
+        "externalSituationId": {
+          "type": "string",
+          "description": "Cross-ref situation identifier."
+        },
+        "externalSituationVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Cross-ref situation version. Requires external_situation_id."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions."
+        }
+      },
+      "required": [
+        "eventId",
+        "incidentType",
+        "status"
+      ],
+      "type": "object",
+      "title": "UTMC Traffic Event Incident"
+    },
+    "IncidentType": {
+      "description": "Classification of incident (78 values from the UTMC specification).\n\nThe XSD carries only a catalogue reference, so the value set is not in it.",
+      "enum": [
+        "abnormalLoad",
+        "airCrash",
+        "airRaid",
+        "animalsOnRoad",
+        "attackOnVehicle",
+        "avalanche",
+        "blasting",
+        "bridgeBlocked",
+        "bridgeClosed",
+        "bridgeDemolition",
+        "bridgeMaintenance",
+        "bridgeOpening",
+        "brokenDownBus",
+        "brokenDownLorry",
+        "brokenDownVehicle",
+        "burstPipe",
+        "burstWaterMain",
+        "busDisruption",
+        "busLaneBlocked",
+        "busLaneClosed",
+        "centreLaneBlocked",
+        "centreLaneClosed",
+        "chemicalSpillage",
+        "childrenOnRoad",
+        "civilEmergency",
+        "civilEmergencyCancelled",
+        "smogAlert",
+        "congestion",
+        "contraflow",
+        "convoy",
+        "crowd",
+        "cyclists",
+        "diversion",
+        "emergencyAlert",
+        "facilitiesClosed",
+        "fault",
+        "fire",
+        "flood",
+        "flow",
+        "fog",
+        "gawkingTraffic",
+        "gunfire",
+        "hail",
+        "heavyFlow",
+        "ice",
+        "laneClosure",
+        "lightFault",
+        "obstruction",
+        "peopleOnRoad",
+        "pollution",
+        "powerFailure",
+        "publicDisturbance",
+        "queue",
+        "radioactiveLeak",
+        "rain",
+        "riot",
+        "roadClosure",
+        "roadsideFire",
+        "sandstorms",
+        "securityAlert",
+        "securityIncident",
+        "sightseers",
+        "snow",
+        "speedRestriction",
+        "spillage",
+        "sprayHazard",
+        "structuralDamage",
+        "telephoneFault",
+        "temporarySignal",
+        "terroristIncident",
+        "tornadoes",
+        "trafficSignalFault",
+        "trainDisruption",
+        "unexplainedDamage",
+        "unexplainedEvent",
+        "washout",
+        "wind",
+        "other"
+      ],
+      "type": "string"
+    }
+  }
+}

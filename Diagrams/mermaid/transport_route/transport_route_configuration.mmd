@@ -1,0 +1,22 @@
+---
+title: UTMC Transport Route Configuration
+---
+erDiagram
+    TRANSPORT_ROUTE_CONFIGURATION {
+        ObjectId transportRouteId FK
+        datetime configurationDate
+        string routeName
+        string routeStart
+        string routeVia
+        string routeEnd
+        number routeLengthMeters
+    }
+
+    TRANSPORT_ROUTE_SEGMENT_CONFIGURATION {
+        ObjectId transportRouteId FK
+        datetime configurationDate
+        int routeSegmentId
+        ObjectId transportLinkId
+    }
+
+

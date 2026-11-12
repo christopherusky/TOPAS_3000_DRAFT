@@ -1,0 +1,201 @@
+---
+title: UTMC Vms Domain
+---
+erDiagram
+    VMS_TYPE {
+        TypeId typeId PK
+        string description
+        string notes
+        uri specificationLink
+    }
+
+    VMS_COLOUR_CAPABILITY {
+        enum monochrome
+        enum amber
+        enum multiColour
+        enum fullColour
+    }
+
+    VMS {
+        ObjectId vmsId PK
+        TypeId typeId FK
+        datetime creationDate
+        object location
+        ObjectId transportLinkId
+        number linkDistanceMetres
+        ObjectId networkLinkId
+        ObjectId networkPathId
+        string shortDescription
+        string longDescription
+        int signHeight
+        int signWidth
+        int numberOfLines
+        int charactersPerLine
+        bool supportsGraphics
+        object colourCapability
+        ParticipantId participantId
+        string ownerOperator
+        ParticipantId originatingParticipantId
+        ObjectId originatingObjectId
+    }
+
+    VMS_CONFIGURATION {
+        ObjectId vmsId FK
+        datetime configurationDate
+        number defaultBrightnessPercent
+        bool autoBrightness
+        int defaultDisplayTimeSeconds
+        int scrollSpeed
+    }
+
+    VMS_STATUS {
+        enum off
+        enum on
+        enum blank
+        enum displaying
+        enum fault
+        enum unknown
+    }
+
+    VMS_MEASUREMENT {
+        ObjectId vmsId FK
+        datetime timestamp
+        object quality
+        string currentMessage
+        string[] messageLines
+        uri graphicUrl
+        number brightnessPercent
+        datetime messageSetTime
+        datetime messageExpiryTime
+        object status
+    }
+
+    VMS_COMMAND {
+        ObjectId vmsId FK
+        int commandCorrelationId
+        datetime requestTime
+        string kind
+    }
+
+    DISPLAY_MESSAGE_COMMAND {
+        ObjectId vmsId FK
+        int commandCorrelationId
+        datetime requestTime
+        string kind
+        string message
+        string[] messageLines
+        int displayDurationSeconds
+    }
+
+    DISPLAY_GRAPHIC_COMMAND {
+        ObjectId vmsId FK
+        int commandCorrelationId
+        datetime requestTime
+        string kind
+        uri graphicUrl
+        int displayDurationSeconds
+    }
+
+    SET_BRIGHTNESS_COMMAND {
+        ObjectId vmsId FK
+        int commandCorrelationId
+        datetime requestTime
+        string kind
+        number brightnessPercent
+    }
+
+    CLEAR_SIGN_COMMAND {
+        ObjectId vmsId FK
+        int commandCorrelationId
+        datetime requestTime
+        string kind
+    }
+
+    VMS_COMMAND_RESPONSE {
+        ObjectId vmsId FK
+        int commandCorrelationId
+        object status
+        datetime responseTime
+        string code
+        string message
+    }
+
+    VMS_FAULT {
+        ObjectId vmsId FK
+        int faultId PK
+        TypeId faultTypeId FK
+        string supplierFaultNumber
+        TypeId subsystemTypeId
+        bool equipmentFault
+        bool communicationsFault
+        datetime creationDate
+        datetime lastUpdated
+        datetime clearedDate
+        string description
+        object acknowledgementState
+        datetime acknowledgementDate
+        int severity
+        object status
+        string[] parameters
+    }
+
+    VMS_HISTORY {
+        ObjectId vmsId FK
+        int logId
+        datetime logDate
+        string logEntry
+        string logUser
+        string eventType
+    }
+
+    SYNC_STATUS {
+        enum success
+        enum rejected
+        enum failed
+    }
+
+    VMS_SYNC_COMPLETE {
+        int syncCorrelationId
+        string syncId
+        object status
+        int objectCount
+        datetime completedTime
+        string message
+    }
+
+    SYNC_CATEGORY_ENUM {
+        enum definition
+        enum configuration
+        enum measurement
+        enum fault
+        enum type
+        enum status
+    }
+
+    VMS_SYNC_REQUEST {
+        int syncCorrelationId
+        datetime requestTime
+        object[] categories
+        ObjectId[] objectIds
+        string subArea
+        TypeId typeId FK
+        bool activeOnly
+        datetime since
+    }
+
+    VMS_TYPE ||--o{ VMS : "classifies (typeId)"
+    VMS ||--o| VMS_CONFIGURATION : "has (vmsId)"
+    VMS ||--o{ VMS_MEASUREMENT : "emits (vmsId)"
+    VMS ||--o{ VMS_COMMAND : "receives (vmsId)"
+    VMS ||--o{ VMS_FAULT : "raises (vmsId)"
+    VMS ||--o{ VMS_HISTORY : "records (vmsId)"
+    VMS_COMMAND ||--o{ VMS_COMMAND_RESPONSE : "produces (commandCorrelationId, status-progression)"
+    VMS }o--|| VMS_COLOUR_CAPABILITY : colourCapability
+    VMS_MEASUREMENT }o--|| VMS_STATUS : status
+    VMS_SYNC_COMPLETE }o--|| SYNC_STATUS : status
+    VMS_SYNC_REQUEST }o--|| SYNC_CATEGORY_ENUM : categories
+    VMS_COMMAND ||--|| DISPLAY_MESSAGE_COMMAND : "displayMessage"
+    VMS_COMMAND ||--|| DISPLAY_GRAPHIC_COMMAND : "displayGraphic"
+    VMS_COMMAND ||--|| SET_BRIGHTNESS_COMMAND : "setBrightness"
+    VMS_COMMAND ||--|| CLEAR_SIGN_COMMAND : "clearSign"
+

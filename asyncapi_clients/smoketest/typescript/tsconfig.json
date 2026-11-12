@@ -1,0 +1,37 @@
+{
+  // tsconfig.json — TypeScript build for the asyncapi-clients smoke harness.
+  //
+  // Compiles the generated TypeScript snippets at
+  // ../../output/typescript/snippets/*.ts in place (no copy) to
+  // ./dist/snippets/*.js. ESM output, strict mode on. Generated
+  // snippets are short and should be strict-clean; if a generated
+  // snippet fails strict-mode compilation, fix the template under
+  // asyncapi_clients/templates/typescript/ rather than relaxing
+  // strict mode here.
+  //
+  // Origin:    Hand-written for asyncapi-clients smoke testing
+  // Author:    Christopher Kettell, TRL Software
+  // Date:      2026-05-05
+  // License:   Apache-2.0
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "outDir": "./dist",
+    "rootDir": "../../output/typescript",
+    "forceConsistentCasingInFileNames": true,
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "rhea": ["./node_modules/rhea"],
+      "rhea/*": ["./node_modules/rhea/*"]
+    }
+  },
+  "include": [
+    "../../output/typescript/snippets/*.ts"
+  ]
+}

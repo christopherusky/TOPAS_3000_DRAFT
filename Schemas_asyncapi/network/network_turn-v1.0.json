@@ -1,0 +1,61 @@
+{
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/network/network_turn-v1.0.json",
+  "$ref": "#/$defs/NetworkTurn",
+  "$defs": {
+    "NetworkTurn": {
+      "additionalProperties": false,
+      "description": "Road network turn (movement through a node between links).",
+      "properties": {
+        "turnId": {
+          "description": "Unique identifier of this turn.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "fromLinkId": {
+          "description": "Approach link.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "toLinkId": {
+          "description": "Departure link.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "allowed": {
+          "description": "Whether this turn is permitted.",
+          "type": "boolean"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable description."
+        },
+        "geometry": {
+          "$ref": "../common/common-v1.0.json#/$defs/GeoJsonLineString",
+          "description": "Turn path geometry as GeoJSON LineString."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions."
+        }
+      },
+      "required": [
+        "turnId",
+        "fromLinkId",
+        "toLinkId",
+        "allowed"
+      ],
+      "type": "object",
+      "title": "UTMC Network Turn"
+    }
+  }
+}

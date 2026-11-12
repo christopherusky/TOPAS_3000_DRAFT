@@ -1,0 +1,55 @@
+@startuml
+title UTMC VMS Definition
+!pragma layout smetana
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam classFontSize 14
+skinparam classAttributeFontSize 11
+skinparam classFontStyle bold
+skinparam dpi 150
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam class {
+  BackgroundColor #FEFEFE
+  BorderColor #333333
+  ArrowColor #555555
+}
+scale max 3508*2480
+
+class VmsDefinition {
+  +vmsId: ObjectId
+  +typeId: TypeId
+  +creationDate: datetime
+   location: Point
+   transportLinkId: ObjectId
+   linkDistanceMetres: number
+   networkLinkId: ObjectId
+   networkPathId: ObjectId
+   shortDescription: string
+   longDescription: string
+   signHeight: integer
+   signWidth: integer
+   numberOfLines: integer
+   charactersPerLine: integer
+   supportsGraphics: boolean
+   colourCapability: VmsColourCapability
+   participantId: ParticipantId
+   ownerOperator: string
+   originatingParticipantId: ParticipantId
+   originatingObjectId: ObjectId
+   extensions: object
+}
+
+enum VmsColourCapability {
+  monochrome
+  amber
+  multiColour
+  fullColour
+}
+
+class Point <<../common/common>> #EEEEEE
+
+VmsDefinition ..> Point : location
+VmsDefinition --> VmsColourCapability : colourCapability
+
+@enduml

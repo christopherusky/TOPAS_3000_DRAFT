@@ -1,0 +1,63 @@
+@startuml
+title UTMC Traffic Signal 0064 Fault
+!pragma layout smetana
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam classFontSize 14
+skinparam classAttributeFontSize 11
+skinparam classFontStyle bold
+skinparam dpi 150
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam class {
+  BackgroundColor #FEFEFE
+  BorderColor #333333
+  ArrowColor #555555
+}
+scale max 3508*2480
+
+class TrafficSignalFault {
+  +trafficSignalId: ObjectId
+   faultTypeId: TypeId
+   trafficSignalFaultType: TrafficSignalFaultEnum
+  +faultLastUpdateTime: datetime
+   faultIdentifier: string
+   faultDescription: string
+   faultCreationTime: datetime
+   faultSeverity: FaultSeverityEnum
+   trafficSignalFaultClearanceTime: datetime
+   trafficSignalFaultUrgency: UrgencyEnum
+   trafficSignalManufacturerFaultCode: string
+   parameters: list<string>
+   extensions: object
+}
+
+enum FaultSeverityEnum {
+  low
+  medium
+  high
+  unknown
+}
+
+enum TrafficSignalFaultEnum {
+  detectorFault
+  electronicsFault
+  indicatorFault
+  lampFault
+  mechanicalFault
+  utilityFault
+  other
+}
+
+enum UrgencyEnum {
+  extremelyUrgent
+  urgent
+  normalUrgency
+  unknown
+}
+
+TrafficSignalFault --> TrafficSignalFaultEnum : trafficSignalFaultType
+TrafficSignalFault --> FaultSeverityEnum : faultSeverity
+TrafficSignalFault --> UrgencyEnum : trafficSignalFaultUrgency
+
+@enduml

@@ -1,0 +1,44 @@
+---
+title: UTMC Traffic Signal 0064 Fault
+---
+erDiagram
+    TRAFFIC_SIGNAL_FAULT {
+        ObjectId trafficSignalId FK
+        TypeId faultTypeId FK
+        object trafficSignalFaultType
+        datetime faultLastUpdateTime
+        string faultIdentifier
+        string faultDescription
+        datetime faultCreationTime
+        object faultSeverity
+        datetime trafficSignalFaultClearanceTime
+        object trafficSignalFaultUrgency
+        string trafficSignalManufacturerFaultCode
+        string[] parameters
+    }
+
+    FAULT_SEVERITY_ENUM {
+        enum low
+        enum medium
+        enum high
+        enum unknown
+    }
+
+    TRAFFIC_SIGNAL_FAULT_ENUM {
+        enum detectorFault
+        enum electronicsFault
+        enum indicatorFault
+        enum lampFault
+        enum mechanicalFault
+        enum utilityFault
+        enum other
+    }
+
+    URGENCY_ENUM {
+        enum extremelyUrgent
+        enum urgent
+        enum normalUrgency
+        enum unknown
+    }
+
+

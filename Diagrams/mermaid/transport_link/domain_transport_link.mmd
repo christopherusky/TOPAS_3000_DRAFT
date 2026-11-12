@@ -1,0 +1,245 @@
+---
+title: UTMC Transport Link Domain
+---
+erDiagram
+    TRANSPORT_LINK_TYPE {
+        string kind
+        TypeId typeId PK
+        string description
+        string notes
+    }
+
+    LINK_STATUS_TYPE {
+        string kind
+        TypeId typeId PK
+        string description
+        string notes
+    }
+
+    TRANSPORT_LINK {
+        ObjectId transportLinkId PK
+        TypeId typeId FK
+        datetime creationDate
+        object location
+        object endPoint
+        string shortDescription
+        string longDescription
+        ParticipantId participantId
+        ParticipantId originatingParticipantId
+        ObjectId originatingObjectId
+    }
+
+    TRANSPORT_LINK_CONFIGURATION {
+        ObjectId transportLinkId FK
+        datetime configurationDate
+        number lengthMetres
+        number fullLengthMetres
+        int numberOfLanes
+        number maximumSpeedKph
+        number capacityVehiclesPerHour
+        string kind
+    }
+
+    TRANSPORT_LINK_SCOOT_CONFIGURATION {
+        ObjectId transportLinkId FK
+        datetime configurationDate
+        number lengthMetres
+        number fullLengthMetres
+        int numberOfLanes
+        number maximumSpeedKph
+        number capacityVehiclesPerHour
+        string kind
+    }
+
+    TRANSPORT_LINK_GPS_CONFIGURATION {
+        ObjectId transportLinkId FK
+        datetime configurationDate
+        number lengthMetres
+        number fullLengthMetres
+        int numberOfLanes
+        number maximumSpeedKph
+        number capacityVehiclesPerHour
+        string kind
+    }
+
+    TRANSPORT_LINK_ANPR_CONFIGURATION {
+        ObjectId transportLinkId FK
+        datetime configurationDate
+        number lengthMetres
+        number fullLengthMetres
+        int numberOfLanes
+        number maximumSpeedKph
+        number capacityVehiclesPerHour
+        string kind
+    }
+
+    TRANSPORT_LINK_MEASUREMENT {
+        ObjectId transportLinkId FK
+        datetime timestamp
+        object quality
+        number averageSpeedKph
+        number linkTravelTimeSeconds
+        string kind
+    }
+
+    TRANSPORT_LINK_SCOOT_DYNAMIC {
+        ObjectId transportLinkId FK
+        datetime timestamp
+        object quality
+        number averageSpeedKph
+        number linkTravelTimeSeconds
+        string kind
+        number congestionPercent
+        number currentFlowVehicles
+        number occupancyPercent
+    }
+
+    TRANSPORT_LINK_ANPR_DYNAMIC {
+        ObjectId transportLinkId FK
+        datetime timestamp
+        object quality
+        number averageSpeedKph
+        number linkTravelTimeSeconds
+        string kind
+        int numberPlatesIn
+        int numberPlatesOut
+        int numberPlatesMatches
+        int numberPlatesMatchesUsed
+    }
+
+    TRANSPORT_LINK_GPS_DYNAMIC {
+        ObjectId transportLinkId FK
+        datetime timestamp
+        object quality
+        number averageSpeedKph
+        number linkTravelTimeSeconds
+        string kind
+        number currentJourneyTimeSeconds
+        number meanTravelTimeSeconds
+        number medianTravelTimeSeconds
+        number varianceTravelTimeSeconds
+        int numberOfVehicles
+        number reservedLaneFlowVehicles
+    }
+
+    TRANSPORT_LINK_COMMAND {
+        ObjectId transportLinkId FK
+        int commandCorrelationId
+        datetime requestTime
+        string kind
+    }
+
+    SET_STOC_COMMAND {
+        ObjectId transportLinkId FK
+        int commandCorrelationId
+        datetime requestTime
+        string kind
+        string stocValue
+    }
+
+    RECALIBRATE_TRANSPORT_LINK_COMMAND {
+        ObjectId transportLinkId FK
+        int commandCorrelationId
+        datetime requestTime
+        string kind
+    }
+
+    REQUEST_TRANSPORT_LINK_STATUS_COMMAND {
+        ObjectId transportLinkId FK
+        int commandCorrelationId
+        datetime requestTime
+        string kind
+    }
+
+    TRANSPORT_LINK_COMMAND_RESPONSE {
+        ObjectId transportLinkId FK
+        int commandCorrelationId
+        object status
+        datetime responseTime
+        string code
+        string message
+    }
+
+    TRANSPORT_LINK_FAULT {
+        ObjectId transportLinkId FK
+        int faultId PK
+        TypeId faultTypeId FK
+        string supplierFaultNumber
+        TypeId subsystemTypeId
+        bool equipmentFault
+        bool communicationsFault
+        datetime creationDate
+        datetime lastUpdated
+        datetime clearedDate
+        string description
+        object acknowledgementState
+        datetime acknowledgementDate
+        int severity
+        object status
+        string[] parameters
+    }
+
+    TRANSPORT_LINK_HISTORY {
+        ObjectId transportLinkId FK
+        int logId
+        datetime logDate
+        string logEntry
+        string logUser
+        string eventType
+    }
+
+    SYNC_STATUS {
+        enum success
+        enum rejected
+        enum failed
+    }
+
+    TRANSPORT_LINK_SYNC_COMPLETE {
+        int syncCorrelationId
+        string syncId
+        object status
+        int objectCount
+        datetime completedTime
+        string message
+    }
+
+    SYNC_CATEGORY_ENUM {
+        enum definition
+        enum configuration
+        enum measurement
+        enum fault
+        enum type
+        enum status
+    }
+
+    TRANSPORT_LINK_SYNC_REQUEST {
+        int syncCorrelationId
+        datetime requestTime
+        object[] categories
+        ObjectId[] objectIds
+        string subArea
+        TypeId typeId FK
+        bool activeOnly
+        datetime since
+    }
+
+    TRANSPORT_LINK_TYPE ||--o{ TRANSPORT_LINK : "classifies (typeId)"
+    TRANSPORT_LINK ||--o| TRANSPORT_LINK_CONFIGURATION : "has (transportLinkId)"
+    TRANSPORT_LINK ||--o{ TRANSPORT_LINK_MEASUREMENT : "emits (transportLinkId)"
+    TRANSPORT_LINK ||--o{ TRANSPORT_LINK_COMMAND : "receives (transportLinkId)"
+    TRANSPORT_LINK ||--o{ TRANSPORT_LINK_FAULT : "raises (transportLinkId)"
+    TRANSPORT_LINK ||--o{ TRANSPORT_LINK_HISTORY : "records (transportLinkId)"
+    TRANSPORT_LINK_COMMAND ||--o{ TRANSPORT_LINK_COMMAND_RESPONSE : "produces (commandCorrelationId, status-progression)"
+    TRANSPORT_LINK_SYNC_COMPLETE }o--|| SYNC_STATUS : status
+    TRANSPORT_LINK_SYNC_REQUEST }o--|| SYNC_CATEGORY_ENUM : categories
+    TRANSPORT_LINK_TYPE ||--|| LINK_STATUS_TYPE : "linkStatus"
+    TRANSPORT_LINK_CONFIGURATION ||--|| TRANSPORT_LINK_SCOOT_CONFIGURATION : "scoot"
+    TRANSPORT_LINK_CONFIGURATION ||--|| TRANSPORT_LINK_GPS_CONFIGURATION : "gps"
+    TRANSPORT_LINK_CONFIGURATION ||--|| TRANSPORT_LINK_ANPR_CONFIGURATION : "anpr"
+    TRANSPORT_LINK_MEASUREMENT ||--|| TRANSPORT_LINK_SCOOT_DYNAMIC : "scoot"
+    TRANSPORT_LINK_MEASUREMENT ||--|| TRANSPORT_LINK_ANPR_DYNAMIC : "anpr"
+    TRANSPORT_LINK_MEASUREMENT ||--|| TRANSPORT_LINK_GPS_DYNAMIC : "gps"
+    TRANSPORT_LINK_COMMAND ||--|| SET_STOC_COMMAND : "setStoc"
+    TRANSPORT_LINK_COMMAND ||--|| RECALIBRATE_TRANSPORT_LINK_COMMAND : "recalibrate"
+    TRANSPORT_LINK_COMMAND ||--|| REQUEST_TRANSPORT_LINK_STATUS_COMMAND : "requestStatus"
+

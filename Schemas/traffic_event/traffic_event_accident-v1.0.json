@@ -1,0 +1,175 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/traffic_event/traffic_event_accident-v1.0.json",
+  "$ref": "#/$defs/AccidentEvent",
+  "$defs": {
+    "AccidentEvent": {
+      "additionalProperties": false,
+      "dependentRequired": {
+        "externalSituationVersion": [
+          "externalSituationId"
+        ]
+      },
+      "description": "Accident traffic event payload.",
+      "properties": {
+        "eventId": {
+          "description": "Unique identifier of this event.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "accidentType": {
+          "$ref": "#/$defs/AccidentType",
+          "description": "Classification of the accident."
+        },
+        "status": {
+          "$ref": "traffic_event_common-v1.0.json#/$defs/EventStatus"
+        },
+        "publicDescription": {
+          "type": "string",
+          "description": "Public-facing summary for journey planners."
+        },
+        "locationDescription": {
+          "type": "string",
+          "description": "Free-text location description."
+        },
+        "location": {
+          "$ref": "../common/common-v1.0.json#/$defs/Point",
+          "description": "WGS84 point location."
+        },
+        "severity": {
+          "$ref": "traffic_event_common-v1.0.json#/$defs/SeverityType",
+          "description": "Event severity."
+        },
+        "phase": {
+          "type": "string",
+          "description": "Event phase (unconstrained)."
+        },
+        "lanesAffected": {
+          "$ref": "traffic_event_common-v1.0.json#/$defs/LanesAffectedType",
+          "description": "Lane closure pattern (I=open, T=closed)."
+        },
+        "lanesRestricted": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Count of closed/restricted lanes."
+        },
+        "lanesOperational": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Count of operational lanes."
+        },
+        "diversionRoute": {
+          "type": "string",
+          "description": "Diversion route description."
+        },
+        "diversionInForce": {
+          "type": "boolean",
+          "description": "Whether diversion is active."
+        },
+        "reportedBy": {
+          "type": "string",
+          "description": "Who reported the event."
+        },
+        "confirmedBy": {
+          "type": "string",
+          "description": "Who confirmed."
+        },
+        "modifiedBy": {
+          "type": "string",
+          "description": "Who last modified."
+        },
+        "accidentTime": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the accident was reported. Optional: unknown when first reported."
+        },
+        "endTime": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When cleared."
+        },
+        "vehicleCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of vehicles involved."
+        },
+        "lightConditions": {
+          "type": "string",
+          "description": "Light conditions at time."
+        },
+        "roadConditions": {
+          "type": "string",
+          "description": "Road surface conditions."
+        },
+        "weatherConditions": {
+          "type": "string",
+          "description": "Weather conditions."
+        },
+        "statisticDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When statistics were collected."
+        },
+        "externalCountryCode": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "description": "Cross-ref country code (an XML NMTOKEN: no whitespace)."
+        },
+        "externalSystemCode": {
+          "type": "string",
+          "description": "Cross-ref system code."
+        },
+        "externalSituationId": {
+          "type": "string",
+          "description": "Cross-ref situation identifier."
+        },
+        "externalSituationVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Cross-ref situation version. Requires external_situation_id."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions."
+        }
+      },
+      "required": [
+        "eventId",
+        "accidentType",
+        "status"
+      ],
+      "type": "object",
+      "title": "UTMC Traffic Event Accident"
+    },
+    "AccidentType": {
+      "description": "Classification of accident (20 values).\n\n18 of the 20 named XSD values, plus ``other``, plus ``overturnedTrailer``,\nwhich has no XSD code. XSD codes 5 (\"Accident History\") and 20 (\"Vehicle\nspun around\") are not carried.",
+      "enum": [
+        "accident",
+        "busAccident",
+        "collision",
+        "investigationWork",
+        "chemicalSpillage",
+        "fuelSpillage",
+        "hazardousMaterials",
+        "heavyLorry",
+        "jackKnifedArticulatedLorry",
+        "jackKnifedCaravan",
+        "jackKnifedTrailer",
+        "multiVehicle",
+        "oilSpillage",
+        "overturnedHeavyLorry",
+        "overturnedTrailer",
+        "overturnedVehicle",
+        "secondaryAccident",
+        "seriousAccident",
+        "shedLoad",
+        "other"
+      ],
+      "type": "string"
+    }
+  }
+}

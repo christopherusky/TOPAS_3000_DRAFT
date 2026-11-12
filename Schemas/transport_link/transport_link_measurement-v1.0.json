@@ -1,0 +1,244 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/transport_link/transport_link_measurement-v1.0.json",
+  "$ref": "#/$defs/TransportLinkMeasurement",
+  "$defs": {
+    "TransportLinkANPRDynamic": {
+      "additionalProperties": false,
+      "description": "ANPR-reported live measurement for a transport link.",
+      "properties": {
+        "transportLinkId": {
+          "description": "Identifier of the transport link this reading is about.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Time the measurement was taken.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "quality": {
+          "$ref": "../common/common-v1.0.json#/$defs/Quality",
+          "description": "Optional quality statement for this measurement."
+        },
+        "averageSpeedKph": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Estimated average speed in kilometres per hour."
+        },
+        "linkTravelTimeSeconds": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Current link journey time in seconds."
+        },
+        "kind": {
+          "const": "anpr",
+          "description": "Discriminator for the tagged union. The fixed value \"anpr\" selects the TransportLinkANPRDynamic payload; it is not free-text command content.",
+          "type": "string"
+        },
+        "numberPlatesIn": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of successful plate reads at the start of the link."
+        },
+        "numberPlatesOut": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of successful plate reads at the end of the link."
+        },
+        "numberPlatesMatches": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Count of number-plate matches in the measurement period."
+        },
+        "numberPlatesMatchesUsed": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of successful matches actually used in the travel-time calculation."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions. Open-content object."
+        }
+      },
+      "required": [
+        "kind",
+        "timestamp",
+        "transportLinkId"
+      ],
+      "type": "object"
+    },
+    "TransportLinkGPSDynamic": {
+      "additionalProperties": false,
+      "description": "GPS-probe live measurement for a transport link.\n\nField set drawn from the XSD TransportLinkGpsDynamicGroup (Freeflow\nExtension): CurrentJourneyTime, the three travel-time statistics\n(Mean/Median/VarianceTravelTime), NumberOfVehicles and the reserved-\nlane flow count. Shared base fields (transport_link_id, timestamp,\nquality, average_speed_kph, link_travel_time_seconds) are inherited\nfrom _TransportLinkDynamicBase.",
+      "properties": {
+        "transportLinkId": {
+          "description": "Identifier of the transport link this reading is about.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Time the measurement was taken.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "quality": {
+          "$ref": "../common/common-v1.0.json#/$defs/Quality",
+          "description": "Optional quality statement for this measurement."
+        },
+        "averageSpeedKph": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Estimated average speed in kilometres per hour."
+        },
+        "linkTravelTimeSeconds": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Current link journey time in seconds."
+        },
+        "kind": {
+          "const": "gps",
+          "description": "Discriminator for the tagged union. The fixed value \"gps\" selects the TransportLinkGPSDynamic payload; it is not free-text command content.",
+          "type": "string"
+        },
+        "currentJourneyTimeSeconds": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Current journey time in seconds."
+        },
+        "meanTravelTimeSeconds": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Mean travel time along the link in the measured interval, in seconds."
+        },
+        "medianTravelTimeSeconds": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Median travel time along the link in the measured interval, in seconds."
+        },
+        "varianceTravelTimeSeconds": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Variance of travel times along the link in the measured interval. The unit is seconds squared (s\u00b2), as for any variance of times; the field name keeps 'Seconds' for compatibility with v1."
+        },
+        "numberOfVehicles": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of vehicles in the measured interval."
+        },
+        "reservedLaneFlowVehicles": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Flow in the reserved lane in the measured interval, in vehicles. A rate, so it may be fractional."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions. Open-content object."
+        }
+      },
+      "required": [
+        "kind",
+        "timestamp",
+        "transportLinkId"
+      ],
+      "type": "object"
+    },
+    "TransportLinkMeasurement": {
+      "discriminator": {
+        "mapping": {
+          "anpr": "#/$defs/TransportLinkANPRDynamic",
+          "gps": "#/$defs/TransportLinkGPSDynamic",
+          "scoot": "#/$defs/TransportLinkSCOOTDynamic"
+        },
+        "propertyName": "kind"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/TransportLinkSCOOTDynamic"
+        },
+        {
+          "$ref": "#/$defs/TransportLinkANPRDynamic"
+        },
+        {
+          "$ref": "#/$defs/TransportLinkGPSDynamic"
+        }
+      ],
+      "title": "UTMC Transport Link Measurement",
+      "description": "Transport link dynamic measurement data."
+    },
+    "TransportLinkSCOOTDynamic": {
+      "additionalProperties": false,
+      "description": "SCOOT-reported live measurement for a transport link.",
+      "properties": {
+        "transportLinkId": {
+          "description": "Identifier of the transport link this reading is about.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Time the measurement was taken.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "quality": {
+          "$ref": "../common/common-v1.0.json#/$defs/Quality",
+          "description": "Optional quality statement for this measurement."
+        },
+        "averageSpeedKph": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Estimated average speed in kilometres per hour."
+        },
+        "linkTravelTimeSeconds": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Current link journey time in seconds."
+        },
+        "kind": {
+          "const": "scoot",
+          "description": "Discriminator for the tagged union. The fixed value \"scoot\" selects the TransportLinkSCOOTDynamic payload; it is not free-text command content.",
+          "type": "string"
+        },
+        "congestionPercent": {
+          "type": "number",
+          "maximum": 100.0,
+          "minimum": 0.0,
+          "description": "Current percentage congestion as reported by SCOOT."
+        },
+        "currentFlowVehicles": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Current flow in vehicles over the SCOOT measurement interval. A rate, so it may be fractional (e.g. a smoothed or averaged flow)."
+        },
+        "occupancyPercent": {
+          "type": "number",
+          "maximum": 100.0,
+          "minimum": 0.0,
+          "description": "Average link occupancy percentage across all detectors on the link."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions. Open-content object."
+        }
+      },
+      "required": [
+        "kind",
+        "timestamp",
+        "transportLinkId"
+      ],
+      "type": "object"
+    }
+  }
+}

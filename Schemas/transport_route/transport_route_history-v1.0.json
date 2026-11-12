@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/transport_route/transport_route_history-v1.0.json",
+  "$ref": "#/$defs/TransportRouteHistoryEntry",
+  "$defs": {
+    "TransportRouteHistoryEntry": {
+      "additionalProperties": false,
+      "description": "Transport route history entries.",
+      "properties": {
+        "transportRouteId": {
+          "description": "Identifier of the route.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "logId": {
+          "description": "Unique identifier of this log entry.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "logDate": {
+          "description": "When the log entry was recorded.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "logEntry": {
+          "description": "Equipment log data.",
+          "type": "string"
+        },
+        "logUser": {
+          "type": "string",
+          "description": "User who created the entry."
+        },
+        "eventType": {
+          "type": "string",
+          "description": "Category of the history event."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions."
+        }
+      },
+      "required": [
+        "transportRouteId",
+        "logId",
+        "logDate",
+        "logEntry"
+      ],
+      "type": "object",
+      "title": "UTMC Transport Route History"
+    }
+  }
+}

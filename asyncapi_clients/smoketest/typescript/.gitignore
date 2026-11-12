@@ -1,0 +1,6 @@
+# Build artefacts and dependency cache for the TopasSnippets TS smoke harness.
+# package.json + package-lock.json + tsconfig.json + the README live above this
+# line; everything below is recreated by `npm ci` and `npm run build`.
+
+node_modules/
+dist/

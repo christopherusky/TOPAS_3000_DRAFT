@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/detector/detector_command-v1.0.json",
+  "$ref": "#/$defs/DetectorCommand",
+  "$defs": {
+    "CalibrateDetectorCommand": {
+      "additionalProperties": false,
+      "description": "Trigger a calibration cycle on the detector.",
+      "properties": {
+        "detectorId": {
+          "description": "Identifier of the detector receiving the command.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "commandCorrelationId": {
+          "description": "Caller-assigned identifier correlating a command request with its response. Not an identifier of the command itself. Named to avoid collision with the AMQP 1.0 correlation-id message property.",
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "requestTime": {
+          "description": "When the command was issued.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "kind": {
+          "const": "calibrate",
+          "description": "Discriminator for the tagged union. The fixed value \"calibrate\" selects the CalibrateDetectorCommand payload; it is not free-text command content.",
+          "type": "string"
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions."
+        }
+      },
+      "required": [
+        "commandCorrelationId",
+        "detectorId",
+        "kind",
+        "requestTime"
+      ],
+      "type": "object"
+    },
+    "DetectorCommand": {
+      "discriminator": {
+        "mapping": {
+          "calibrate": "#/$defs/CalibrateDetectorCommand",
+          "reset": "#/$defs/ResetDetectorCommand",
+          "setThreshold": "#/$defs/SetThresholdDetectorCommand"
+        },
+        "propertyName": "kind"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/ResetDetectorCommand"
+        },
+        {
+          "$ref": "#/$defs/CalibrateDetectorCommand"
+        },
+        {
+          "$ref": "#/$defs/SetThresholdDetectorCommand"
+        }
+      ],
+      "title": "UTMC Detector Command",
+      "description": "Detector command payloads."
+    },
+    "ResetDetectorCommand": {
+      "additionalProperties": false,
+      "description": "Reset the detector to its default state.",
+      "properties": {
+        "detectorId": {
+          "description": "Identifier of the detector receiving the command.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "commandCorrelationId": {
+          "description": "Caller-assigned identifier correlating a command request with its response. Not an identifier of the command itself. Named to avoid collision with the AMQP 1.0 correlation-id message property.",
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "requestTime": {
+          "description": "When the command was issued.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "kind": {
+          "const": "reset",
+          "description": "Discriminator for the tagged union. The fixed value \"reset\" selects the ResetDetectorCommand payload; it is not free-text command content.",
+          "type": "string"
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions."
+        }
+      },
+      "required": [
+        "commandCorrelationId",
+        "detectorId",
+        "kind",
+        "requestTime"
+      ],
+      "type": "object"
+    },
+    "SetThresholdDetectorCommand": {
+      "additionalProperties": false,
+      "description": "Set occupancy/flow threshold values on the detector.",
+      "properties": {
+        "detectorId": {
+          "description": "Identifier of the detector receiving the command.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "commandCorrelationId": {
+          "description": "Caller-assigned identifier correlating a command request with its response. Not an identifier of the command itself. Named to avoid collision with the AMQP 1.0 correlation-id message property.",
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "requestTime": {
+          "description": "When the command was issued.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "kind": {
+          "const": "setThreshold",
+          "description": "Discriminator for the tagged union. The fixed value \"setThreshold\" selects the SetThresholdDetectorCommand payload; it is not free-text command content.",
+          "type": "string"
+        },
+        "thresholdUp": {
+          "description": "Upward threshold value to set.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "thresholdDown": {
+          "description": "Downward threshold value to set.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions."
+        }
+      },
+      "required": [
+        "commandCorrelationId",
+        "detectorId",
+        "kind",
+        "requestTime",
+        "thresholdDown",
+        "thresholdUp"
+      ],
+      "type": "object"
+    }
+  }
+}

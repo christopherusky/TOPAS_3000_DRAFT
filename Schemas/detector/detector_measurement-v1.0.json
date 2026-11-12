@@ -1,0 +1,310 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/detector/detector_measurement-v1.0.json",
+  "$ref": "#/$defs/DetectorMeasurement",
+  "$defs": {
+    "DetectorMeasurement": {
+      "discriminator": {
+        "mapping": {
+          "flow": "#/$defs/FlowDynamic",
+          "headway": "#/$defs/HeadwayDynamic",
+          "occupancy": "#/$defs/OccupancyDynamic",
+          "queue": "#/$defs/QueueDynamic",
+          "speed": "#/$defs/SpeedDynamic"
+        },
+        "propertyName": "kind"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/FlowDynamic"
+        },
+        {
+          "$ref": "#/$defs/OccupancyDynamic"
+        },
+        {
+          "$ref": "#/$defs/QueueDynamic"
+        },
+        {
+          "$ref": "#/$defs/SpeedDynamic"
+        },
+        {
+          "$ref": "#/$defs/HeadwayDynamic"
+        }
+      ],
+      "title": "UTMC Detector Measurement",
+      "description": "Detector dynamic measurement data."
+    },
+    "FlowDynamic": {
+      "additionalProperties": false,
+      "description": "Vehicle flow count over a measurement period.",
+      "properties": {
+        "detectorId": {
+          "description": "Identifier of the detector this reading is about.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Time the measurement was taken.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "quality": {
+          "$ref": "../common/common-v1.0.json#/$defs/Quality",
+          "description": "Optional quality statement for this measurement."
+        },
+        "kind": {
+          "const": "flow",
+          "description": "Discriminator for the tagged union. The fixed value \"flow\" selects the FlowDynamic payload; it is not free-text command content.",
+          "type": "string"
+        },
+        "totalFlow": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total vehicle count over the period. Omitted when only class counts are reported."
+        },
+        "periodSeconds": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "description": "Duration of the measurement period in seconds."
+        },
+        "classCounts": {
+          "description": "Per-class vehicle counts in positional order \u2014 index 0 is Class1, index 7 is Class8. May be shorter if trailing classes are absent. A null entry means that class was not reported, as distinct from a count of zero.",
+          "items": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "maxItems": 8,
+          "type": "array"
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions. Open-content object."
+        }
+      },
+      "required": [
+        "detectorId",
+        "kind",
+        "timestamp"
+      ],
+      "type": "object"
+    },
+    "HeadwayDynamic": {
+      "additionalProperties": false,
+      "description": "Mean inter-vehicle headway over a measurement period.",
+      "properties": {
+        "detectorId": {
+          "description": "Identifier of the detector this reading is about.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Time the measurement was taken.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "quality": {
+          "$ref": "../common/common-v1.0.json#/$defs/Quality",
+          "description": "Optional quality statement for this measurement."
+        },
+        "kind": {
+          "const": "headway",
+          "description": "Discriminator for the tagged union. The fixed value \"headway\" selects the HeadwayDynamic payload; it is not free-text command content.",
+          "type": "string"
+        },
+        "meanHeadwaySeconds": {
+          "description": "Mean inter-vehicle headway in seconds.",
+          "minimum": 0.0,
+          "type": "number"
+        },
+        "periodSeconds": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "description": "Duration of the measurement period in seconds."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions. Open-content object."
+        }
+      },
+      "required": [
+        "detectorId",
+        "kind",
+        "meanHeadwaySeconds",
+        "timestamp"
+      ],
+      "type": "object"
+    },
+    "OccupancyDynamic": {
+      "additionalProperties": false,
+      "description": "Detector occupancy (percentage of period occupied).",
+      "properties": {
+        "detectorId": {
+          "description": "Identifier of the detector this reading is about.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Time the measurement was taken.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "quality": {
+          "$ref": "../common/common-v1.0.json#/$defs/Quality",
+          "description": "Optional quality statement for this measurement."
+        },
+        "kind": {
+          "const": "occupancy",
+          "description": "Discriminator for the tagged union. The fixed value \"occupancy\" selects the OccupancyDynamic payload; it is not free-text command content.",
+          "type": "string"
+        },
+        "occupancyPercent": {
+          "description": "Percentage occupancy over the period.",
+          "maximum": 100.0,
+          "minimum": 0.0,
+          "type": "number"
+        },
+        "periodSeconds": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "description": "Duration of the measurement period in seconds."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions. Open-content object."
+        }
+      },
+      "required": [
+        "detectorId",
+        "kind",
+        "occupancyPercent",
+        "timestamp"
+      ],
+      "type": "object"
+    },
+    "QueueDynamic": {
+      "additionalProperties": false,
+      "description": "Queue presence and severity reported by the detector.",
+      "properties": {
+        "detectorId": {
+          "description": "Identifier of the detector this reading is about.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Time the measurement was taken.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "quality": {
+          "$ref": "../common/common-v1.0.json#/$defs/Quality",
+          "description": "Optional quality statement for this measurement."
+        },
+        "kind": {
+          "const": "queue",
+          "description": "Discriminator for the tagged union. The fixed value \"queue\" selects the QueueDynamic payload; it is not free-text command content.",
+          "type": "string"
+        },
+        "queuePresent": {
+          "description": "Whether a queue is currently detected.",
+          "type": "boolean"
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "normal",
+            "dense",
+            "delayed",
+            "congested",
+            "stopAndGo",
+            "severe"
+          ],
+          "description": "Queue severity when a queue is present."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions. Open-content object."
+        }
+      },
+      "required": [
+        "detectorId",
+        "kind",
+        "queuePresent",
+        "timestamp"
+      ],
+      "type": "object"
+    },
+    "SpeedDynamic": {
+      "additionalProperties": false,
+      "description": "Mean vehicle speed over a measurement period.",
+      "properties": {
+        "detectorId": {
+          "description": "Identifier of the detector this reading is about.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Time the measurement was taken.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "quality": {
+          "$ref": "../common/common-v1.0.json#/$defs/Quality",
+          "description": "Optional quality statement for this measurement."
+        },
+        "kind": {
+          "const": "speed",
+          "description": "Discriminator for the tagged union. The fixed value \"speed\" selects the SpeedDynamic payload; it is not free-text command content.",
+          "type": "string"
+        },
+        "meanSpeedKph": {
+          "description": "Mean vehicle speed in kilometres per hour.",
+          "minimum": 0.0,
+          "type": "number"
+        },
+        "periodSeconds": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "description": "Duration of the measurement period in seconds."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions. Open-content object."
+        }
+      },
+      "required": [
+        "detectorId",
+        "kind",
+        "meanSpeedKph",
+        "timestamp"
+      ],
+      "type": "object"
+    }
+  }
+}

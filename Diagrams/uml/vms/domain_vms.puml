@@ -1,0 +1,241 @@
+@startuml
+title UTMC Vms Domain
+!pragma layout smetana
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam classFontSize 14
+skinparam classAttributeFontSize 11
+skinparam classFontStyle bold
+skinparam dpi 150
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam class {
+  BackgroundColor #FEFEFE
+  BorderColor #333333
+  ArrowColor #555555
+}
+scale max 4961*3508
+
+' ── vms_command ──
+class ClearSignCommand {
+  +vmsId: ObjectId
+  +commandCorrelationId: integer
+  +requestTime: datetime
+  +kind: "clearSign"
+   extensions: object
+}
+
+class DisplayGraphicCommand {
+  +vmsId: ObjectId
+  +commandCorrelationId: integer
+  +requestTime: datetime
+  +kind: "displayGraphic"
+  +graphicUrl: uri
+   displayDurationSeconds: integer
+   extensions: object
+}
+
+class DisplayMessageCommand {
+  +vmsId: ObjectId
+  +commandCorrelationId: integer
+  +requestTime: datetime
+  +kind: "displayMessage"
+  +message: string
+   messageLines: list<string>
+   displayDurationSeconds: integer
+   extensions: object
+}
+
+class SetBrightnessCommand {
+  +vmsId: ObjectId
+  +commandCorrelationId: integer
+  +requestTime: datetime
+  +kind: "setBrightness"
+  +brightnessPercent: number
+   extensions: object
+}
+
+class VmsCommand <<union>> {
+  discriminator: kind
+}
+
+' ── vms_command_response ──
+class VmsCommandResponse {
+  +vmsId: ObjectId
+  +commandCorrelationId: integer
+  +status: CommandResponseStatus
+  +responseTime: datetime
+   code: string
+   message: string
+   extensions: object
+}
+
+' ── vms_configuration ──
+class VmsConfiguration {
+  +vmsId: ObjectId
+  +configurationDate: datetime
+   defaultBrightnessPercent: number
+   autoBrightness: boolean
+   defaultDisplayTimeSeconds: integer
+   scrollSpeed: integer
+   extensions: object
+}
+
+' ── vms_definition ──
+class VmsDefinition {
+  +vmsId: ObjectId
+  +typeId: TypeId
+  +creationDate: datetime
+   location: Point
+   transportLinkId: ObjectId
+   linkDistanceMetres: number
+   networkLinkId: ObjectId
+   networkPathId: ObjectId
+   shortDescription: string
+   longDescription: string
+   signHeight: integer
+   signWidth: integer
+   numberOfLines: integer
+   charactersPerLine: integer
+   supportsGraphics: boolean
+   colourCapability: VmsColourCapability
+   participantId: ParticipantId
+   ownerOperator: string
+   originatingParticipantId: ParticipantId
+   originatingObjectId: ObjectId
+   extensions: object
+}
+
+enum VmsColourCapability {
+  monochrome
+  amber
+  multiColour
+  fullColour
+}
+
+' ── vms_fault ──
+class VmsFault {
+  +vmsId: ObjectId
+  +faultId: integer
+  +faultTypeId: TypeId
+   supplierFaultNumber: string
+   subsystemTypeId: TypeId
+   equipmentFault: boolean
+   communicationsFault: boolean
+  +creationDate: datetime
+   lastUpdated: datetime
+   clearedDate: datetime
+   description: string
+   acknowledgementState: AcknowledgementState
+   acknowledgementDate: datetime
+   severity: integer
+   status: FaultStatus
+   parameters: list<string>
+   extensions: object
+}
+
+' ── vms_history ──
+class VmsHistoryEntry {
+  +vmsId: ObjectId
+  +logId: integer
+  +logDate: datetime
+  +logEntry: string
+   logUser: string
+   eventType: string
+   extensions: object
+}
+
+' ── vms_measurement ──
+class VmsDynamic {
+  +vmsId: ObjectId
+  +timestamp: datetime
+   quality: Quality
+   currentMessage: string
+   messageLines: list<string>
+   graphicUrl: uri
+   brightnessPercent: number
+   messageSetTime: datetime
+   messageExpiryTime: datetime
+   status: VmsStatus
+   extensions: object
+}
+
+enum VmsStatus {
+  off
+  on
+  blank
+  displaying
+  fault
+  unknown
+}
+
+' ── vms_sync_complete ──
+class SyncComplete {
+  +syncCorrelationId: integer
+   syncId: string
+  +status: SyncStatus
+  +objectCount: integer
+  +completedTime: datetime
+   message: string
+   extensions: object
+}
+
+enum SyncStatus {
+  success
+  rejected
+  failed
+}
+
+' ── vms_sync_request ──
+class SyncRequest {
+  +syncCorrelationId: integer
+  +requestTime: datetime
+   categories: list<SyncCategoryEnum>
+   objectIds: list<ObjectId>
+   subArea: string
+   typeId: TypeId
+   activeOnly: boolean
+   since: datetime
+   extensions: object
+}
+
+enum SyncCategoryEnum {
+  definition
+  configuration
+  measurement
+  fault
+  type
+  status
+}
+
+' ── vms_type ──
+class VmsType {
+  +typeId: TypeId
+  +description: string
+   notes: string
+   specificationLink: uri
+   extensions: object
+}
+
+' ── External types ──
+class AcknowledgementState <<../fault_support/fault_support>> #EEEEEE
+class CommandResponseStatus <<../common/common>> #EEEEEE
+class FaultStatus <<../fault_support/fault_support>> #EEEEEE
+class Point <<../common/common>> #EEEEEE
+class Quality <<../common/common>> #EEEEEE
+
+VmsCommand <|-- DisplayMessageCommand
+VmsCommand <|-- DisplayGraphicCommand
+VmsCommand <|-- SetBrightnessCommand
+VmsCommand <|-- ClearSignCommand
+VmsCommandResponse ..> CommandResponseStatus : status
+VmsDefinition ..> Point : location
+VmsDefinition --> VmsColourCapability : colourCapability
+VmsFault ..> AcknowledgementState : acknowledgementState
+VmsFault ..> FaultStatus : status
+VmsDynamic ..> Quality : quality
+VmsDynamic --> VmsStatus : status
+SyncComplete --> SyncStatus : status
+SyncRequest --> SyncCategoryEnum : categories
+
+@enduml

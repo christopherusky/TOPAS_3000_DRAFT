@@ -1,0 +1,87 @@
+@startuml
+title UTMC Detector Measurement
+!pragma layout smetana
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam classFontSize 14
+skinparam classAttributeFontSize 11
+skinparam classFontStyle bold
+skinparam dpi 150
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam class {
+  BackgroundColor #FEFEFE
+  BorderColor #333333
+  ArrowColor #555555
+}
+scale max 3508*2480
+
+class FlowDynamic {
+  +detectorId: ObjectId
+  +timestamp: datetime
+   quality: Quality
+  +kind: "flow"
+   totalFlow: integer
+   periodSeconds: integer
+   classCounts: list<any>
+   extensions: object
+}
+
+class HeadwayDynamic {
+  +detectorId: ObjectId
+  +timestamp: datetime
+   quality: Quality
+  +kind: "headway"
+  +meanHeadwaySeconds: number
+   periodSeconds: integer
+   extensions: object
+}
+
+class OccupancyDynamic {
+  +detectorId: ObjectId
+  +timestamp: datetime
+   quality: Quality
+  +kind: "occupancy"
+  +occupancyPercent: number
+   periodSeconds: integer
+   extensions: object
+}
+
+class QueueDynamic {
+  +detectorId: ObjectId
+  +timestamp: datetime
+   quality: Quality
+  +kind: "queue"
+  +queuePresent: boolean
+   severity: enum
+   extensions: object
+}
+
+class SpeedDynamic {
+  +detectorId: ObjectId
+  +timestamp: datetime
+   quality: Quality
+  +kind: "speed"
+  +meanSpeedKph: number
+   periodSeconds: integer
+   extensions: object
+}
+
+class DetectorMeasurement <<union>> {
+  discriminator: kind
+}
+
+class Quality <<../common/common>> #EEEEEE
+
+DetectorMeasurement <|-- FlowDynamic
+DetectorMeasurement <|-- OccupancyDynamic
+DetectorMeasurement <|-- QueueDynamic
+DetectorMeasurement <|-- SpeedDynamic
+DetectorMeasurement <|-- HeadwayDynamic
+FlowDynamic ..> Quality : quality
+HeadwayDynamic ..> Quality : quality
+OccupancyDynamic ..> Quality : quality
+QueueDynamic ..> Quality : quality
+SpeedDynamic ..> Quality : quality
+
+@enduml

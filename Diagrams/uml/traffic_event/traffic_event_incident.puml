@@ -1,0 +1,137 @@
+@startuml
+title UTMC Traffic Event Incident
+!pragma layout smetana
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam classFontSize 14
+skinparam classAttributeFontSize 11
+skinparam classFontStyle bold
+skinparam dpi 150
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam class {
+  BackgroundColor #FEFEFE
+  BorderColor #333333
+  ArrowColor #555555
+}
+scale max 3508*2480
+
+class IncidentEvent {
+  +eventId: ObjectId
+  +incidentType: IncidentType
+  +status: EventStatus
+   publicDescription: string
+   locationDescription: string
+   location: Point
+   severity: SeverityType
+   phase: string
+   lanesAffected: LanesAffectedType
+   lanesRestricted: integer
+   lanesOperational: integer
+   diversionRoute: string
+   diversionInForce: boolean
+   reportedBy: string
+   confirmedBy: string
+   modifiedBy: string
+   incidentTime: datetime
+   endTime: datetime
+   externalCountryCode: string
+   externalSystemCode: string
+   externalSituationId: string
+   externalSituationVersion: integer
+   extensions: object
+}
+
+enum IncidentType {
+  abnormalLoad
+  airCrash
+  airRaid
+  animalsOnRoad
+  attackOnVehicle
+  avalanche
+  blasting
+  bridgeBlocked
+  bridgeClosed
+  bridgeDemolition
+  bridgeMaintenance
+  bridgeOpening
+  brokenDownBus
+  brokenDownLorry
+  brokenDownVehicle
+  burstPipe
+  burstWaterMain
+  busDisruption
+  busLaneBlocked
+  busLaneClosed
+  centreLaneBlocked
+  centreLaneClosed
+  chemicalSpillage
+  childrenOnRoad
+  civilEmergency
+  civilEmergencyCancelled
+  smogAlert
+  congestion
+  contraflow
+  convoy
+  crowd
+  cyclists
+  diversion
+  emergencyAlert
+  facilitiesClosed
+  fault
+  fire
+  flood
+  flow
+  fog
+  gawkingTraffic
+  gunfire
+  hail
+  heavyFlow
+  ice
+  laneClosure
+  lightFault
+  obstruction
+  peopleOnRoad
+  pollution
+  powerFailure
+  publicDisturbance
+  queue
+  radioactiveLeak
+  rain
+  riot
+  roadClosure
+  roadsideFire
+  sandstorms
+  securityAlert
+  securityIncident
+  sightseers
+  snow
+  speedRestriction
+  spillage
+  sprayHazard
+  structuralDamage
+  telephoneFault
+  temporarySignal
+  terroristIncident
+  tornadoes
+  trafficSignalFault
+  trainDisruption
+  unexplainedDamage
+  unexplainedEvent
+  washout
+  wind
+  other
+}
+
+class EventStatus <<traffic_event_common>> #EEEEEE
+class LanesAffectedType <<traffic_event_common>> #EEEEEE
+class Point <<../common/common>> #EEEEEE
+class SeverityType <<traffic_event_common>> #EEEEEE
+
+IncidentEvent --> IncidentType : incidentType
+IncidentEvent ..> EventStatus : status
+IncidentEvent ..> Point : location
+IncidentEvent ..> SeverityType : severity
+IncidentEvent ..> LanesAffectedType : lanesAffected
+
+@enduml

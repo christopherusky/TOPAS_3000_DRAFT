@@ -1,0 +1,5 @@
+# Build artefacts for the asyncapi-clients Rust smoke harness.
+# Cargo.toml + Cargo.lock + the README live above this line; everything
+# below is recreated by `cargo build --release`.
+
+target/

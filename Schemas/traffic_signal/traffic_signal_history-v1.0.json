@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/traffic_signal/traffic_signal_history-v1.0.json",
+  "$ref": "#/$defs/TrafficSignalHistoryEntry",
+  "$defs": {
+    "TrafficSignalHistoryEntry": {
+      "additionalProperties": false,
+      "description": "Traffic signal history entries (reused from TS004.0061:2010 Annex D).",
+      "properties": {
+        "trafficSignalId": {
+          "description": "Identifier of the traffic signal this log entry is about.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "logId": {
+          "description": "Unique identifier of this log entry within the owning system.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "logDate": {
+          "description": "When the log entry was recorded.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "logEntry": {
+          "description": "Equipment log data (free-form text).",
+          "type": "string"
+        },
+        "logUser": {
+          "type": "string",
+          "description": "User who created the log entry."
+        },
+        "eventType": {
+          "type": "string",
+          "description": "Category or type of the history event (e.g. 'configuration_change', 'fault_cleared')."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions. Open-content object."
+        }
+      },
+      "required": [
+        "trafficSignalId",
+        "logId",
+        "logDate",
+        "logEntry"
+      ],
+      "type": "object",
+      "title": "UTMC Traffic Signal 0064 History"
+    }
+  }
+}

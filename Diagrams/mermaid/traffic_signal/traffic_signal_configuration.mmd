@@ -1,0 +1,26 @@
+---
+title: UTMC Traffic Signal 0064 Configuration
+---
+erDiagram
+    TRAFFIC_SIGNAL_CONFIGURATION {
+        ObjectId trafficSignalId FK
+        string controllerType
+        string supplier
+        object trafficSignalType
+        datetime configurationDate
+        string subArea
+        string userCodeNumber
+    }
+
+    TRAFFIC_SIGNAL_TYPE_ENUM {
+        enum intersection
+        enum pegasus
+        enum pelican
+        enum puffin
+        enum toucan
+        enum tramCrossing
+        enum wigWag
+        enum other
+    }
+
+

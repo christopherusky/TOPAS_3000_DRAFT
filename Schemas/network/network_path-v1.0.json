@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/network/network_path-v1.0.json",
+  "$ref": "#/$defs/NetworkPath",
+  "$defs": {
+    "NetworkPath": {
+      "additionalProperties": false,
+      "description": "Road network path (ordered sequence of links).",
+      "properties": {
+        "pathId": {
+          "description": "Unique identifier of this path.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "typeId": {
+          "type": "string",
+          "description": "Path type classification (e.g. bus route, diversion).",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^\\S(?:[\\s\\S]*\\S)?$",
+          "title": "TypeId"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable name."
+        },
+        "permanent": {
+          "type": "boolean",
+          "description": "Whether this is a permanent or temporary path."
+        },
+        "linkIds": {
+          "type": "array",
+          "items": {
+            "description": "Unique identifier of an object. String of 1-32 characters from A-Z, a-z, 0-9 and . _ : - (no spaces), unique within object type within system.",
+            "maxLength": 32,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9._:-]+$",
+            "title": "ObjectId",
+            "type": "string"
+          },
+          "minItems": 1,
+          "description": "Ordered links defining the path. List order is the route sequence. Omit the field rather than send an empty list. A link may appear more than once, since a route can traverse the same link twice."
+        },
+        "initialTrimMeters": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Distance to trim from the start of the first link."
+        },
+        "finalTrimMeters": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Distance to trim from the end of the last link."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions."
+        }
+      },
+      "required": [
+        "pathId"
+      ],
+      "type": "object",
+      "title": "UTMC Network Path"
+    }
+  }
+}

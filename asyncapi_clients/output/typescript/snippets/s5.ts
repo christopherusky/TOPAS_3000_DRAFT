@@ -1,0 +1,109 @@
+/*
+ * File:        output/typescript/snippets/s5.ts
+ * Origin:      Generated from asyncapi.yaml by asyncapi_clients/generator/generate.py
+ * Changes:     Do not hand-edit; re-run `make asyncapi-clients` to regenerate
+ * Author:      Christopher Kettell, TRL Software
+ * Date:        2026-11-12
+ * Generator:   asyncapi_clients/generator v0.1.0
+ * License:     Apache-2.0  (https://opensource.org/license/Apache-2.0)
+ */
+import rhea from "rhea";
+
+/**
+ * Scenario S5 — Subscribe to traffic-signal.measurement (DATEX-II 2017 profile).
+ *
+ * Demonstrates: continuous telemetry from the most operationally
+ * important UTC domain. Same envelope shape as S1 but a
+ * different domain; the snippet pulls out the headline fields
+ * (signal id, mode, sub-mode, current plan id) so an operator can
+ * eyeball state at a glance.
+ *
+ * Tip: a typed SDK is not yet generated for TypeScript; use a Zod
+ * schema or the inline `TrafficSignalDynamicState` interface below
+ * for static typing. Once the SDK ships, replace the cast with the
+ * generated `TrafficSignalDynamicState` type.
+ */
+
+const CHANNEL = "traffic-signal.measurement";
+const SERVER_URL =
+  process.env.TOPAS_AMQP_URL ??
+  "amqps://{host}:{port}".replace("{host}", "localhost").replace("{port}", "5671");
+const MAX_MESSAGES = parseInt(process.env.TOPAS_MAX_MESSAGES ?? "5", 10);
+
+interface PlanLine {
+  planNumber?: number;
+}
+
+interface TrafficSignalDynamicState {
+  trafficSignalId?: string;
+  trafficSignalMode?: string;
+  trafficSignalSubMode?: string;
+  planLine?: PlanLine | null;
+}
+
+let received = 0;
+
+const container = rhea.create_container();
+
+container.on("connection_open", (ctx) => {
+  ctx.connection.open_receiver({
+    source: { address: CHANNEL, capabilities: ["topic"] },
+  });
+});
+
+container.on("message", (ctx) => {
+  const state = parseJsonBody(ctx.message?.body) as TrafficSignalDynamicState;
+
+  const signalId = state.trafficSignalId ?? "n/a";
+  const mode = state.trafficSignalMode ?? "n/a";
+  const subMode = state.trafficSignalSubMode ?? "n/a";
+  const plan = state.planLine?.planNumber ?? "n/a";
+
+  received += 1;
+  console.log(
+    `[${received}] signal=${signalId} mode=${mode} sub=${subMode} plan=${plan}`,
+  );
+  if (received >= MAX_MESSAGES) {
+    ctx.connection.close();
+  }
+});
+
+// Readiness handshake: the harness waits for this before starting
+// the publisher. Every publisher sends a fixed burst and exits, so anything
+// published before the receiver is attached is discarded by the broker.
+// rhea fires receiver_open once the peer confirms the attach.
+let __linksOpen = 0;
+container.on("receiver_open", () => {
+  __linksOpen += 1;
+  if (__linksOpen === 1) {
+    console.error("[ready]");
+  }
+});
+
+container.on("connection_close", () => process.exit(0));
+container.on("disconnected", () => process.exit(0));
+
+container.on("error", (err) => {
+  console.error(`[S5] error: ${err}`);
+  process.exit(1);
+});
+
+const parsed = new URL(SERVER_URL);
+const isTls = parsed.protocol === "amqps:";
+const host = parsed.hostname;
+const port = parseInt(parsed.port || (isTls ? "5671" : "5672"), 10);
+if (isTls) {
+  container.connect({ host, port, transport: "tls" });
+} else {
+  container.connect({ host, port });
+}
+
+function parseJsonBody(body: unknown): unknown {
+  if (typeof body === "string") {
+    return JSON.parse(body);
+  }
+  if (Buffer.isBuffer(body)) {
+    return JSON.parse(body.toString("utf-8"));
+  }
+  return body;
+}

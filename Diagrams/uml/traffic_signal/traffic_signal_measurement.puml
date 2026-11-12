@@ -1,0 +1,77 @@
+@startuml
+title UTMC Traffic Signal 0064 Dynamic State
+!pragma layout smetana
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam classFontSize 14
+skinparam classAttributeFontSize 11
+skinparam classFontStyle bold
+skinparam dpi 150
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam class {
+  BackgroundColor #FEFEFE
+  BorderColor #333333
+  ArrowColor #555555
+}
+scale max 3508*2480
+
+class PlanLine {
+  +planNumber: integer
+   planStartTime: datetime
+   cycleTime: integer
+   planDescription: string
+   offset: integer
+   signalGroupTimings: list<SignalGroupTimings>
+   extensions: object
+}
+
+class SignalGroupTimings {
+  +primarySignalGroup: string
+  +primarySignalGroupDuration: integer
+   alternateSignalGroup: string
+   extensions: object
+}
+
+class TrafficSignalDynamicState {
+  +trafficSignalId: ObjectId
+  +timestamp: datetime
+  +trafficSignalMode: TrafficSignalModeEnum
+   trafficSignalSubMode: TrafficSignalSubModeEnum
+   subArea: string
+   planLine: PlanLine
+   extensions: object
+}
+
+enum TrafficSignalModeEnum {
+  localMode
+  centralMode
+  signalsOffMode
+  startUpMode
+  unknownMode
+}
+
+enum TrafficSignalSubModeEnum {
+  cablelessLinking
+  fixedModeSimpleOrLinked
+  fixedModeToCurrentMax
+  manualMode
+  manualStepOn
+  movaMode
+  otherDistributedMode
+  preEmptLevel1
+  preEmptLevel2
+  preEmptLevel3
+  utcFixedTime
+  utcOtherCentralControlMethod
+  utcScoot
+  vehicleActuated
+  wardenControl
+}
+
+PlanLine --> SignalGroupTimings : signalGroupTimings
+TrafficSignalDynamicState --> TrafficSignalModeEnum : trafficSignalMode
+TrafficSignalDynamicState --> TrafficSignalSubModeEnum : trafficSignalSubMode
+TrafficSignalDynamicState --> PlanLine : planLine
+
+@enduml

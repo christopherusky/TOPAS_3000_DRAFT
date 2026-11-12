@@ -1,0 +1,40 @@
+# docker-compose.auth.yml — Artemis with authentication genuinely enabled.
+#
+# The ordinary smoke broker runs anonymous, which is right for the routing
+# scenarios and useless for proving anything about identity: Artemis
+# documents that with security disabled populate-validated-user falls back
+# to the username the client supplied, so the "validated" user would be
+# self-asserted.
+#
+# This broker therefore runs with ANONYMOUS_LOGIN=false and a mounted
+# etc-override supplying broker.xml, users and roles. It listens on 5674
+# so it can coexist with the anonymous broker on 5672.
+#
+# Origin:    Hand-written for asyncapi-clients conformance testing
+# Author:    Christopher Kettell, TRL Software
+# License:   Apache-2.0
+services:
+  artemis-auth:
+    image: apache/activemq-artemis:2.31.2-alpine
+    container_name: topas-smoketest-artemis-auth
+    environment:
+      ARTEMIS_USER: admin
+      ARTEMIS_PASSWORD: admin
+      ANONYMOUS_LOGIN: "false"
+    ports:
+      - "5674:5672"
+      # Management, for the scenario that asks the broker what it knows.
+      # 8162 so it does not clash with the anonymous broker's console.
+      - "8162:8161"
+    volumes:
+      - ./auth/broker.xml:/var/lib/artemis-instance/etc-override/broker.xml:ro
+      - ./auth/artemis-users.properties:/var/lib/artemis-instance/etc-override/artemis-users.properties:ro
+      - ./auth/artemis-roles.properties:/var/lib/artemis-instance/etc-override/artemis-roles.properties:ro
+    healthcheck:
+      # TCP-only, deliberately weak: the real readiness check authenticates
+      # and attaches, because a broker whose security config is not yet
+      # loaded still accepts a TCP connection (see a11_authenticated.py).
+      test: ["CMD", "sh", "-c", "nc -z localhost 5672"]
+      interval: 5s
+      timeout: 3s
+      retries: 24

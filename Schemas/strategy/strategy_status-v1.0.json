@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/strategy/strategy_status-v1.0.json",
+  "$ref": "#/$defs/StrategyStatus",
+  "$defs": {
+    "StrategyStatus": {
+      "additionalProperties": false,
+      "description": "Traffic management strategy current status.",
+      "properties": {
+        "strategyId": {
+          "description": "Identifier of the strategy this status is about.",
+          "minLength": 1,
+          "type": "string"
+        },
+        "strategyStatus": {
+          "$ref": "#/$defs/StrategyStatusEnum",
+          "description": "Current status (active/inactive)."
+        },
+        "statusMessage": {
+          "type": "string",
+          "description": "Non-error status information (e.g. 'Strategy applied 6 of 10 measures')."
+        },
+        "errorMessage": {
+          "type": "string",
+          "description": "Error information (e.g. 'Strategy will never become active')."
+        },
+        "strategyChangeStateTime": {
+          "description": "When the strategy status changed.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions."
+        }
+      },
+      "required": [
+        "strategyId",
+        "strategyStatus",
+        "strategyChangeStateTime"
+      ],
+      "type": "object",
+      "title": "UTMC Strategy Status"
+    },
+    "StrategyStatusEnum": {
+      "description": "Status of a traffic management strategy.",
+      "enum": [
+        "active",
+        "inactive"
+      ],
+      "type": "string"
+    }
+  }
+}

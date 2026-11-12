@@ -1,0 +1,283 @@
+{
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/common/common-v1.0.json",
+  "title": "UTMC Common Primitives",
+  "description": "Shared primitive types referenced by every domain schema.",
+  "$defs": {
+    "CommandResponseStatus": {
+      "description": "Outcome of a command execution.\n\nEvery value except ``PENDING`` is terminal. Consumers SHOULD test for\n\"not pending\" rather than enumerating the terminal values, so that a\nfuture profile adding one does not strand them.",
+      "enum": [
+        "success",
+        "failed",
+        "timedOut",
+        "invalid",
+        "notSupported",
+        "pending"
+      ],
+      "type": "string"
+    },
+    "Coordinates": {
+      "additionalProperties": false,
+      "description": "A WGS84 geographic coordinate pair (longitude, latitude).",
+      "properties": {
+        "latitude": {
+          "description": "Latitude in decimal degrees (WGS84).",
+          "maximum": 90.0,
+          "minimum": -90.0,
+          "type": "number"
+        },
+        "longitude": {
+          "description": "Longitude in decimal degrees (WGS84).",
+          "maximum": 180.0,
+          "minimum": -180.0,
+          "type": "number"
+        }
+      },
+      "required": [
+        "latitude",
+        "longitude"
+      ],
+      "type": "object"
+    },
+    "DateTypeDefinition": {
+      "additionalProperties": false,
+      "description": "Maps a specific calendar date to a day type category.\n\nUsed to classify special dates (e.g. 2025-04-18 as Easter Bank Holiday)\nso that profiles and schedules can apply the correct day type.",
+      "properties": {
+        "dayTypeId": {
+          "description": "Reference to the day type this date is classified as.",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "date": {
+          "description": "The calendar date being classified.",
+          "format": "date",
+          "type": "string"
+        },
+        "abnormal": {
+          "description": "Whether this date is an abnormal (non-standard) day.",
+          "type": "boolean"
+        },
+        "reason": {
+          "type": "string",
+          "description": "Reason for the abnormal classification, e.g. 'Easter Bank Holiday'."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions. Open-content object."
+        }
+      },
+      "required": [
+        "dayTypeId",
+        "date",
+        "abnormal"
+      ],
+      "type": "object"
+    },
+    "DayTypeDefinition": {
+      "additionalProperties": false,
+      "description": "Day type classification used for scheduling.\n\nPredefined day types 1-7 cover Monday to Sunday. Custom day types\n(8-100) can be added for special categories such as Bank Holidays\nor Race Days.",
+      "properties": {
+        "dayTypeId": {
+          "description": "Identifier of this day type.",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "description": {
+          "description": "Human-readable name, e.g. 'Monday', 'Bank Holiday'.",
+          "type": "string"
+        },
+        "shortName": {
+          "type": "string",
+          "description": "Abbreviated name, e.g. 'Mon', 'BH'."
+        },
+        "preDefined": {
+          "type": "boolean",
+          "description": "Whether this is a predefined day type (1-7 for Monday to Sunday)."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions. Open-content object."
+        }
+      },
+      "required": [
+        "dayTypeId",
+        "description"
+      ],
+      "type": "object"
+    },
+    "GeoJsonLineString": {
+      "additionalProperties": false,
+      "description": "A GeoJSON LineString geometry (RFC 7946).\n\nAn ordered sequence of two or more positions forming a polyline.\nCoordinates are [longitude, latitude] per GeoJSON specification.",
+      "properties": {
+        "type": {
+          "const": "LineString",
+          "default": "LineString",
+          "type": "string"
+        },
+        "coordinates": {
+          "description": "Ordered [longitude, latitude] pairs forming a polyline.",
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "maximum": 180.0,
+                "minimum": -180.0,
+                "type": "number"
+              },
+              {
+                "maximum": 90.0,
+                "minimum": -90.0,
+                "type": "number"
+              }
+            ],
+            "type": "array"
+          },
+          "minItems": 2,
+          "type": "array"
+        }
+      },
+      "required": [
+        "coordinates"
+      ],
+      "type": "object"
+    },
+    "GeoJsonPoint": {
+      "additionalProperties": false,
+      "description": "A GeoJSON Point geometry (RFC 7946).\n\nCoordinates are [longitude, latitude] per GeoJSON specification.",
+      "properties": {
+        "type": {
+          "const": "Point",
+          "default": "Point",
+          "type": "string"
+        },
+        "coordinates": {
+          "description": "[longitude, latitude] in WGS84 decimal degrees.",
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "maximum": 180.0,
+              "minimum": -180.0,
+              "type": "number"
+            },
+            {
+              "maximum": 90.0,
+              "minimum": -90.0,
+              "type": "number"
+            }
+          ],
+          "type": "array"
+        }
+      },
+      "required": [
+        "coordinates"
+      ],
+      "type": "object"
+    },
+    "Point": {
+      "additionalProperties": false,
+      "description": "A geographic point: a coordinate plus optional altitude.",
+      "properties": {
+        "coordinates": {
+          "$ref": "#/$defs/Coordinates",
+          "description": "WGS84 coordinates."
+        },
+        "altitudeMeters": {
+          "type": "number",
+          "maximum": 5000.0,
+          "minimum": -1000.0,
+          "description": "Altitude in metres above mean sea level. Optional. Bounds [-1000, 5000] inherited from utmc_location-v1.0.xsd AltitudeType."
+        }
+      },
+      "required": [
+        "coordinates"
+      ],
+      "type": "object"
+    },
+    "Quality": {
+      "additionalProperties": false,
+      "description": "Quality statement attached to a UTMC data object or measurement.",
+      "properties": {
+        "qualityId": {
+          "description": "Identifier of this Quality statement.",
+          "title": "QualityId",
+          "type": "integer"
+        },
+        "sourceName": {
+          "description": "Name of the data source (e.g. 'SCOOT', 'MIDAS'). Required: a quality statement naming no source cannot be interpreted.",
+          "minLength": 1,
+          "type": "string"
+        },
+        "sourceType": {
+          "type": "string",
+          "description": "Free-text description of the source kind."
+        },
+        "participantId": {
+          "type": "string",
+          "description": "Identifier of the UTMC participant system that owns this quality statement.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ParticipantId"
+        },
+        "lastUpdated": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When this quality statement was last updated."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions. Open-content object."
+        }
+      },
+      "required": [
+        "qualityId",
+        "sourceName"
+      ],
+      "type": "object"
+    },
+    "SubsystemDefinition": {
+      "additionalProperties": false,
+      "description": "Catalogue entry for a UTMC subsystem type.\n\nFollows the standard TypeDefinitionStructure pattern: TypeId +\nTypeDescription + TypeNotes + SpecificationLink + Extensions.",
+      "properties": {
+        "typeId": {
+          "description": "Identifier of this subsystem type.",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^\\S(?:[\\s\\S]*\\S)?$",
+          "title": "TypeId",
+          "type": "string"
+        },
+        "description": {
+          "description": "Human-readable description of the subsystem.",
+          "type": "string"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional notes about the subsystem."
+        },
+        "specificationLink": {
+          "type": "string",
+          "format": "uri",
+          "minLength": 1,
+          "description": "URL to an external specification document for this subsystem type."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions. Open-content object."
+        }
+      },
+      "required": [
+        "typeId",
+        "description"
+      ],
+      "type": "object"
+    }
+  }
+}

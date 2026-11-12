@@ -1,0 +1,18 @@
+---
+title: UTMC Strategy Command
+---
+erDiagram
+    STRATEGY_TRIGGER {
+        string strategyId FK
+        int commandCorrelationId
+        datetime requestTime
+        string serviceRequester
+        object triggerState
+    }
+
+    TRIGGER_STATE_ENUM {
+        enum enabled
+        enum disabled
+    }
+
+

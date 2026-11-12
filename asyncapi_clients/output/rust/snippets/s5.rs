@@ -1,0 +1,151 @@
+/*
+ * File:        output/rust/snippets/s5.rs
+ * Origin:      Generated from asyncapi.yaml by asyncapi_clients/generator/generate.py
+ * Changes:     Do not hand-edit; re-run `make asyncapi-clients` to regenerate
+ * Author:      Christopher Kettell, TRL Software
+ * Date:        2026-11-12
+ * Generator:   asyncapi_clients/generator v0.1.0
+ * License:     Apache-2.0  (https://opensource.org/license/Apache-2.0)
+ */
+//! Scenario S5 — Subscribe to traffic-signal.measurement (DATEX-II 2017 profile).
+//!
+//! Demonstrates: continuous telemetry from the most operationally
+//! important UTC domain. The TrafficSignalDynamicState payload is
+//! DATEX-II-derived (2017 profile); this snippet prints the
+//! headline fields (mode, sub-mode, current plan).
+//!
+//! Tip: a typed SDK is not yet generated for Rust; the inline struct
+//! below covers the headline fields only — add the rest, or generate
+//! the full struct from
+//! Schemas/traffic_signal/traffic_signal_measurement-v1.0.json, once
+//! the SDK ships.
+
+use std::env;
+use std::time::Duration;
+
+use fe2o3_amqp::types::messaging::{Body, Source};
+use fe2o3_amqp::types::primitives::Symbol;
+use fe2o3_amqp::{Connection, Receiver, Session};
+use serde::Deserialize;
+use serde_json::Value;
+use tokio::time::timeout;
+
+const CHANNEL: &str = "traffic-signal.measurement";
+const RECV_TIMEOUT: Duration = Duration::from_secs(5);
+
+/// Hand-written subset of the would-be generated SDK class; only the
+/// fields the snippet prints are modelled. Unrecognised fields are
+/// ignored by `serde` (default behaviour).
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct TrafficSignalDynamicState {
+    traffic_signal_id: String,
+    traffic_signal_mode: String,
+    #[serde(default)]
+    traffic_signal_sub_mode: Option<String>,
+    #[serde(default)]
+    plan_line: Option<PlanLine>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct PlanLine {
+    plan_number: i64,
+}
+
+fn server_url() -> String {
+    env::var("TOPAS_AMQP_URL")
+        .unwrap_or_else(|_| "amqps://{host}:{port}".replace("{host}", "localhost").replace("{port}", "5671"))
+}
+
+fn max_messages() -> usize {
+    env::var("TOPAS_MAX_MESSAGES")
+        .ok()
+        .and_then(|v| v.parse::<usize>().ok())
+        .unwrap_or(5)
+}
+
+fn body_as_string(body: &Body<Value>) -> String {
+    match body {
+        Body::Data(batch) => {
+            let mut out = String::new();
+            for data in batch.iter() {
+                out.push_str(&String::from_utf8_lossy(data.0.as_ref()));
+            }
+            out
+        }
+        Body::Value(v) => match &v.0 {
+            Value::String(s) => s.clone(),
+            other => other.to_string(),
+        },
+        Body::Sequence(_) | Body::Empty => String::new(),
+    }
+}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let url = server_url();
+    let max = max_messages();
+
+    let mut connection = Connection::open("topas-s5", url.as_str()).await?;
+    let mut session = Session::begin(&mut connection).await?;
+    let source = Source::builder()
+        .address(CHANNEL)
+        .capabilities(vec![Symbol::from("topic")])
+        .build();
+    let mut receiver = Receiver::builder()
+        .name("s5-receiver")
+        .source(source)
+        .attach(&mut session)
+        .await?;
+    // Readiness handshake — the link is attached, so a burst
+    // published from here on will be delivered rather than discarded.
+    eprintln!("[ready]");  // readiness handshake
+
+    for received in 0..max {
+        let delivery = match timeout(RECV_TIMEOUT, receiver.recv::<Body<Value>>()).await {
+            Ok(Ok(d)) => d,
+            Ok(Err(e)) => {
+                eprintln!("[S5] receive failed: {e}");
+                break;
+            }
+            Err(_) => {
+                eprintln!("[S5] receive timed out — broker idle? aborting.");
+                break;
+            }
+        };
+
+        let raw = body_as_string(delivery.body());
+        match serde_json::from_str::<TrafficSignalDynamicState>(&raw) {
+            Ok(state) => {
+                let plan = state
+                    .plan_line
+                    .as_ref()
+                    .map(|p| p.plan_number.to_string())
+                    .unwrap_or_else(|| "n/a".to_string());
+                let sub = state
+                    .traffic_signal_sub_mode
+                    .as_deref()
+                    .unwrap_or("n/a");
+                println!(
+                    "[{}] signal={} mode={} sub={} plan={}",
+                    received + 1,
+                    state.traffic_signal_id,
+                    state.traffic_signal_mode,
+                    sub,
+                    plan
+                );
+            }
+            Err(e) => eprintln!("[S5] JSON parse failed: {e}"),
+        }
+
+        if let Err(e) = receiver.accept(&delivery).await {
+            eprintln!("[S5] accept failed: {e}");
+        }
+    }
+
+    receiver.close().await?;
+    session.end().await?;
+    connection.close().await?;
+    Ok(())
+}

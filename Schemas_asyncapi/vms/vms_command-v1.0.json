@@ -1,0 +1,229 @@
+{
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/vms/vms_command-v1.0.json",
+  "$ref": "#/$defs/VmsCommand",
+  "$defs": {
+    "ClearSignCommand": {
+      "additionalProperties": false,
+      "description": "Clear the sign (blank the display).",
+      "properties": {
+        "vmsId": {
+          "description": "Identifier of the VMS receiving the command.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "commandCorrelationId": {
+          "description": "Caller-assigned identifier.",
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "requestTime": {
+          "description": "When the command was issued.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "kind": {
+          "const": "clearSign",
+          "description": "Discriminator for the tagged union. The fixed value \"clearSign\" selects the ClearSignCommand payload; it is not free-text command content.",
+          "type": "string"
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions."
+        }
+      },
+      "required": [
+        "commandCorrelationId",
+        "kind",
+        "requestTime",
+        "vmsId"
+      ],
+      "type": "object"
+    },
+    "DisplayGraphicCommand": {
+      "additionalProperties": false,
+      "description": "Display a graphic on the sign.",
+      "properties": {
+        "vmsId": {
+          "description": "Identifier of the VMS receiving the command.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "commandCorrelationId": {
+          "description": "Caller-assigned identifier.",
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "requestTime": {
+          "description": "When the command was issued.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "kind": {
+          "const": "displayGraphic",
+          "description": "Discriminator for the tagged union. The fixed value \"displayGraphic\" selects the DisplayGraphicCommand payload; it is not free-text command content.",
+          "type": "string"
+        },
+        "graphicUrl": {
+          "description": "URL of the graphic to display.",
+          "format": "uri",
+          "minLength": 1,
+          "type": "string"
+        },
+        "displayDurationSeconds": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "description": "How long to display the graphic."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions."
+        }
+      },
+      "required": [
+        "commandCorrelationId",
+        "graphicUrl",
+        "kind",
+        "requestTime",
+        "vmsId"
+      ],
+      "type": "object"
+    },
+    "DisplayMessageCommand": {
+      "additionalProperties": false,
+      "description": "Display a text message on the sign.",
+      "properties": {
+        "vmsId": {
+          "description": "Identifier of the VMS receiving the command.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "commandCorrelationId": {
+          "description": "Caller-assigned identifier.",
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "requestTime": {
+          "description": "When the command was issued.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "kind": {
+          "const": "displayMessage",
+          "description": "Discriminator for the tagged union. The fixed value \"displayMessage\" selects the DisplayMessageCommand payload; it is not free-text command content.",
+          "type": "string"
+        },
+        "message": {
+          "description": "Message text to display.",
+          "type": "string"
+        },
+        "messageLines": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Message split by lines."
+        },
+        "displayDurationSeconds": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "description": "How long to display the message."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions."
+        }
+      },
+      "required": [
+        "commandCorrelationId",
+        "kind",
+        "message",
+        "requestTime",
+        "vmsId"
+      ],
+      "type": "object"
+    },
+    "SetBrightnessCommand": {
+      "additionalProperties": false,
+      "description": "Set the brightness of the sign.",
+      "properties": {
+        "vmsId": {
+          "description": "Identifier of the VMS receiving the command.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "commandCorrelationId": {
+          "description": "Caller-assigned identifier.",
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "requestTime": {
+          "description": "When the command was issued.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "kind": {
+          "const": "setBrightness",
+          "description": "Discriminator for the tagged union. The fixed value \"setBrightness\" selects the SetBrightnessCommand payload; it is not free-text command content.",
+          "type": "string"
+        },
+        "brightnessPercent": {
+          "description": "Brightness percentage to set.",
+          "maximum": 100.0,
+          "minimum": 0.0,
+          "type": "number"
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions."
+        }
+      },
+      "required": [
+        "brightnessPercent",
+        "commandCorrelationId",
+        "kind",
+        "requestTime",
+        "vmsId"
+      ],
+      "type": "object"
+    },
+    "VmsCommand": {
+      "discriminator": "kind",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/DisplayMessageCommand"
+        },
+        {
+          "$ref": "#/$defs/DisplayGraphicCommand"
+        },
+        {
+          "$ref": "#/$defs/SetBrightnessCommand"
+        },
+        {
+          "$ref": "#/$defs/ClearSignCommand"
+        }
+      ],
+      "title": "UTMC VMS Command",
+      "description": "Variable message sign command payloads."
+    }
+  }
+}

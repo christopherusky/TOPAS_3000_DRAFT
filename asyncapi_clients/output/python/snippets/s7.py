@@ -1,0 +1,139 @@
+"""
+File:        output/python/snippets/s7.py
+Origin:      Generated from asyncapi.yaml by asyncapi_clients/generator/generate.py
+Changes:     Do not hand-edit; re-run `make asyncapi-clients` to regenerate
+Author:      Christopher Kettell, TRL Software
+Date:        2026-11-12
+Generator:   asyncapi_clients/generator v0.1.0
+License:     Apache-2.0  (https://opensource.org/license/Apache-2.0)
+"""
+"""Scenario S7 — Static reference data: consume the network topology.
+
+Demonstrates: the snapshot-then-disconnect idiom for static
+reference data. Network topology is published across five
+channels (one per object type: node, link, zone, path, turn). A
+consumer that needs the topology opens five receivers, accumulates
+each object into a typed dict keyed by the per-type id field, and disconnects
+once all five streams have produced their first message — different
+from S1/S5 which are continuous-telemetry consumers.
+
+The resulting in-memory dict is what a route-planning or incident-
+location component would build before serving its first request.
+"""
+import os
+import sys
+
+from proton.handlers import MessagingHandler
+from proton.reactor import Container
+
+from asyncapi_clients.output.python.sdk.network.network_node_v1_0 import NetworkNode
+from asyncapi_clients.output.python.sdk.network.network_link_v1_0 import NetworkLink
+from asyncapi_clients.output.python.sdk.network.network_zone_v1_0 import NetworkZone
+from asyncapi_clients.output.python.sdk.network.network_path_v1_0 import NetworkPath
+from asyncapi_clients.output.python.sdk.network.network_turn_v1_0 import NetworkTurn
+
+
+SERVER = os.environ.get(
+    "TOPAS_AMQP_URL",
+    "amqps://{host}:{port}".format(host="localhost", port="5671"),
+)
+
+CHANNELS = {
+    "network.node": NetworkNode,
+    "network.link": NetworkLink,
+    "network.zone": NetworkZone,
+    "network.path": NetworkPath,
+    "network.turn": NetworkTurn,
+}
+
+# Bound the wait so a silent stream cannot hang the consumer forever. The
+# other language snippets use the same 30s figure.
+TOTAL_DEADLINE_SECONDS = 30.0
+
+# Each network object has a type-specific id field, not a shared one.
+ID_FIELDS = {
+    "network.node": "nodeId",
+    "network.link": "linkId",
+    "network.zone": "zoneId",
+    "network.path": "pathId",
+    "network.turn": "turnId",
+}
+
+
+class NetworkTopologyConsumer(MessagingHandler):
+    def __init__(self, url: str) -> None:
+        super().__init__()
+        self.url = url
+        # objectId -> typed instance, one dict per object type.
+        self.topology: dict[str, dict] = {name: {} for name in CHANNELS}
+        self.seen_first_on: set[str] = set()
+        self.connection = None
+
+    def on_start(self, event):
+        conn = event.container.connect(self.url)
+        for channel in CHANNELS:
+            event.container.create_receiver(conn, channel)
+        self.connection = conn
+        # Report rather than hang if a stream stays silent. Without this the
+        # process produced no output at all on failure and simply waited to be
+        # killed, which is the property that made the equivalent Rust failure
+        # so hard to place.
+        event.container.schedule(TOTAL_DEADLINE_SECONDS, self)
+
+    def on_link_opened(self, event):
+        # Readiness handshake: the harness waits for this before
+        # starting the publisher. Every publisher sends a fixed burst and
+        # exits, so anything published before this link is attached is
+        # discarded by the broker and the subscriber then waits for messages
+        # that no longer exist. on_link_opened fires when the peer confirms
+        # the attach, which is the earliest point it is safe to publish.
+        if event.receiver is None:
+            return
+        self._links_open = getattr(self, "_links_open", 0) + 1
+        if self._links_open == len(CHANNELS):
+            print("[ready]", file=sys.stderr, flush=True)
+
+    def on_timer_task(self, event):
+        if self.seen_first_on == set(CHANNELS):
+            return  # already complete; the connection is closing
+        print(
+            "[S7] timed out waiting for all five channels; saw: "
+            f"{sorted(self.seen_first_on)}",
+            file=sys.stderr,
+            flush=True,
+        )
+        if self.connection is not None:
+            self.connection.close()
+
+    def on_message(self, event):
+        channel = event.message.address
+        cls = CHANNELS.get(channel)
+        if cls is None:
+            return  # unknown receiver, ignore
+        obj = cls.model_validate_json(event.message.body)
+        # Look up the per-type id field (nodeId, linkId, zoneId, etc).
+        id_value = getattr(obj, ID_FIELDS[channel])
+        self.topology[channel][id_value] = obj
+        self.seen_first_on.add(channel)
+        # Disconnect once we've heard from all five streams; in
+        # production a consumer would tune this differently (drain
+        # each stream, or wait for a sync-batch completion per A5).
+        if self.seen_first_on == set(CHANNELS):
+            print(
+                "[topology] "
+                + ", ".join(
+                    f"{name.split('.')[-1]}={len(self.topology[name])}"
+                    for name in CHANNELS
+                ),
+                flush=True,
+            )
+            event.connection.close()
+
+
+def main() -> int:
+    Container(NetworkTopologyConsumer(SERVER)).run()
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

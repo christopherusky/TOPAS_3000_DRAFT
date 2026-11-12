@@ -1,0 +1,14 @@
+---
+title: UTMC Transport Route Command Response
+---
+erDiagram
+    TRANSPORT_ROUTE_COMMAND_RESPONSE {
+        ObjectId transportRouteId FK
+        int commandCorrelationId
+        object status
+        datetime responseTime
+        string code
+        string message
+    }
+
+

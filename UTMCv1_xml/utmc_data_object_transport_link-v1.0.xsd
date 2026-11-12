@@ -1,0 +1,1086 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns="http://localhost/services/utmc/v1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:siri="http://www.siri.org.uk/siri" targetNamespace="http://localhost/services/utmc/v1" elementFormDefault="qualified" attributeFormDefault="unqualified" version="1.0" id="utmc_data_object_transport_link">
+    <!-- ===Dependencies ======================================= -->
+    <xsd:include schemaLocation="utmc_device-v1.0.xsd"/>
+    <!-- ===eGIF/GovTalk Documentation ======================================= -->
+    <xsd:annotation>
+        <xsd:appinfo>
+            <Metadata xmlns="http://www.govtalk.gov.uk/CM/gms-xs">
+                <Aggregation>main schema</Aggregation>
+                <Audience>e-service developers</Audience>
+                <Contributor>Freeflow Project and UTMC XML working Group. </Contributor>
+                <Contributor>UTMC and UML: Ian Cornwell, Ian.Cornwell at mottmac.com;</Contributor>
+                <Contributor>UTMC and UML: Tim Wright,  Tim.Wright  at ipl.com; </Contributor>
+                <Contributor>UtmcXml Nicholas Knowles, KIZOOM LTD., London EC4A 1LT</Contributor>
+                <Contributor>UTMC: mark.cartwright at centaurconsulting.co.uk;  </Contributor>
+                <Contributor>UTMC: mark.bodger at siemens.com; </Contributor>
+                <Contributor>UTMC: alison.h.jones at siemens.com; </Contributor>
+                <Contributor>UTMC: josef.kaltwasser at heuboe.de; </Contributor>
+                <Contributor>UTMC: brendan mason, tenet </Contributor>
+                <Contributor>UTMC: mandi patel at streetmanagement.org.uk; </Contributor>
+                <Contributor>UTMC:Matthew Shephard at tenettechnology.com</Contributor>
+                <Contributor>UTMC: ian.skeoch at peek-traffic.co.uk; </Contributor>
+                <Contributor>UTMC: martin.siczkowski at acis-cam.uk.com; </Contributor>
+                <Contributor>UTMC: richard thurbin, richard at cloudamber.com; </Contributor>
+                <Contributor>UTMC: ivan.wells at highways.gsi.gov.uk; </Contributor>
+                <Contributor>Freeflow: dan fitzgerald at Kizoom.com  </Contributor>
+                <Contributor>Freeflow: andy grove at whitewillow.biz</Contributor>
+                <Contributor>Freeflow: rajesh K; krishnamoorthy,   at imperial.ac.uk</Contributor>
+                <Contributor>Freeflow: rob shepherd at acis.com</Contributor>
+                <Contributor>Freeflow: ian routledge at acis.com</Contributor>
+                <Contributor>TO be COMPLETED  </Contributor>
+                <Coverage>United Kingdom</Coverage>
+                <Creator>Drafted for version 1.0   FREEFLOW. Nick Knowles Kizoom mailto:schemer@/www.utmc.uk.com/</Creator>
+                <Date>
+                    <Created>2009-04-01</Created>
+                    <!-- Documentation headers added -->
+                </Date>
+                <Description>
+                    <p>UtmcXml is an XML representation of the Urban Traffic Management Control model that can be used to exchange data objects between UTMC databases and other services.</p>. 
+                    <p>This subschema describes the UTMC Transport Link Data Object. A Transport Link describes a route  through the transport network from an origin to a destination, possibly via a specified point. It may be composed of an ordered list of <b>Route Segments </b> and  may include:
+                    <ol>
+                            <li>Definition, describing the fixed properties of an object and its location on the network</li>
+                            <ul>
+                                <li>Transport Link Definition</li>
+                            </ul>
+                            <li>Configuration  Objects, describing configurable properties of objects, with a time of last change</li>
+                            <ul>
+                                <li>Transport Link ANPR Configuration, describing a transport link monitored by an ANPR camera </li>
+                                <li>Transport Link GPS  Configuration, describing a transport link monitored by GPS probes</li>
+                                <li>Transport Link Scoot Configuration, describing a transport link monitored by a  Scoot system.</li>
+                            </ul>
+                            <li>Dynamic  Objects, describing volatile properties of Data Objects, with a time of last change</li>
+                            <ul>
+                                <li>Transport Link ANPR Dynamic, describing a transport link flow values from   an ANPR system.</li>
+                                <li>Transport Link GPS Dynamic, describing a transport link flow values from  GPS probes.</li>
+                                <li>Transport Link Scoot Dynamic, describing a transport link flow values from   a  Scoot system.</li>
+                            </ul>
+                            <li>Device History, describing the device history which may be issued to the device.</li>
+                            <ul>
+                                <li>Transport Link Device History</li>
+                            </ul>
+                            <li>Fault, describing the device  faults,</li>
+                            <ul>
+                                <li>Transport Link Fault</li>
+                            </ul>
+                            <li>Command, describing the commands which may be issued to the device.</li>
+                            <ul>
+                                <li>Transport Link Command</li>
+                            </ul>
+                            <li>Types, describing the allowed values for types associated with a Transport Link.</li>
+                            <ul>
+                                <li>Transport Link Type Definition</li>
+                                <li>Transport Link State Type Definition</li>
+                                <li>Transport Link Quality Type Definition</li>
+                                <li>Transport Link Fault  Type Definition</li>
+                            </ul>
+                        </ol>
+                    </p>
+                </Description>
+                <Format>
+                    <MediaType>text/xml</MediaType>
+                    <Syntax>http://www.w3.org/2001/XMLSchema</Syntax>
+                    <Description>XML schema, W3C Recommendation 2001</Description>
+                </Format>
+                <Identifier>{http://www.utmc.uk.com/schemas/1.0/utmc/}utmc_data_object_transport_link-v1.0.xsd</Identifier>
+                <Language>[ISO 639-2/B] ENG</Language>
+                <Publisher>Kizoom, 109-123 Clifton Street, London EC4A 4LD </Publisher>
+                <Relation>
+                    <Requires>http://www.utmc.uk.com/schemas/1.0/utmc/utmc_device-v1.0.xsd</Requires>
+                </Relation>
+                <Rights>Unclassified
+                            <Copyright>Freeflow, UTMC  2009</Copyright>
+                </Rights>
+                <Source>
+                    <p>Derived from the UTMC specification and SIRI standards.
+                            <ul>
+                            <li>UTMC Data Object specification: ts004.003annexdapr07.xls</li>
+                            <li>UTMC UML specification: ts004-004a-annexd-sep08.pdf  - </li>
+                        </ul>
+                    </p>
+                </Source>
+                <Status>Version 1.0 Draft for approval</Status>
+                <Subject>
+                    <Category>Arts, recreation and travel, Tourism, Travel (tourism), Transport,
+Public transport, Bus services, Coach services, Bus stops and stations,
+Business and industry, Transport, 
+Roads and road transport
+</Category>
+                    <Project>Freeflow UtmcXml Interface</Project>
+                </Subject>
+                <Title>UTMC XML schema.   Subschema  describing ca UTMC Transport Link Object.</Title>
+                <Type>Standard</Type>
+            </Metadata>
+        </xsd:appinfo>
+    </xsd:annotation>
+    <!-- ===Object Type=========================================================== -->
+    <xsd:element name="TransportLink" substitutionGroup="AbstractLinkObject">
+        <xsd:annotation>
+            <xsd:documentation>Transport Link Data Object. Represents  a link on the network that typical has real-time flow monitoring from SCOOT, ANPR or GPS  May be projected on a Network Link associated with a GIS feature.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:complexContent>
+                <xsd:restriction base="TransportLinkStructure">
+                    <xsd:sequence>
+                        <xsd:sequence>
+                            <xsd:element ref="ParticipantRef" minOccurs="0">
+                                <xsd:annotation>
+                                    <xsd:documentation>Unique Identifier of a system providing data. If absent, given by context.  Participant identifiers should be chosen to be unique across all systems so that together with SystemCodeNumber there is   a unique reference to each UTMC data object.</xsd:documentation>
+                                </xsd:annotation>
+                            </xsd:element>
+                        </xsd:sequence>
+                        <xsd:sequence>
+                            <xsd:element name="SystemCodeNumber" type="TransportLinkIdType">
+                                <xsd:annotation>
+                                    <xsd:documentation>Identifier of data object, unique within system and type.</xsd:documentation>
+                                </xsd:annotation>
+                            </xsd:element>
+                            <xsd:element ref="OriginatingParticipantRef" minOccurs="0"/>
+                            <xsd:element name="OriginatingObjectRef" type="TransportLinkIdType" minOccurs="0">
+                                <xsd:annotation>
+                                    <xsd:documentation>Identifier of object on originating system. Unique within originating  system and object type.</xsd:documentation>
+                                </xsd:annotation>
+                            </xsd:element>
+                        </xsd:sequence>
+                        <xsd:sequence>
+                            <xsd:group ref="TransportLinkGroup"/>
+                            <xsd:group ref="TransportLinkDeviceGroup">
+                                <xsd:annotation>
+                                    <xsd:documentation>Device related elements.</xsd:documentation>
+                                </xsd:annotation>
+                            </xsd:group>
+                            <xsd:element ref="Extensions" minOccurs="0"/>
+                        </xsd:sequence>
+                    </xsd:sequence>
+                </xsd:restriction>
+            </xsd:complexContent>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:complexType name="TransportLinkStructure">
+        <xsd:annotation>
+            <xsd:documentation xml:lang="en">Type for Transport Link.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="AbstractDataObjectStructure">
+                <xsd:sequence>
+                    <xsd:group ref="TransportLinkGroup"/>
+                    <xsd:group ref="TransportLinkDeviceGroup"/>
+                    <xsd:element ref="Extensions" minOccurs="0"/>
+                </xsd:sequence>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+    <xsd:group name="TransportLinkGroup">
+        <xsd:annotation>
+            <xsd:documentation>Group of Elements specific to Transport Link.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="definitions" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>Link defiinition. Normally there will be only one, but there may be more if historic values are included.</xsd:documentation>
+                </xsd:annotation>
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element ref="TransportLinkDefinition" maxOccurs="unbounded"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="configurations" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>Configurations for Link.</xsd:documentation>
+                </xsd:annotation>
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element ref="TransportLinkAnprConfiguration" minOccurs="0" maxOccurs="unbounded"/>
+                        <xsd:element ref="TransportLinkGpsConfiguration" minOccurs="0" maxOccurs="unbounded">
+                            <xsd:annotation>
+                                <xsd:documentation>GPS Transport Link Configuration. Configures values for a GPS probe. Freeflow extension.</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                        <xsd:element ref="TransportLinkScootConfiguration" minOccurs="0" maxOccurs="unbounded"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="dynamics" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>Dynamic values for link.</xsd:documentation>
+                </xsd:annotation>
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element ref="TransportLinkAnprDynamic" minOccurs="0" maxOccurs="unbounded"/>
+                        <xsd:element ref="TransportLinkGpsDynamic" minOccurs="0" maxOccurs="unbounded"/>
+                        <xsd:element ref="TransportLinkScootDynamic" minOccurs="0" maxOccurs="unbounded"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:sequence>
+    </xsd:group>
+    <!-- ===Object Type=========================================================== -->
+    <xsd:group name="LinkLocationGroup">
+        <xsd:annotation>
+            <xsd:documentation>Elements that additionally locate object as a Link on a   Network Path.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="EndPoint" type="PointStructure">
+                <xsd:annotation>
+                    <xsd:documentation>Location indicating end of link.</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+        </xsd:sequence>
+    </xsd:group>
+    <xsd:element name="TransportLinkDefinition" substitutionGroup="AbstractLinkDefinition">
+        <xsd:annotation>
+            <xsd:documentation>Transport Link Definition.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:complexContent>
+                <xsd:restriction base="TransportLinkDefinitionStructure">
+                    <xsd:sequence>
+                        <xsd:sequence>
+                            <xsd:element name="SystemCodeNumber" type="TransportLinkIdType" minOccurs="0">
+                                <xsd:annotation>
+                                    <xsd:documentation>Identifier of Data Object. Unique  within System and type. Only needs to be specified if not given by context.</xsd:documentation>
+                                </xsd:annotation>
+                            </xsd:element>
+                            <xsd:element name="ObjectTypeRef" type="TransportLinkTypeIdType">
+                                <xsd:annotation>
+                                    <xsd:documentation>Type of Data Object.</xsd:documentation>
+                                </xsd:annotation>
+                            </xsd:element>
+                            <xsd:element name="QualityRef" type="TransportLinkQualityIdType" minOccurs="0">
+                                <xsd:annotation>
+                                    <xsd:documentation>Quality statement of Data Object.</xsd:documentation>
+                                </xsd:annotation>
+                            </xsd:element>
+                            <xsd:group ref="BaseDefinitionGroup"/>
+                            <xsd:group ref="DefinitionDescriptionGroup">
+                                <xsd:annotation>
+                                    <xsd:documentation>UTMC Object textual description elements.</xsd:documentation>
+                                </xsd:annotation>
+                            </xsd:group>
+                            <xsd:group ref="PointOnPathGroup" minOccurs="0"/>
+                        </xsd:sequence>
+                        <xsd:sequence>
+                            <xsd:group ref="OffsetObjectGroup"/>
+                        </xsd:sequence>
+                        <xsd:sequence>
+                            <xsd:group ref="LinkLocationGroup"/>
+                            <xsd:element ref="Extensions" minOccurs="0"/>
+                        </xsd:sequence>
+                    </xsd:sequence>
+                </xsd:restriction>
+            </xsd:complexContent>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:complexType name="TransportLinkDefinitionStructure">
+        <xsd:annotation>
+            <xsd:documentation xml:lang="en">Type for Transport Link  Definition.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="AbstractDeviceDefinitionStructure">
+                <xsd:sequence>
+                    <xsd:group ref="LinkLocationGroup"/>
+                    <xsd:element ref="Extensions" minOccurs="0"/>
+                </xsd:sequence>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+    <!-- ======================================================================= -->
+    <!-- ===Object Configuration========================================================= -->
+    <xsd:element name="TransportLinkConfiguration" type="TransportLinkConfigurationStructure" abstract="true" substitutionGroup="AbstractConfiguration">
+        <xsd:annotation>
+            <xsd:documentation>Transport Link Configuration </xsd:documentation>
+        </xsd:annotation>
+    </xsd:element>
+    <xsd:complexType name="TransportLinkConfigurationStructure" abstract="true">
+        <xsd:annotation>
+            <xsd:documentation xml:lang="en">Type for  Transport Link Configuration.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="AbstractConfigurationStructure">
+                <xsd:sequence>
+                    <xsd:group ref="TransportLinkConfigurationGroup"/>
+                    <xsd:element ref="Extensions" minOccurs="0"/>
+                </xsd:sequence>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+    <xsd:group name="TransportLinkConfigurationGroup">
+        <xsd:annotation>
+            <xsd:documentation>Elements specific to Transport Link Configuration</xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="Length" type="Distance" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>Distance from detector to stop line in meters</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:element name="FullLength" type="Distance" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>Distance from stop line to stop line in meters.</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:element name="NumberOfLanes" type="xsd:positiveInteger" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>Number of lanes.</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:element name="MaximumSpeed" type="Speed" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>Maximum speed associated with the "object" in kph.</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:element name="Capacity" type="VehiclesPerInterval" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>Maximum flow in vehicles per hour.  </xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:group ref="TransportLinkSpeedTimeGroup">
+                <xsd:annotation>
+                    <xsd:documentation>Speed time elements</xsd:documentation>
+                </xsd:annotation>
+            </xsd:group>
+        </xsd:sequence>
+    </xsd:group>
+    <xsd:group name="TransportLinkSpeedTimeGroup">
+        <xsd:annotation>
+            <xsd:documentation>Speed times group.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="AtCapacity" type="SpeedTimeStructure" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>Speed and Journey Time at capacity.</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:element name="AtFreeflow" type="SpeedTimeStructure" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>Speed and Journey Time at freeflow.</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:element name="Average" type="SpeedTimeStructure" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>Average Speed and Journey Time.</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+        </xsd:sequence>
+    </xsd:group>
+    <xsd:complexType name="SpeedTimeStructure">
+        <xsd:annotation>
+            <xsd:documentation xml:lang="en">Type for Speed / Time pair.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="Speed" type="Speed" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>Average speed over the link</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:element name="JourneyTime" type="xsd:duration" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>Journey time at Capacity</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+        </xsd:sequence>
+    </xsd:complexType>
+    <!-- ======================================================================= -->
+    <xsd:element name="TransportLinkGpsConfiguration" abstract="false" substitutionGroup="TransportLinkConfiguration">
+        <xsd:annotation>
+            <xsd:documentation>GPS Transport Link Configuration.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:complexContent>
+                <xsd:restriction base="TransportLinkConfigurationStructure">
+                    <xsd:sequence>
+                        <xsd:sequence>
+                            <xsd:element name="SystemCodeNumber" type="TransportLinkIdType" minOccurs="0">
+                                <xsd:annotation>
+                                    <xsd:documentation>Identifier of parent Data Object. Only needed if not given by context.</xsd:documentation>
+                                </xsd:annotation>
+                            </xsd:element>
+                            <xsd:group ref="AbstractConfigurationGroup"/>
+                        </xsd:sequence>
+                        <xsd:sequence>
+                            <xsd:group ref="TransportLinkConfigurationGroup"/>
+                            <xsd:element ref="Extensions" minOccurs="0"/>
+                        </xsd:sequence>
+                    </xsd:sequence>
+                </xsd:restriction>
+            </xsd:complexContent>
+        </xsd:complexType>
+    </xsd:element>
+    <!-- ======================================================================= -->
+    <xsd:element name="TransportLinkAnprConfiguration" abstract="false" substitutionGroup="TransportLinkConfiguration">
+        <xsd:annotation>
+            <xsd:documentation>ANPR Transport Link Configuration.  </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:complexContent>
+                <xsd:restriction base="TransportLinkConfigurationStructure">
+                    <xsd:sequence>
+                        <xsd:sequence>
+                            <xsd:element name="SystemCodeNumber" type="TransportLinkIdType" minOccurs="0">
+                                <xsd:annotation>
+                                    <xsd:documentation>Identifier of parent Data Object. Only needed if not given by context.</xsd:documentation>
+                                </xsd:annotation>
+                            </xsd:element>
+                            <xsd:group ref="AbstractConfigurationGroup"/>
+                        </xsd:sequence>
+                        <xsd:sequence>
+                            <xsd:group ref="TransportLinkConfigurationGroup"/>
+                            <xsd:element ref="Extensions" minOccurs="0"/>
+                        </xsd:sequence>
+                    </xsd:sequence>
+                </xsd:restriction>
+            </xsd:complexContent>
+        </xsd:complexType>
+    </xsd:element>
+    <!-- ======================================================================= -->
+    <xsd:element name="TransportLinkScootConfiguration" abstract="false" substitutionGroup="TransportLinkConfiguration">
+        <xsd:annotation>
+            <xsd:documentation>SCOOT Transport Link Configuration.  </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:complexContent>
+                <xsd:restriction base="TransportLinkConfigurationStructure">
+                    <xsd:sequence>
+                        <xsd:sequence>
+                            <xsd:element name="SystemCodeNumber" type="TransportLinkIdType" minOccurs="0">
+                                <xsd:annotation>
+                                    <xsd:documentation>Identifier of parent Data Object. Only needed if not given by context.</xsd:documentation>
+                                </xsd:annotation>
+                            </xsd:element>
+                            <xsd:group ref="AbstractConfigurationGroup"/>
+                        </xsd:sequence>
+                        <xsd:sequence>
+                            <xsd:group ref="TransportLinkConfigurationGroup"/>
+                            <xsd:element ref="Extensions" minOccurs="0"/>
+                        </xsd:sequence>
+                    </xsd:sequence>
+                </xsd:restriction>
+            </xsd:complexContent>
+        </xsd:complexType>
+    </xsd:element>
+    <!-- ======================================================================= -->
+    <!-- ==Object Dynamic===================================================== -->
+    <xsd:element name="TransportLinkDynamic" type="TransportLinkDynamicStructure" abstract="true" substitutionGroup="AbstractDynamic">
+        <xsd:annotation>
+            <xsd:documentation>Transport Link Object  Dynamic.  </xsd:documentation>
+        </xsd:annotation>
+    </xsd:element>
+    <xsd:complexType name="TransportLinkDynamicStructure" abstract="true">
+        <xsd:annotation>
+            <xsd:documentation xml:lang="en">Type for  Transport Link Object  Dynamic.  </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="AbstractDynamicStructure">
+                <xsd:sequence>
+                    <xsd:group ref="TransportLinkDynamicGroup"/>
+                </xsd:sequence>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+    <xsd:group name="TransportLinkDynamicGroup">
+        <xsd:annotation>
+            <xsd:documentation>Elements specific to Transport Link Common Dynamic.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="AverageSpeed" type="Speed" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>Estimated Average speed in kilometers per hour.</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:element name="LinkTravelTime" type="xsd:duration" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>Current Link journey time in seconds</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:element ref="LinkStatusTypeRef" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>Reference to of Transport Link Status Type Definition.</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+        </xsd:sequence>
+    </xsd:group>
+    <!-- ======================================================================= -->
+    <xsd:element name="TransportLinkAnprDynamic" abstract="false" substitutionGroup="TransportLinkDynamic">
+        <xsd:annotation>
+            <xsd:documentation>ANPR Transport Link Dynamic.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:complexContent>
+                <xsd:restriction base="TransportLinkAnprDynamicStructure">
+                    <xsd:sequence>
+                        <xsd:sequence>
+                            <xsd:element name="SystemCodeNumber" type="TransportLinkIdType" minOccurs="0">
+                                <xsd:annotation>
+                                    <xsd:documentation>Identifier of parent Data Object. Only needed if not given by context.</xsd:documentation>
+                                </xsd:annotation>
+                            </xsd:element>
+                            <xsd:group ref="AbstractDynamicGroup"/>
+                        </xsd:sequence>
+                        <xsd:sequence>
+                            <xsd:group ref="TransportLinkDynamicGroup"/>
+                        </xsd:sequence>
+                        <xsd:sequence>
+                            <xsd:group ref="TransportLinkAnprDynamicGroup"/>
+                            <xsd:element ref="Extensions" minOccurs="0"/>
+                        </xsd:sequence>
+                    </xsd:sequence>
+                </xsd:restriction>
+            </xsd:complexContent>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:complexType name="TransportLinkAnprDynamicStructure" abstract="false">
+        <xsd:annotation>
+            <xsd:documentation xml:lang="en">Type for  Transport Link ANPR Dynamic.  </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="TransportLinkDynamicStructure">
+                <xsd:sequence>
+                    <xsd:group ref="TransportLinkAnprDynamicGroup"/>
+                    <xsd:element ref="Extensions" minOccurs="0"/>
+                </xsd:sequence>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+    <xsd:group name="TransportLinkAnprDynamicGroup">
+        <xsd:annotation>
+            <xsd:documentation>Elements specific to ANPR Transport Link Dynamic.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="NumberPlatesIn" type="NumberOfVehicles" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>The number of successful reads at the start of the object.</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:element name="NumberPlatesOut" type="NumberOfVehicles" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>The number of successful reads at the end of the object.</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:element name="NumberPlatesMatches" type="NumberOfVehicles" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>Count of Number plate matches in period</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:element name="NumberPlatesMatchesUsed" type="NumberOfVehicles" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>The number of successful matches used in calculation.</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+        </xsd:sequence>
+    </xsd:group>
+    <!-- ======================================================================= -->
+    <xsd:element name="TransportLinkGpsDynamic" abstract="false" substitutionGroup="TransportLinkDynamic">
+        <xsd:annotation>
+            <xsd:documentation>GPS Transport Link Dynamic. Freeflow Extension</xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:complexContent>
+                <xsd:restriction base="TransportLinkGpsDynamicStructure">
+                    <xsd:sequence>
+                        <xsd:sequence>
+                            <xsd:element name="SystemCodeNumber" type="TransportLinkIdType" minOccurs="0">
+                                <xsd:annotation>
+                                    <xsd:documentation>Identifier of parent Data Object. Only needed if not given by context.</xsd:documentation>
+                                </xsd:annotation>
+                            </xsd:element>
+                            <xsd:group ref="AbstractDynamicGroup"/>
+                        </xsd:sequence>
+                        <xsd:sequence>
+                            <xsd:group ref="TransportLinkDynamicGroup"/>
+                        </xsd:sequence>
+                        <xsd:sequence>
+                            <xsd:group ref="TransportLinkGpsDynamicGroup"/>
+                            <xsd:element ref="Extensions" minOccurs="0"/>
+                        </xsd:sequence>
+                    </xsd:sequence>
+                </xsd:restriction>
+            </xsd:complexContent>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:group name="TransportLinkGpsDynamicGroup">
+        <xsd:annotation>
+            <xsd:documentation>Elements specific to GPS  Transport Link Dynamic. Freeflow Extension</xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="CurrentJourneyTime" type="xsd:duration" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>Current journey time in seconds</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:group ref="TransportLinkTravelTimesGroup"/>
+            <xsd:element name="NumberOfVehicles" type="NumberOfVehicles" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>Number of vehicles in measured interval</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:element name="ReservedLane" type="VehiclesPerInterval" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>Flow in reserved lane in measured interval.</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+        </xsd:sequence>
+    </xsd:group>
+    <xsd:complexType name="TransportLinkGpsDynamicStructure" abstract="false">
+        <xsd:annotation>
+            <xsd:documentation xml:lang="en">Type for  Transport Link GPS Object  Dynamic.   Freeflow Extension</xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="TransportLinkDynamicStructure">
+                <xsd:sequence>
+                    <xsd:group ref="TransportLinkGpsDynamicGroup"/>
+                    <xsd:element ref="Extensions" minOccurs="0"/>
+                </xsd:sequence>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+    <xsd:group name="TransportLinkTravelTimesGroup">
+        <xsd:annotation>
+            <xsd:documentation>Travel times specific to Transport Link Object  Dynamic. Freeflow Extension</xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="MeanTravelTime" type="xsd:duration" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>Mean Travel Time along link in measured interval.</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:element name="MedianTravelTime" type="xsd:duration" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>Median Travel Time along link in measured interval.</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:element name="VarianceTravelTime" type="xsd:duration" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>Variance Travel Time along link in measured interval.</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+        </xsd:sequence>
+    </xsd:group>
+    <!-- ======================================================================= -->
+    <xsd:element name="TransportLinkScootDynamic" type="TransportLinkScootDynamicStructure" abstract="false" substitutionGroup="TransportLinkDynamic">
+        <xsd:annotation>
+            <xsd:documentation>SCOOT Transport Link Dynamic Values</xsd:documentation>
+        </xsd:annotation>
+    </xsd:element>
+    <xsd:complexType name="TransportLinkScootDynamicStructure" abstract="false">
+        <xsd:annotation>
+            <xsd:documentation xml:lang="en">Type for  Transport Link Object  SCOOT Dynamic.   Freeflow Extension</xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="TransportLinkDynamicStructure">
+                <xsd:sequence>
+                    <xsd:group ref="TransportLinkScootDynamicGroup"/>
+                    <xsd:element ref="Extensions" minOccurs="0"/>
+                </xsd:sequence>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+    <xsd:group name="TransportLinkScootDynamicGroup">
+        <xsd:annotation>
+            <xsd:documentation>Elements specific to SCOOT  Transport Link Dynamic Values</xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="CongestionPercent" type="Percentage" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>Current percentage congestion.</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:element name="CurrentFlow" type="VehiclesPerInterval" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>Current flow (vehicles/5mins)</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:element name="OccupancyPercent" type="Percentage" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>Average of link occupancy percentage for detectors on link</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+        </xsd:sequence>
+    </xsd:group>
+    <!-- ======================================================================= -->
+    <xsd:group name="TransportLinkDeviceGroup">
+        <xsd:annotation>
+            <xsd:documentation>Device related elements</xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="history" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>Device History.</xsd:documentation>
+                </xsd:annotation>
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element ref="TransportLinkHistory" maxOccurs="unbounded">
+                            <xsd:annotation>
+                                <xsd:documentation>Log entry describing an event relating to Transport Link equipment.</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="faults" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>Device Faults.</xsd:documentation>
+                </xsd:annotation>
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element ref="TransportLinkFault" maxOccurs="unbounded">
+                            <xsd:annotation>
+                                <xsd:documentation>Transport Link Fault</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="commands" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>Device Commands.</xsd:documentation>
+                </xsd:annotation>
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element ref="TransportLinkCommand" maxOccurs="unbounded">
+                            <xsd:annotation>
+                                <xsd:documentation>A command to Transport Link equipment.</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:sequence>
+    </xsd:group>
+    <!-- ===Fault===================================================== -->
+    <xsd:element name="TransportLinkFault" substitutionGroup="AbstractDeviceFault">
+        <xsd:annotation>
+            <xsd:documentation>Transport Link Fault.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:complexContent>
+                <xsd:restriction base="AbstractDeviceFaultStructure">
+                    <xsd:sequence>
+                        <xsd:element name="SystemCodeNumber" type="TransportLinkIdType" minOccurs="0">
+                            <xsd:annotation>
+                                <xsd:documentation>Identifier of Data Object. Unique  within System and type. Only needs to be specified if not given by context.</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                        <xsd:element name="FaultTypeRef" type="TransportLinkFaultTypeIdType" minOccurs="0">
+                            <xsd:annotation>
+                                <xsd:documentation>Type of fault.</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                        <xsd:group ref="AbstractDeviceFaultGroup"/>
+                        <xsd:element ref="Extensions" minOccurs="0"/>
+                    </xsd:sequence>
+                </xsd:restriction>
+            </xsd:complexContent>
+        </xsd:complexType>
+    </xsd:element>
+    <!-- ====Command========================================================== -->
+    <xsd:element name="TransportLinkCommand" substitutionGroup="AbstractDeviceCommand">
+        <xsd:annotation>
+            <xsd:documentation>Transport Link Fault.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:complexContent>
+                <xsd:restriction base="AbstractDeviceCommandStructure">
+                    <xsd:sequence>
+                        <xsd:element name="SystemCodeNumber" type="TransportLinkIdType" minOccurs="0">
+                            <xsd:annotation>
+                                <xsd:documentation>Identifier of Data Object. Unique  within System and type. Only needs to be specified if not given by context.</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                        <xsd:group ref="DeviceCommandRequestGroup"/>
+                        <xsd:group ref="DeviceCommandResponseGroup"/>
+                        <xsd:element ref="Extensions" minOccurs="0"/>
+                    </xsd:sequence>
+                </xsd:restriction>
+            </xsd:complexContent>
+        </xsd:complexType>
+    </xsd:element>
+    <!-- ====Device History===================================================== -->
+    <xsd:simpleType name="TransportLinkLogIdType">
+        <xsd:annotation>
+            <xsd:documentation>Type for Identifier of Transport Link Device History.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:restriction base="LogIdType"/>
+    </xsd:simpleType>
+    <xsd:element name="TransportLinkHistory" substitutionGroup="AbstractDeviceHistory">
+        <xsd:annotation>
+            <xsd:documentation>Transport Link Device History.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:complexContent>
+                <xsd:restriction base="AbstractDeviceHistoryStructure">
+                    <xsd:sequence>
+                        <xsd:element name="SystemCodeNumber" type="TransportLinkIdType" minOccurs="0">
+                            <xsd:annotation>
+                                <xsd:documentation>Identifier of Data Object. Only needs to be specified if not given by context.</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                        <xsd:element name="LogId" type="TransportLinkLogIdType">
+                            <xsd:annotation>
+                                <xsd:documentation>Identifier of Log entry. Unique within Type.</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                        <xsd:group ref="AbstractDeviceHistoryGroup"/>
+                        <xsd:element ref="Extensions" minOccurs="0"/>
+                    </xsd:sequence>
+                </xsd:restriction>
+            </xsd:complexContent>
+        </xsd:complexType>
+    </xsd:element>
+    <!-- ================================================================= -->
+    <!-- ====Static===================================================== -->
+    <xsd:element name="TransportLinkStatic" substitutionGroup="AbstractStatic">
+        <xsd:annotation>
+            <xsd:documentation>Transport Link Data Object Static Data.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:complexContent>
+                <xsd:extension base="AbstractSystemObjectStructure">
+                    <xsd:sequence>
+                        <xsd:group ref="TransportLinkStaticGroup"/>
+                    </xsd:sequence>
+                </xsd:extension>
+            </xsd:complexContent>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:group name="TransportLinkStaticGroup">
+        <xsd:annotation>
+            <xsd:documentation>Static Elements specific to Transport Link.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="types" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>Object Types.</xsd:documentation>
+                </xsd:annotation>
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:group ref="DeviceTypeDefinitionsGroup"/>
+                        <xsd:group ref="TransportLinkTypeDefinitionsGroup"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="qualityStatements" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>Quality Statements. </xsd:documentation>
+                </xsd:annotation>
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element ref="TransportLinkQuality" maxOccurs="unbounded">
+                            <xsd:annotation>
+                                <xsd:documentation>Transport Link Quality Statements</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="faultTypes" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>Device Faults.</xsd:documentation>
+                </xsd:annotation>
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element ref="TransportLinkFaultTypeDefinition" maxOccurs="unbounded">
+                            <xsd:annotation>
+                                <xsd:documentation>Transport Link Fault</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:sequence>
+    </xsd:group>
+    <xsd:group name="TransportLinkTypeDefinitionsGroup">
+        <xsd:annotation>
+            <xsd:documentation>Type definition Elements specific to Transport Link.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element ref="TransportLinkTypeDefinition" minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element ref="LinkStatusTypeDefinition" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:group>
+    <!-- ===Object Type=========================================================== -->
+    <xsd:element name="TransportLinkTypeRef" type="TransportLinkTypeIdType" substitutionGroup="DeviceTypeRef">
+        <xsd:annotation>
+            <xsd:documentation>Reference to of Transport Link Type.
+1 = SCOOT
+2 = ANPR
+3 = SCOOT Normal
+4 = SCOOT Entry
+5 = SCOOT Exit
+6 = SCOOT Filter
+7 = SCOOT Uncontrolled
+8 = SCOOT Stop_line Normal
+9 = SCOOT Stop_line Entry
+999 = Other</xsd:documentation>
+        </xsd:annotation>
+    </xsd:element>
+    <xsd:simpleType name="TransportLinkTypeIdEnum">
+        <xsd:annotation>
+            <xsd:documentation>Allowed values for Transport Link types</xsd:documentation>
+        </xsd:annotation>
+        <xsd:restriction base="TypeIdEnum">
+            <xsd:enumeration value="1"/>
+            <xsd:enumeration value="SCOOT"/>
+            <xsd:enumeration value="2"/>
+            <xsd:enumeration value="ANPR"/>
+            <xsd:enumeration value="3"/>
+            <xsd:enumeration value="SCOOT Normal"/>
+            <xsd:enumeration value="4"/>
+            <xsd:enumeration value="SCOOT Entry"/>
+            <xsd:enumeration value="5"/>
+            <xsd:enumeration value="SCOOT Exit"/>
+            <xsd:enumeration value="6"/>
+            <xsd:enumeration value="SCOOT Filter"/>
+            <xsd:enumeration value="7"/>
+            <xsd:enumeration value="SCOOT Uncontrolled"/>
+            <xsd:enumeration value="8"/>
+            <xsd:enumeration value="SCOOT Stop Line Normal"/>
+            <xsd:enumeration value="9"/>
+            <xsd:enumeration value="SCOOT Stop Line Entry"/>
+            <xsd:enumeration value="bus"/>
+            <xsd:enumeration value="999"/>
+            <xsd:enumeration value="Other"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+    <xsd:simpleType name="TransportLinkTypeIdType">
+        <xsd:annotation>
+            <xsd:documentation>Identifier of Transport Link type Definition.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:restriction base="TypeIdType"/>
+    </xsd:simpleType>
+    <xsd:element name="TransportLinkTypeDefinition" substitutionGroup="DataObjectTypeDefinition">
+        <xsd:annotation>
+            <xsd:documentation>Transport Link Type Type  Definition. 
+1 = SCOOT
+2 = ANPR
+3 = SCOOT Normal
+4 = SCOOT Entry
+5 = SCOOT Exit
+6 = SCOOT Filter
+7 = SCOOT Uncontrolled
+8 = SCOOT Stop_line Normal
+9 = SCOOT Stop_line Entry
+999 = Other</xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:complexContent>
+                <xsd:restriction base="TypeDefinitionStructure">
+                    <xsd:sequence>
+                        <xsd:element name="TypeId" type="TransportLinkTypeIdType">
+                            <xsd:annotation>
+                                <xsd:documentation>Identifier for Transport Link type Definition.  
+</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                        <xsd:group ref="TypeDefinitionGroup"/>
+                        <xsd:element ref="Extensions" minOccurs="0"/>
+                    </xsd:sequence>
+                </xsd:restriction>
+            </xsd:complexContent>
+        </xsd:complexType>
+    </xsd:element>
+    <!-- ===Object Type=========================================================== -->
+    <xsd:element name="LinkStatusTypeRef" type="LinkStatusTypeIdType" substitutionGroup="DataValueTypeRef">
+        <xsd:annotation>
+            <xsd:documentation>Reference to of Transport Link Status Type Definition. 
+0 = Normal,
+1 = Suspect
+</xsd:documentation>
+        </xsd:annotation>
+    </xsd:element>
+    <xsd:simpleType name="LinkStatusTypeIdType">
+        <xsd:annotation>
+            <xsd:documentation>Identifier of Transport Link Status type Definition.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:restriction base="TypeIdType"/>
+    </xsd:simpleType>
+    <xsd:simpleType name="LinkStatusIdEnum">
+        <xsd:annotation>
+            <xsd:documentation>Allowed values for of Transport Link Status types</xsd:documentation>
+        </xsd:annotation>
+        <xsd:restriction base="TypeIdEnum">
+            <xsd:enumeration value="0"/>
+            <xsd:enumeration value="normal"/>
+            <xsd:enumeration value="1"/>
+            <xsd:enumeration value="suspect"/>
+            <xsd:enumeration value="2"/>
+            <xsd:enumeration value="noVehiclesInPeriod"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+    <xsd:element name="LinkStatusTypeDefinition" substitutionGroup="ValueTypeDefinition">
+        <xsd:annotation>
+            <xsd:documentation>Link Status Type Definition. 
+0 = Normal,
+1 = Suspect.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:complexContent>
+                <xsd:restriction base="TypeDefinitionStructure">
+                    <xsd:sequence>
+                        <xsd:element name="TypeId" type="TransportLinkTypeIdType">
+                            <xsd:annotation>
+                                <xsd:documentation>Identifier for Link Status type definition.  </xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                        <xsd:group ref="TypeDefinitionGroup"/>
+                        <xsd:element ref="Extensions" minOccurs="0"/>
+                    </xsd:sequence>
+                </xsd:restriction>
+            </xsd:complexContent>
+        </xsd:complexType>
+    </xsd:element>
+    <!-- ===Quality==================================================== -->
+    <xsd:simpleType name="TransportLinkQualityIdType">
+        <xsd:annotation>
+            <xsd:documentation>Type for identifier of Transport Link Quality.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:restriction base="QualityIdType"/>
+    </xsd:simpleType>
+    <xsd:element name="TransportLinkQuality" substitutionGroup="AbstractQuality">
+        <xsd:annotation>
+            <xsd:documentation>Transport Link  Quality.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:complexContent>
+                <xsd:restriction base="AbstractQualityStructure">
+                    <xsd:sequence>
+                        <xsd:element name="QualityId" type="TransportLinkQualityIdType">
+                            <xsd:annotation>
+                                <xsd:documentation>identifier of quality Statement. Unique within object type and system. </xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                        <xsd:group ref="AbstractQualityGroup"/>
+                        <xsd:element ref="Extensions" minOccurs="0"/>
+                    </xsd:sequence>
+                </xsd:restriction>
+            </xsd:complexContent>
+        </xsd:complexType>
+    </xsd:element>
+    <!-- ===Fault Type===================================================== -->
+    <xsd:simpleType name="TransportLinkFaultTypeIdType">
+        <xsd:annotation>
+            <xsd:documentation>Type for identifier of  Transport Link  Fault type.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:restriction base="FaultTypeIdType"/>
+    </xsd:simpleType>
+    <xsd:element name="TransportLinkFaultTypeDefinition" substitutionGroup="AbstractFaultTypeDefinition">
+        <xsd:annotation>
+            <xsd:documentation>Transport Link Fault Type Definition.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:complexContent>
+                <xsd:restriction base="AbstractFaultTypeDefinitionStructure">
+                    <xsd:sequence>
+                        <xsd:element name="FaultTypeId" type="TransportLinkFaultTypeIdType">
+                            <xsd:annotation>
+                                <xsd:documentation>Identifier of Fault Type.</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:element>
+                        <xsd:group ref="AbstractFaultTypeDefinitionGroup"/>
+                        <xsd:element ref="Extensions" minOccurs="0"/>
+                    </xsd:sequence>
+                </xsd:restriction>
+            </xsd:complexContent>
+        </xsd:complexType>
+    </xsd:element>
+</xsd:schema>

@@ -1,0 +1,140 @@
+//! Scenario S6 — Discriminated-union consumer for {{ channels.transport_link_measurement }}.
+//!
+//! Demonstrates: client-side dispatch on the `kind` discriminator
+//!. The TransportLinkMeasurement payload is one of three
+//! variants — SCOOT, GPS, or ANPR — distinguished by the `kind`
+//! field. The snippet decodes to a `serde_json::Value`, matches on
+//! the discriminator, and dispatches to a per-variant handler.
+//!
+//! This is the idiom for handling any of the discriminated unions in
+//! TOPAS 3000A (F6 in the cross-cutting design log).
+//!
+//! Tip: a typed SDK is not yet generated for Rust; once it ships,
+//! replace the `match` below with a `#[serde(tag = "kind")]` enum
+//! whose variants deserialise directly into the per-variant structs.
+
+use std::env;
+use std::time::Duration;
+
+use fe2o3_amqp::types::messaging::{Body, Source};
+use fe2o3_amqp::types::primitives::Symbol;
+use fe2o3_amqp::{Connection, Receiver, Session};
+use serde_json::Value;
+use tokio::time::timeout;
+
+const CHANNEL: &str = "{{ channels.transport_link_measurement }}";
+const RECV_TIMEOUT: Duration = Duration::from_secs(5);
+
+fn server_url() -> String {
+    env::var("TOPAS_AMQP_URL")
+        .unwrap_or_else(|_| "{{ server_uri }}".replace("{host}", "localhost").replace("{port}", "5671"))
+}
+
+fn max_messages() -> usize {
+    env::var("TOPAS_MAX_MESSAGES")
+        .ok()
+        .and_then(|v| v.parse::<usize>().ok())
+        .unwrap_or(5)
+}
+
+fn body_as_string(body: &Body<Value>) -> String {
+    match body {
+        Body::Data(batch) => {
+            let mut out = String::new();
+            for data in batch.iter() {
+                out.push_str(&String::from_utf8_lossy(data.0.as_ref()));
+            }
+            out
+        }
+        Body::Value(v) => match &v.0 {
+            Value::String(s) => s.clone(),
+            other => other.to_string(),
+        },
+        Body::Sequence(_) | Body::Empty => String::new(),
+    }
+}
+
+fn field(payload: &Value, name: &str) -> String {
+    match payload.get(name) {
+        Some(Value::Null) | None => "n/a".to_string(),
+        Some(Value::String(s)) => s.clone(),
+        Some(other) => other.to_string(),
+    }
+}
+
+/// Dispatch on the `kind` JSON discriminator.
+fn handle(payload: &Value) -> String {
+    let kind = payload
+        .get("kind")
+        .and_then(|v| v.as_str())
+        .unwrap_or("");
+    match kind {
+        "scoot" => format!(
+            "SCOOT flow={} occupancy%={}",
+            field(payload, "currentFlowVehicles"),
+            field(payload, "occupancyPercent")
+        ),
+        "gps" => format!(
+            "GPS meanTravelTime={}s",
+            field(payload, "meanTravelTimeSeconds")
+        ),
+        "anpr" => format!(
+            "ANPR in={} out={} matches={}",
+            field(payload, "numberPlatesIn"),
+            field(payload, "numberPlatesOut"),
+            field(payload, "numberPlatesMatches")
+        ),
+        "" => "unknown variant kind=<missing>".to_string(),
+        other => format!("unknown variant kind={other}"),
+    }
+}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let url = server_url();
+    let max = max_messages();
+
+    let mut connection = Connection::open("topas-s6", url.as_str()).await?;
+    let mut session = Session::begin(&mut connection).await?;
+    let source = Source::builder()
+        .address(CHANNEL)
+        .capabilities(vec![Symbol::from("topic")])
+        .build();
+    let mut receiver = Receiver::builder()
+        .name("s6-receiver")
+        .source(source)
+        .attach(&mut session)
+        .await?;
+    // Readiness handshake — the link is attached, so a burst
+    // published from here on will be delivered rather than discarded.
+    eprintln!("[ready]");  // readiness handshake
+
+    for received in 0..max {
+        let delivery = match timeout(RECV_TIMEOUT, receiver.recv::<Body<Value>>()).await {
+            Ok(Ok(d)) => d,
+            Ok(Err(e)) => {
+                eprintln!("[S6] receive failed: {e}");
+                break;
+            }
+            Err(_) => {
+                eprintln!("[S6] receive timed out — broker idle? aborting.");
+                break;
+            }
+        };
+
+        let raw = body_as_string(delivery.body());
+        match serde_json::from_str::<Value>(&raw) {
+            Ok(payload) => println!("[{}] {}", received + 1, handle(&payload)),
+            Err(e) => eprintln!("[S6] JSON parse failed: {e}"),
+        }
+
+        if let Err(e) = receiver.accept(&delivery).await {
+            eprintln!("[S6] accept failed: {e}");
+        }
+    }
+
+    receiver.close().await?;
+    session.end().await?;
+    connection.close().await?;
+    Ok(())
+}

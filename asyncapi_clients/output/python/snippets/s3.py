@@ -1,0 +1,241 @@
+"""
+File:        output/python/snippets/s3.py
+Origin:      Generated from asyncapi.yaml by asyncapi_clients/generator/generate.py
+Changes:     Do not hand-edit; re-run `make asyncapi-clients` to regenerate
+Author:      Christopher Kettell, TRL Software
+Date:        2026-11-12
+Generator:   asyncapi_clients/generator v0.1.0
+License:     Apache-2.0  (https://opensource.org/license/Apache-2.0)
+"""
+"""Scenario S3 — Publish a command, await its response (A11).
+
+Demonstrates AMQP 1.0 request/reply addressing. The requester creates a
+**dynamic** reply node, waits for the broker to assign its address, and
+puts that address in the command's ``reply-to``. The command processor
+answers that node and nobody else — no shared response channel, no
+broker-specific selector, no filtering after delivery.
+
+The six stages below appear in the same order in every language's S3, so
+the protocol is legible across implementations even where the client APIs
+differ:
+
+  1. connect
+  2. create the dynamic reply receiver
+  3. wait for it to open and read the broker-assigned address
+  4. send the command with message-id and reply-to
+  5. receive the response on the private node
+  6. independently verify delivery isolation, transport correlation
+     (correlation-id and `to`) and application correlation
+     (commandCorrelationId)
+
+Stage 3 is not optional. The address does not exist until the broker has
+opened the link and assigned it; publishing before that leaves nowhere for
+the response to go.
+"""
+import json
+import os
+import sys
+import uuid
+
+from proton import Message
+from proton.handlers import MessagingHandler
+from proton.reactor import Container
+
+
+COMMAND_CHANNEL = "vms.command"
+SERVER = os.environ.get(
+    "TOPAS_AMQP_URL",
+    "amqps://{host}:{port}".format(host="localhost", port="5671"),
+)
+# Audit/tracing only under A11 — it is not how the response is routed.
+ORIGINATOR_ID = os.environ.get("TOPAS_ORIGINATOR", "asyncapi-clients-s3-demo")
+COMMAND_CORRELATION_ID = int(os.environ.get("TOPAS_COMMAND_CORRELATION_ID", "3701"))
+# How many responses this requester expects before the terminal one, inclusive.
+# A pending->success progression is 2. The conformance harness sets this so a
+# short delivery is a failure rather than a quiet pass.
+EXPECTED_RESPONSES = int(os.environ.get("TOPAS_EXPECTED_RESPONSES", "0"))
+
+
+def _decode_response_body(body):
+    """Decode a response body, or fail loudly.
+
+    An explicit compatibility layer over the representations responders
+    actually produce: a `str` when the body is an AMQP value section, and
+    `bytes`/`memoryview` when it is a data section. Proton hands back
+    whichever the peer sent.
+
+    This snippet used to call ``json.loads(msg.body)`` directly, which
+    worked only because the Python responder happened to send a value
+    section. The first cross-language pairing against a responder that
+    sends a data section raised
+    ``TypeError: the JSON object must be str, bytes or bytearray, not
+    memoryview`` — a representation assumption that held only
+    against one peer.
+
+    It throws rather than degrading: an unrecognised body must be a
+    visible failure in a conformance test, not a placeholder.
+    """
+    if isinstance(body, (bytes, bytearray, memoryview)):
+        body = bytes(body).decode("utf-8")
+    if not isinstance(body, str):
+        raise TypeError(
+            f"unhandled body representation {type(body).__name__!r}; "
+            "add it to _decode_response_body rather than degrading"
+        )
+    return json.loads(body)
+
+
+class CommandRoundTrip(MessagingHandler):
+    def __init__(self, url: str) -> None:
+        super().__init__()
+        self.url = url
+        # Transport-level identity of the request. The response's
+        # correlation-id must equal this.
+        self.message_id = str(uuid.uuid4())
+        self.reply_address = None
+        self.sender = None
+        # Three independent invariants, counted by failure kind. None may
+        # compensate for another: a response on the right node with the right
+        # commandCorrelationId but no correlation-id is still a failure.
+        self.foreign = 0            # routing: delivered here, addressed elsewhere
+        self.missing_to = 0         # absence
+        self.missing_corr = 0       # absence
+        self.wrong_corr = 0         # transformation: right node, wrong id
+        self.missing_app = 0        # absence
+        self.wrong_app = 0          # transformation
+        self.received = 0
+
+    def on_start(self, event):
+        # (1) connect
+        conn = event.container.connect(self.url)
+        self.sender = event.container.create_sender(conn, COMMAND_CHANNEL)
+        # (2) dynamic reply node — the broker creates it and names it.
+        event.container.create_receiver(conn, None, dynamic=True)
+
+    def on_link_opened(self, event):
+        if event.receiver is None:
+            return
+        # (3) the address exists only now.
+        self.reply_address = event.receiver.remote_source.address
+        print(f"[reply-node] {self.reply_address}", file=sys.stderr, flush=True)
+        print("[ready]", file=sys.stderr, flush=True)
+
+    def on_sendable(self, event):
+        if not (event.sender.credit and self.reply_address
+                and not getattr(self, "_sent", False)):
+            return
+        # (4) send the command. reply-to tells the processor where to
+        # answer; message-id is what its correlation-id will mirror.
+        command_payload = {
+            "kind": "DisplayMessage",
+            "text": "HELLO TOPAS",
+            "commandCorrelationId": COMMAND_CORRELATION_ID,
+        }
+        msg = Message(
+            body=json.dumps(command_payload),
+            id=self.message_id,
+            reply_to=self.reply_address,
+            properties={"x-originator": ORIGINATOR_ID},
+        )
+        event.sender.send(msg)
+        self._sent = True
+        # Machine-readable request identity, so the conformance harness can
+        # aim defective responses at this node and prove the checks below
+        # can actually fail.
+        print(
+            f"[a11-request] node={self.reply_address} "
+            f"messageId={self.message_id}",
+            flush=True,
+        )
+
+    def on_message(self, event):
+        # (5) this arrives on the private reply node. Anything not
+        # correlated to our request should never have been delivered here
+        # at all — under A11 that is an isolation failure, not a routine
+        # filtering step, so it is counted and reported.
+        msg = event.message
+        to = msg.address
+
+        # (a) correlation-id — absence, transformation and routing are three
+        # different faults and are counted as such. `to` is the discriminator:
+        # a response bearing someone else's correlation-id was mis-delivered
+        # if it was addressed elsewhere, but merely mis-correlated if it was
+        # addressed here. Note there is no "ignore what isn't mine" branch —
+        # that is the A4 behaviour A11 replaced.
+        if msg.correlation_id is None:
+            self.missing_corr += 1
+            print("[absence] response carried no correlation-id",
+                  file=sys.stderr, flush=True)
+        elif msg.correlation_id != self.message_id:
+            if to == self.reply_address:
+                self.wrong_corr += 1
+                print(
+                    f"[transformation] correlation-id={msg.correlation_id!r} "
+                    f"!= request message-id, but addressed to this node",
+                    file=sys.stderr, flush=True,
+                )
+            else:
+                self.foreign += 1
+                print(
+                    f"[routing] response for correlation-id="
+                    f"{msg.correlation_id!r} (to={to!r}) reached our private "
+                    f"reply node",
+                    file=sys.stderr, flush=True,
+                )
+            return
+
+        # (b) `to` — unconditional. A11 requires the response to be addressed,
+        # and it survives delivery to a dynamic node, so absence is a fault
+        # rather than a broker quirk.
+        if not to:
+            self.missing_to += 1
+            print("[absence] response carried no `to`", file=sys.stderr, flush=True)
+
+        body = _decode_response_body(msg.body)
+        status = body.get("status", "success") if isinstance(body, dict) else "success"
+
+        # (c) application correlation — mandatory in the schema, so absence
+        # fails even when the transport correlation was perfect. Compared with
+        # `is None` rather than a truthiness test: commandCorrelationId is an
+        # integer and 0 is a legitimate value.
+        app_id = body.get("commandCorrelationId") if isinstance(body, dict) else None
+        if app_id is None:
+            self.missing_app += 1
+            print("[absence] response carried no commandCorrelationId",
+                  file=sys.stderr, flush=True)
+        elif app_id != COMMAND_CORRELATION_ID:
+            self.wrong_app += 1
+            print(
+                f"[transformation] commandCorrelationId {app_id} != "
+                f"{COMMAND_CORRELATION_ID}",
+                file=sys.stderr, flush=True,
+            )
+        self.received += 1
+
+        print(f"[response] {status} {json.dumps(body)}", flush=True)
+        # Any status other than "pending" is terminal, which is why
+        # a later profile could add notSupported without changing this.
+        if status != "pending":
+            # Machine-readable summary for the conformance harness. Prose
+            # above is for a reader; this line is what gets asserted on.
+            print(
+                f"[a11] node={self.reply_address} "
+                f"expected={EXPECTED_RESPONSES} received={self.received} "
+                f"foreign={self.foreign} "
+                f"missingTo={self.missing_to} "
+                f"missingCorr={self.missing_corr} "
+                f"wrongCorr={self.wrong_corr} "
+                f"missingApp={self.missing_app} "
+                f"wrongApp={self.wrong_app}",
+                flush=True,
+            )
+            event.connection.close()
+
+
+def main() -> int:
+    Container(CommandRoundTrip(SERVER)).run()
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

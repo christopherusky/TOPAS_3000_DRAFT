@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/transport_link/transport_link_definition-v1.0.json",
+  "$ref": "#/$defs/TransportLinkDefinition",
+  "$defs": {
+    "TransportLinkDefinition": {
+      "additionalProperties": false,
+      "description": "Transport link equipment details.",
+      "properties": {
+        "transportLinkId": {
+          "description": "Unique identifier of this transport link within its owning system.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "typeId": {
+          "description": "Unique identifier for a transport link type (SCOOT, ANPR, SCOOT Entry, ...).",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^\\S(?:[\\s\\S]*\\S)?$",
+          "title": "TypeId",
+          "type": "string"
+        },
+        "creationDate": {
+          "description": "When this definition record was created.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "location": {
+          "$ref": "../common/common-v1.0.json#/$defs/Point",
+          "description": "Start of the transport link as a WGS84 point. Optional."
+        },
+        "endPoint": {
+          "$ref": "../common/common-v1.0.json#/$defs/Point",
+          "description": "End of the transport link as a WGS84 point. Optional here although the v1 XSD requires it, matching transport_route."
+        },
+        "shortDescription": {
+          "type": "string",
+          "maxLength": 32,
+          "minLength": 1,
+          "description": "Short human-readable name (e.g. 'A1 northbound, Jct 5 -> Jct 6')."
+        },
+        "longDescription": {
+          "type": "string",
+          "maxLength": 2000,
+          "minLength": 1,
+          "description": "Longer description (context, commissioning notes, etc.)."
+        },
+        "participantId": {
+          "type": "string",
+          "description": "System that owns this transport link definition. Often implicit from context.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ParticipantId"
+        },
+        "originatingParticipantId": {
+          "type": "string",
+          "description": "Identifier of the upstream system that originally created this object (comparable to the UML DataSourceTypeId).",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ParticipantId"
+        },
+        "originatingObjectId": {
+          "type": "string",
+          "description": "Identifier of this object on the originating (upstream) system. Enables cross-system traceability.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId"
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions. Open-content object."
+        }
+      },
+      "required": [
+        "transportLinkId",
+        "typeId",
+        "creationDate"
+      ],
+      "type": "object",
+      "title": "UTMC Transport Link Definition"
+    }
+  }
+}

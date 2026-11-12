@@ -1,0 +1,36 @@
+# File:        smoketest/docker-compose.yml
+# Origin:      Hand-written for asyncapi-clients smoke testing
+# Author:      Christopher Kettell, TRL Software
+# Date:        2026-05-02
+# License:     Apache-2.0  (https://opensource.org/license/Apache-2.0)
+#
+# Local Apache ActiveMQ Artemis broker for end-to-end validation of
+# the generated snippets against a real AMQP 1.0 endpoint. Plain TCP
+# only — mTLS is intentionally disabled here,. This is a
+# smoke harness, not a production-mirror.
+#
+# Usage:
+#   docker compose -f asyncapi_clients/smoketest/docker-compose.yml up -d
+#   # ...run snippets/publisher with TOPAS_AMQP_URL=amqp://localhost:5672
+#   docker compose -f asyncapi_clients/smoketest/docker-compose.yml down
+#
+# Ports:
+#   5672  AMQP 1.0 listener (plain)
+#   8161  Web console (admin/admin)
+
+services:
+  artemis:
+    image: apache/activemq-artemis:2.31.2-alpine
+    container_name: topas-smoketest-artemis
+    environment:
+      ARTEMIS_USER: admin
+      ARTEMIS_PASSWORD: admin
+      ANONYMOUS_LOGIN: "true"
+    ports:
+      - "5672:5672"
+      - "8161:8161"
+    healthcheck:
+      test: ["CMD", "sh", "-c", "nc -z localhost 5672"]
+      interval: 5s
+      timeout: 3s
+      retries: 12

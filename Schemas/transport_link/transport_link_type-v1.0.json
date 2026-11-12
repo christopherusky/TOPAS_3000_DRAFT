@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/transport_link/transport_link_type-v1.0.json",
+  "$ref": "#/$defs/TransportLinkTypeUnion",
+  "$defs": {
+    "LinkStatusType": {
+      "additionalProperties": false,
+      "description": "Catalogue entry for one operational status of a transport link.",
+      "properties": {
+        "kind": {
+          "const": "linkStatus",
+          "description": "Discriminator for the tagged union. The fixed value \"linkStatus\" selects the LinkStatusType payload; it is not free-text command content.",
+          "type": "string"
+        },
+        "typeId": {
+          "description": "Identifier of this link status type.",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^\\S(?:[\\s\\S]*\\S)?$",
+          "title": "TypeId",
+          "type": "string"
+        },
+        "description": {
+          "description": "Human-readable description of the link status (v1: 'normal', 'suspect', 'noVehiclesInPeriod').",
+          "type": "string"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional notes about this status value."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions. Open-content object."
+        }
+      },
+      "required": [
+        "description",
+        "kind",
+        "typeId"
+      ],
+      "type": "object"
+    },
+    "TransportLinkType": {
+      "additionalProperties": false,
+      "description": "Catalogue entry for one kind of transport link.",
+      "properties": {
+        "kind": {
+          "const": "transportLink",
+          "description": "Discriminator for the tagged union. The fixed value \"transportLink\" selects the TransportLinkType payload; it is not free-text command content.",
+          "type": "string"
+        },
+        "typeId": {
+          "description": "Identifier of this transport link type.",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^\\S(?:[\\s\\S]*\\S)?$",
+          "title": "TypeId",
+          "type": "string"
+        },
+        "description": {
+          "description": "Human-readable description of the transport link kind.",
+          "type": "string"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional notes, e.g. deployment details."
+        },
+        "specificationLink": {
+          "type": "string",
+          "format": "uri",
+          "minLength": 1,
+          "description": "URL to an external specification document for this transport link type."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions. Open-content object."
+        }
+      },
+      "required": [
+        "description",
+        "kind",
+        "typeId"
+      ],
+      "type": "object"
+    },
+    "TransportLinkTypeUnion": {
+      "discriminator": {
+        "mapping": {
+          "linkStatus": "#/$defs/LinkStatusType",
+          "transportLink": "#/$defs/TransportLinkType"
+        },
+        "propertyName": "kind"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/TransportLinkType"
+        },
+        {
+          "$ref": "#/$defs/LinkStatusType"
+        }
+      ],
+      "title": "UTMC Transport Link Type",
+      "description": "Transport link type definitions."
+    }
+  }
+}

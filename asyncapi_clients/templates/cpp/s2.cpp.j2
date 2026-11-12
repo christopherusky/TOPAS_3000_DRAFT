@@ -1,0 +1,121 @@
+#include <cstdlib>
+#include <iostream>
+#include <string>
+
+#include <proton/connection.hpp>
+#include <proton/container.hpp>
+#include <proton/delivery.hpp>
+#include <proton/message.hpp>
+#include <proton/messaging_handler.hpp>
+#include <proton/receiver.hpp>
+
+#include <nlohmann/json.hpp>
+
+/**
+ * Scenario S2 — Wildcard subscription across a domain.
+ *
+ * Demonstrates: subscribing to {{ channels.wildcard_fault }} (every
+ * fault from every device domain) using the AMQP 1.0 source address.
+ * Teaches A8 (channel naming convention).
+ *
+ * Wildcard syntax is broker-specific. Qpid Proton C++ passes the
+ * source address through verbatim, so the exact pattern depends on
+ * the broker:
+ *   - Apache ActiveMQ Artemis treats `*.fault` as an address-pattern.
+ *   - Apache Qpid Dispatch Router uses the multicast prefix
+ *     (e.g. `mc/*.fault`).
+ * Adjust to your deployment.
+ */
+class S2 : public proton::messaging_handler {
+    std::string url_;
+    std::string pattern_;
+    int max_messages_;
+    int received_ = 0;
+
+public:
+    S2(std::string url, std::string pattern, int max_messages)
+        : url_(std::move(url)),
+          pattern_(std::move(pattern)),
+          max_messages_(max_messages) {}
+
+    void on_container_start(proton::container& c) override {
+        c.connect(url_);
+    }
+
+    void on_connection_open(proton::connection& conn) override {
+        conn.open_receiver(pattern_);
+        // Readiness handshake: the harness waits for this
+        // before starting the publisher.
+        std::cerr << "[ready]" << std::endl;
+    }
+
+    void on_message(proton::delivery& d, proton::message& msg) override {
+        std::string body = body_as_string(msg);
+        // The concrete address arrives in msg.address() (set by the
+        // broker on delivery for wildcard sources). Fall back to the
+        // pattern if the broker did not populate it.
+        std::string concrete = msg.address();
+        if (concrete.empty()) {
+            concrete = pattern_;
+        }
+        std::string domain = concrete;
+        const auto dot = concrete.find('.');
+        if (dot != std::string::npos) {
+            domain = concrete.substr(0, dot);
+        }
+
+        try {
+            auto payload = nlohmann::json::parse(body);
+            std::cout << "[fault from " << domain << "] " << payload.dump()
+                      << std::endl;
+        } catch (const nlohmann::json::parse_error& e) {
+            std::cerr << "[S2] JSON parse error: " << e.what() << std::endl;
+        }
+        ++received_;
+        if (received_ >= max_messages_) {
+            d.connection().close();
+        }
+    }
+
+private:
+    static std::string body_as_string(const proton::message& msg) {
+        const proton::value& body = msg.body();
+        if (body.empty()) {
+            return std::string();
+        }
+        try {
+            return proton::get<std::string>(body);
+        } catch (const proton::conversion_error&) {
+            try {
+                proton::binary b = proton::get<proton::binary>(body);
+                return std::string(b.begin(), b.end());
+            } catch (const proton::conversion_error&) {
+                return proton::to_string(body);
+            }
+        }
+    }
+};
+
+int main(int argc, char* argv[]) {
+    (void)argc;
+    (void)argv;
+
+    const char* env_url = std::getenv("TOPAS_AMQP_URL");
+    std::string url = env_url ? env_url : "amqps://localhost:5671";
+
+    const char* env_max = std::getenv("TOPAS_MAX_MESSAGES");
+    int max_messages = env_max ? std::atoi(env_max) : 5;
+    if (max_messages <= 0) {
+        max_messages = 5;
+    }
+
+    S2 handler(url, "{{ channels.wildcard_fault }}", max_messages);
+    proton::container c(handler);
+    try {
+        c.run();
+    } catch (const std::exception& e) {
+        std::cerr << "[S2] AMQP error: " << e.what() << std::endl;
+        return 1;
+    }
+    return 0;
+}

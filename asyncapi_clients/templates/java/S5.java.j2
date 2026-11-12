@@ -1,0 +1,95 @@
+import java.nio.charset.StandardCharsets;
+
+import javax.jms.BytesMessage;
+import javax.jms.Connection;
+import javax.jms.Destination;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.Session;
+import javax.jms.TextMessage;
+
+import org.apache.qpid.jms.JmsConnectionFactory;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+/**
+ * Scenario S5 — Subscribe to {{ channels.traffic_signal_measurement }} (DATEX-II 2017 profile).
+ *
+ * Demonstrates: continuous telemetry from the most operationally
+ * important UTC domain. Same envelope shape as S1 but
+ * a different domain; the snippet pulls out the headline fields
+ * (signal id, mode, sub-mode, current plan id) so an operator can
+ * eyeball state at a glance.
+ *
+ * Tip: a typed SDK is not yet generated for Java. Parse the JSON
+ * to a record/POJO of your choosing — Jackson's
+ * {@code ObjectMapper.treeToValue} is the usual bridge once the
+ * SDK ships.
+ */
+public class S5 {
+
+    private static final String CHANNEL = "{{ channels.traffic_signal_measurement }}";
+
+    public static void main(String[] args) throws Exception {
+        String url = System.getenv().getOrDefault(
+                "TOPAS_AMQP_URL", "{{ server_uri }}".replace("{host}", "localhost").replace("{port}", "5671"));
+        int maxMessages = Integer.parseInt(
+                System.getenv().getOrDefault("TOPAS_MAX_MESSAGES", "5"));
+
+        JmsConnectionFactory factory = new JmsConnectionFactory(url);
+        ObjectMapper mapper = new ObjectMapper();
+
+        try (Connection connection = factory.createConnection()) {
+            connection.start();
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            Destination dest = session.createTopic(CHANNEL);
+            MessageConsumer consumer = session.createConsumer(dest);
+            // Readiness handshake: the harness waits for this
+            // before starting the publisher. JMS createConsumer returns
+            // once the consumer is established, so anything published
+            // after this line will be delivered; anything before it
+            // would be discarded with no consumer attached.
+            System.err.println("[ready]");
+
+            int received = 0;
+            while (received < maxMessages) {
+                Message msg = consumer.receive(5000);
+                if (msg == null) {
+                    System.err.println("[S5] receive() timed out — broker idle? aborting.");
+                    return;
+                }
+                JsonNode state = mapper.readTree(bodyAsString(msg));
+                String signalId = textOrNa(state, "trafficSignalId");
+                String mode = textOrNa(state, "trafficSignalMode");
+                String subMode = textOrNa(state, "trafficSignalSubMode");
+                String plan = "n/a";
+                JsonNode planLine = state.path("planLine");
+                if (!planLine.isMissingNode() && !planLine.isNull()) {
+                    plan = textOrNa(planLine, "planNumber");
+                }
+                System.out.printf("[%d] signal=%s mode=%s sub=%s plan=%s%n",
+                        received + 1, signalId, mode, subMode, plan);
+                received++;
+            }
+        }
+    }
+
+    private static String textOrNa(JsonNode node, String field) {
+        JsonNode v = node.path(field);
+        return v.isMissingNode() || v.isNull() ? "n/a" : v.asText();
+    }
+
+    static String bodyAsString(Message msg) throws Exception {
+        if (msg instanceof TextMessage) {
+            return ((TextMessage) msg).getText();
+        }
+        if (msg instanceof BytesMessage) {
+            BytesMessage b = (BytesMessage) msg;
+            byte[] buf = new byte[(int) b.getBodyLength()];
+            b.readBytes(buf);
+            return new String(buf, StandardCharsets.UTF_8);
+        }
+        return msg.getBody(String.class);
+    }
+}

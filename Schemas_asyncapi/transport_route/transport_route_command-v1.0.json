@@ -1,0 +1,58 @@
+{
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/transport_route/transport_route_command-v1.0.json",
+  "$ref": "#/$defs/TransportRouteCommand",
+  "$defs": {
+    "RequestTransportRouteStatusCommand": {
+      "additionalProperties": false,
+      "description": "Request the current status of a transport route.",
+      "properties": {
+        "transportRouteId": {
+          "description": "Identifier of the route receiving the command.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "commandCorrelationId": {
+          "description": "Caller-assigned identifier correlating a command request with its response. Not an identifier of the command itself. Named to avoid collision with the AMQP 1.0 correlation-id message property.",
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "requestTime": {
+          "description": "When the command was issued.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "kind": {
+          "const": "requestStatus",
+          "description": "Discriminator for the tagged union. The fixed value \"requestStatus\" selects the RequestTransportRouteStatusCommand payload; it is not free-text command content.",
+          "type": "string"
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions."
+        }
+      },
+      "required": [
+        "commandCorrelationId",
+        "kind",
+        "requestTime",
+        "transportRouteId"
+      ],
+      "type": "object"
+    },
+    "TransportRouteCommand": {
+      "discriminator": "kind",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/RequestTransportRouteStatusCommand"
+        }
+      ],
+      "title": "UTMC Transport Route Command",
+      "description": "Transport route command payloads."
+    }
+  }
+}

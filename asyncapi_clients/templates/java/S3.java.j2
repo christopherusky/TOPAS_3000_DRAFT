@@ -1,0 +1,238 @@
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
+
+import javax.jms.BytesMessage;
+import javax.jms.Connection;
+import javax.jms.Destination;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+import javax.jms.TemporaryQueue;
+import javax.jms.TextMessage;
+
+import org.apache.qpid.jms.JmsConnectionFactory;
+import org.apache.qpid.jms.message.JmsMessage;
+import org.apache.qpid.jms.provider.amqp.message.AmqpJmsMessageFacade;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+/**
+ * Scenario S3 — Publish a command, await its response (A11).
+ *
+ * Demonstrates AMQP 1.0 request/reply addressing through JMS. The requester
+ * creates a temporary queue, puts it in JMSReplyTo, and consumes the
+ * response from it. A11's vocabulary is *dynamic reply node*; TemporaryQueue
+ * is how Qpid JMS represents one, mapping to an AMQP dynamic terminus. The
+ * protocol requirement is the AMQP behaviour, not this API. No shared response channel, and no selector: nothing
+ * uncorrelated should reach a private reply node in the first place.
+ *
+ * The same six stages appear in every language's S3:
+ *
+ *   1. connect
+ *   2. create the dynamic reply node
+ *   3. obtain its broker-assigned address
+ *   4. send the command with reply-to, and learn its message-id
+ *   5. receive the response from the private node
+ *   6. independently verify delivery isolation, transport correlation
+ *      (correlation-id and `to`) and application correlation
+ *
+ * Stage 4 is ordered deliberately for JMS: JMSMessageID is assigned by the
+ * provider during send, so it can only be read afterwards. A11 requires the
+ * response's AMQP correlation-id to mirror the request's AMQP message-id;
+ * this snippet compares the JMS renderings of those two properties, which
+ * is the mapping a JMS client actually has available.
+ */
+public class S3 {
+
+    private static final String COMMAND_CHANNEL = "{{ channels.vms_command }}";
+
+    public static void main(String[] args) throws Exception {
+        String url = System.getenv().getOrDefault(
+                "TOPAS_AMQP_URL", "{{ server_uri }}".replace("{host}", "localhost").replace("{port}", "5671"));
+        // Audit/tracing only under A11 — not how the response is routed.
+        String originator = System.getenv().getOrDefault(
+                "TOPAS_ORIGINATOR", "asyncapi-clients-s3-demo");
+        int commandCorrelationId = Integer.parseInt(
+                System.getenv().getOrDefault("TOPAS_COMMAND_CORRELATION_ID", "3701"));
+        int expectedResponses = Integer.parseInt(
+                System.getenv().getOrDefault("TOPAS_EXPECTED_RESPONSES", "0"));
+
+        JmsConnectionFactory factory = new JmsConnectionFactory(url);
+        ObjectMapper mapper = new ObjectMapper();
+
+        // Three independent invariants; none may compensate for another.
+        int received = 0;
+        int foreign = 0;          // routing: delivered here, addressed elsewhere
+        // No missingTo counter: see (6b) — JMS cannot observe an absent `to`.
+        int missingCorr = 0;      // absence
+        int wrongCorr = 0;        // transformation: right node, wrong id
+        int missingApp = 0;       // absence
+        int wrongApp = 0;         // transformation
+
+        try (Connection connection = factory.createConnection()) {   // (1)
+            connection.start();
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+            Destination commandDest = session.createTopic(COMMAND_CHANNEL);
+            MessageProducer producer = session.createProducer(commandDest);
+
+            // (2)(3) The temporary queue is JMS's dynamic reply node. Unlike
+            // Proton, where the address only exists once the link opens, JMS
+            // creates it synchronously and the name is available immediately.
+            TemporaryQueue replyNode = session.createTemporaryQueue();
+            String replyAddress = replyNode.getQueueName();
+            System.err.println("[reply-node] " + replyAddress);
+
+            // No selector. Under A4 this consumer filtered a shared channel;
+            // under A11 it drains a node nobody else can address.
+            MessageConsumer responseConsumer = session.createConsumer(replyNode);
+            System.err.println("[ready]");
+
+            String body = mapper.writeValueAsString(Map.of(
+                    "kind", "DisplayMessage",
+                    "text", "HELLO TOPAS",
+                    "commandCorrelationId", commandCorrelationId));
+
+            BytesMessage out = session.createBytesMessage();
+            out.writeBytes(body.getBytes(StandardCharsets.UTF_8));
+            out.setJMSReplyTo(replyNode);
+            // {{ headers.originator }} contains hyphens which the JMS API
+            // rejects as an invalid identifier. Bypass the check by writing
+            // directly to the AMQP application-properties map via the
+            // Qpid JMS facade.
+            ((AmqpJmsMessageFacade) ((JmsMessage) out).getFacade())
+                    .setApplicationProperty("{{ headers.originator }}", originator);
+
+            producer.send(out);                                       // (4)
+            // Only now does the provider know it: JMSMessageID is assigned
+            // during send, so reading it earlier would yield null.
+            String requestMessageId = out.getJMSMessageID();
+            System.out.printf("[S3] sent reply-to=%s message-id=%s originator=%s%n",
+                    replyAddress, requestMessageId, originator);
+            // Machine-readable request identity, so the conformance harness can
+            // aim defective responses at this node and prove the checks below
+            // can actually fail.
+            System.out.printf("[a11-request] node=%s messageId=%s%n",
+                    replyAddress, requestMessageId);
+
+            while (true) {                                            // (5)
+                Message reply = responseConsumer.receive(10_000);
+                if (reply == null) {
+                    System.err.println("[S3] no response within 10s — aborting.");
+                    break;
+                }
+
+                // (6a) correlation-id. Absence, transformation and routing are
+                // three different faults, counted as such. `to` is the
+                // discriminator: a response bearing someone else's
+                // correlation-id was mis-delivered if addressed elsewhere,
+                // but merely mis-correlated if addressed here. There is no
+                // "ignore what isn't mine" branch — that is the A4 behaviour
+                // A11 replaced.
+                String replyCorrelationId = reply.getJMSCorrelationID();
+                String to = destinationAddress(reply.getJMSDestination());
+                if (replyCorrelationId == null) {
+                    missingCorr++;
+                    System.err.println("[absence] response carried no correlation-id");
+                } else if (!replyCorrelationId.equals(requestMessageId)) {
+                    if (replyAddress.equals(to)) {
+                        wrongCorr++;
+                        System.err.printf("[transformation] correlation-id=%s != request "
+                                + "message-id %s, but addressed to this node%n",
+                                replyCorrelationId, requestMessageId);
+                    } else {
+                        foreign++;
+                        System.err.printf("[routing] response for correlation-id=%s "
+                                + "(to=%s) reached our private reply node%n",
+                                replyCorrelationId, to);
+                    }
+                    continue;
+                }
+
+                // (6b) `to` — unobservable through the JMS API, and reported as
+                // such rather than asserted vacuously.
+                //
+                // A11 requires the response to be addressed, and every other
+                // client here can check it. JMS cannot: when the AMQP `to` is
+                // absent, Qpid synthesises JMSDestination from the consumer's
+                // own queue, so the check would pass for a message that never
+                // carried the property. Verified against a broker — for a
+                // response sent with no `to`, the package-private
+                // AmqpJmsMessageFacade.getToAddress() returns null while both
+                // getJMSDestination() and the facade's public getDestination()
+                // return this consumer's queue name.
+                //
+                // The value is therefore present in the client but reachable
+                // only by reflecting into provider internals, which is not
+                // something a reference example should teach. A check that
+                // cannot fail is worse than a declared gap, so this snippet
+                // declares the gap: `missingTo=n/a`. Note this affects
+                // *absence* only — a `to` naming a different node is visible,
+                // which is why the routing check above still works.
+
+                // Body decoding does not degrade: an unparseable response is a
+                // failure, not an object with a "raw" field. Graceful
+                // degradation here is what let a vacuous check pass.
+                JsonNode replyBody = mapper.readTree(bodyAsString(reply));
+
+                // (6c) Application correlation — mandatory in the schema, so
+                // absence fails even when transport correlation was perfect.
+                JsonNode appId = replyBody.path("commandCorrelationId");
+                if (appId.isMissingNode() || appId.isNull()) {
+                    missingApp++;
+                    System.err.println("[absence] response carried no commandCorrelationId");
+                } else if (appId.asInt() != commandCorrelationId) {
+                    wrongApp++;
+                    System.err.printf("[transformation] commandCorrelationId %d != %d%n",
+                            appId.asInt(), commandCorrelationId);
+                }
+
+                received++;
+                String status = replyBody.has("status")
+                        ? replyBody.get("status").asText()
+                        : "success";
+                System.out.println("[response] " + status + " " + replyBody);
+
+                // Any status other than "pending" is terminal.
+                if (!"pending".equals(status)) {
+                    break;
+                }
+            }
+
+            System.out.printf(
+                    "[a11] node=%s expected=%d received=%d foreign=%d "
+                            + "missingTo=n/a missingCorr=%d wrongCorr=%d "
+                            + "missingApp=%d wrongApp=%d%n",
+                    replyAddress, expectedResponses, received, foreign,
+                    missingCorr, wrongCorr, missingApp, wrongApp);
+        }
+    }
+
+    private static String bodyAsString(Message msg) throws Exception {
+        if (msg instanceof TextMessage) {
+            return ((TextMessage) msg).getText();
+        }
+        if (msg instanceof BytesMessage) {
+            BytesMessage bytes = (BytesMessage) msg;
+            byte[] buf = new byte[(int) bytes.getBodyLength()];
+            bytes.readBytes(buf);
+            return new String(buf, StandardCharsets.UTF_8);
+        }
+        throw new IllegalStateException(
+                "unhandled body representation " + msg.getClass().getName()
+                + "; add it here rather than degrading to a placeholder");
+    }
+
+    /** The AMQP `to` address, however JMS chose to represent the destination. */
+    private static String destinationAddress(Destination dest) throws Exception {
+        if (dest instanceof javax.jms.Queue) {
+            return ((javax.jms.Queue) dest).getQueueName();
+        }
+        if (dest instanceof javax.jms.Topic) {
+            return ((javax.jms.Topic) dest).getTopicName();
+        }
+        return dest == null ? null : String.valueOf(dest);
+    }
+}

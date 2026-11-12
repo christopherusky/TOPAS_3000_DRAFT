@@ -1,0 +1,152 @@
+/*
+ * File:        output/cpp/snippets/s6.cpp
+ * Origin:      Generated from asyncapi.yaml by asyncapi_clients/generator/generate.py
+ * Changes:     Do not hand-edit; re-run `make asyncapi-clients` to regenerate
+ * Author:      Christopher Kettell, TRL Software
+ * Date:        2026-11-12
+ * Generator:   asyncapi_clients/generator v0.1.0
+ * License:     Apache-2.0  (https://opensource.org/license/Apache-2.0)
+ */
+#include <cstdlib>
+#include <iostream>
+#include <string>
+
+#include <proton/connection.hpp>
+#include <proton/container.hpp>
+#include <proton/delivery.hpp>
+#include <proton/message.hpp>
+#include <proton/messaging_handler.hpp>
+#include <proton/receiver.hpp>
+
+#include <nlohmann/json.hpp>
+
+/**
+ * Scenario S6 — Discriminated-union consumer for transport-link.measurement.
+ *
+ * Demonstrates: client-side dispatch on the `kind` discriminator
+ *. The TransportLinkMeasurement payload is one of three
+ * variants — SCOOT, GPS, or ANPR — distinguished by the `kind` field.
+ * The snippet reads the JSON, switches on the discriminator, and
+ * dispatches to a per-variant handler.
+ *
+ * This is the idiom for handling any of the discriminated unions in
+ * TOPAS 3000A (F6 in the cross-cutting design log).
+ *
+ * Tip: a typed SDK is not yet generated for C++. When it
+ * ships, replace the string switch below with a sealed/struct
+ * variant + std::visit dispatch over the generated variant types.
+ */
+class S6 : public proton::messaging_handler {
+    std::string url_;
+    std::string channel_;
+    int max_messages_;
+    int received_ = 0;
+
+public:
+    S6(std::string url, std::string channel, int max_messages)
+        : url_(std::move(url)),
+          channel_(std::move(channel)),
+          max_messages_(max_messages) {}
+
+    void on_container_start(proton::container& c) override {
+        c.connect(url_);
+    }
+
+    void on_connection_open(proton::connection& conn) override {
+        conn.open_receiver(channel_);
+        // Readiness handshake: the harness waits for this
+        // before starting the publisher.
+        std::cerr << "[ready]" << std::endl;
+    }
+
+    void on_message(proton::delivery& d, proton::message& msg) override {
+        std::string body = body_as_string(msg);
+        nlohmann::json variant;
+        try {
+            variant = nlohmann::json::parse(body);
+        } catch (const nlohmann::json::parse_error& e) {
+            std::cerr << "[S6] JSON parse error: " << e.what() << std::endl;
+            advance_or_close(d);
+            return;
+        }
+        std::cout << "[" << (received_ + 1) << "] " << handle(variant)
+                  << std::endl;
+        advance_or_close(d);
+    }
+
+private:
+    /** Dispatch on the `kind` JSON discriminator. */
+    static std::string handle(const nlohmann::json& variant) {
+        const std::string kind =
+            (variant.contains("kind") && variant["kind"].is_string())
+                ? variant["kind"].get<std::string>()
+                : std::string();
+
+        if (kind == "scoot") {
+            return std::string("SCOOT flow=") + field(variant, "currentFlowVehicles")
+                   + " occupancy%=" + field(variant, "occupancyPercent");
+        }
+        if (kind == "gps") {
+            return std::string("GPS meanTravelTime=")
+                   + field(variant, "meanTravelTimeSeconds") + "s";
+        }
+        if (kind == "anpr") {
+            return std::string("ANPR in=") + field(variant, "numberPlatesIn")
+                   + " out=" + field(variant, "numberPlatesOut")
+                   + " matches=" + field(variant, "numberPlatesMatches");
+        }
+        return std::string("unknown variant kind=")
+               + (kind.empty() ? std::string("<missing>") : kind);
+    }
+
+    static std::string field(const nlohmann::json& node,
+                             const std::string& key) {
+        if (!node.contains(key) || node[key].is_null()) return "n/a";
+        const auto& v = node[key];
+        if (v.is_string()) return v.get<std::string>();
+        return v.dump();
+    }
+
+    void advance_or_close(proton::delivery& d) {
+        ++received_;
+        if (received_ >= max_messages_) {
+            d.connection().close();
+        }
+    }
+
+    static std::string body_as_string(const proton::message& msg) {
+        const proton::value& body = msg.body();
+        if (body.empty()) return std::string();
+        try { return proton::get<std::string>(body); }
+        catch (const proton::conversion_error&) {
+            try {
+                proton::binary b = proton::get<proton::binary>(body);
+                return std::string(b.begin(), b.end());
+            } catch (const proton::conversion_error&) {
+                return proton::to_string(body);
+            }
+        }
+    }
+};
+
+int main(int argc, char* argv[]) {
+    (void)argc;
+    (void)argv;
+
+    const char* env_url = std::getenv("TOPAS_AMQP_URL");
+    std::string url = env_url ? env_url : "amqps://localhost:5671";
+
+    const char* env_max = std::getenv("TOPAS_MAX_MESSAGES");
+    int max_messages = env_max ? std::atoi(env_max) : 5;
+    if (max_messages <= 0) max_messages = 5;
+
+    S6 handler(url, "transport-link.measurement", max_messages);
+    proton::container c(handler);
+    try {
+        c.run();
+    } catch (const std::exception& e) {
+        std::cerr << "[S6] AMQP error: " << e.what() << std::endl;
+        return 1;
+    }
+    return 0;
+}

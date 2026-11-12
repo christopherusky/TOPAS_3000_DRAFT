@@ -1,0 +1,62 @@
+{
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/transport_route/transport_route_measurement-v1.0.json",
+  "$ref": "#/$defs/TransportRouteDynamic",
+  "$defs": {
+    "TransportRouteDynamic": {
+      "additionalProperties": false,
+      "description": "Transport route dynamic measurement data.",
+      "properties": {
+        "transportRouteId": {
+          "description": "Identifier of the route.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Time of the observation.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "quality": {
+          "$ref": "../common/common-v1.0.json#/$defs/Quality",
+          "description": "Optional quality statement."
+        },
+        "currentJourneyTimeSeconds": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Current journey time in seconds."
+        },
+        "estimatedSpeedKph": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Estimated speed along the route in km/h."
+        },
+        "routeStatus": {
+          "$ref": "#/$defs/TransportRouteStatus",
+          "description": "Route status (inRange/outOfRange)."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions."
+        }
+      },
+      "required": [
+        "transportRouteId",
+        "timestamp"
+      ],
+      "type": "object",
+      "title": "UTMC Transport Route Measurement"
+    },
+    "TransportRouteStatus": {
+      "description": "Route status (a closed string enum, not an extensible TypeId catalogue).",
+      "enum": [
+        "inRange",
+        "outOfRange"
+      ],
+      "type": "string"
+    }
+  }
+}

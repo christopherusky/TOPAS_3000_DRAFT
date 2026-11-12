@@ -1,0 +1,38 @@
+@startuml
+title UTMC Transport Link Definition
+!pragma layout smetana
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam classFontSize 14
+skinparam classAttributeFontSize 11
+skinparam classFontStyle bold
+skinparam dpi 150
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam class {
+  BackgroundColor #FEFEFE
+  BorderColor #333333
+  ArrowColor #555555
+}
+scale max 3508*2480
+
+class TransportLinkDefinition {
+  +transportLinkId: ObjectId
+  +typeId: TypeId
+  +creationDate: datetime
+   location: Point
+   endPoint: Point
+   shortDescription: string
+   longDescription: string
+   participantId: ParticipantId
+   originatingParticipantId: ParticipantId
+   originatingObjectId: ObjectId
+   extensions: object
+}
+
+class Point <<../common/common>> #EEEEEE
+
+TransportLinkDefinition ..> Point : location
+TransportLinkDefinition ..> Point : endPoint
+
+@enduml

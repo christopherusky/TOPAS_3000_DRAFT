@@ -1,0 +1,397 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns="http://localhost/services/utmc/v1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:siri="http://www.siri.org.uk/siri" targetNamespace="http://localhost/services/utmc/v1" elementFormDefault="qualified" attributeFormDefault="unqualified" version="1.0" id="utmc_data_object_vms">
+<xsd:include schemaLocation="utmc_device-v1.0.xsd"/>
+<xsd:annotation>
+<xsd:appinfo>
+<Metadata xmlns="http://www.govtalk.gov.uk/CM/gms-xs">
+<Aggregation>main schema</Aggregation>
+<Audience>e-service developers</Audience>
+<Contributor>Freeflow Project and UTMC XML working Group.</Contributor>
+<Coverage>United Kingdom</Coverage>
+<Creator>Drafted for version 1.0 FREEFLOW. Nick Knowles Kizoom</Creator>
+<Date><Created>2009-04-01</Created></Date>
+<Description><p>UTMC Variable Message Sign (VMS) device Data Object schema.</p></Description>
+<Format><MediaType>text/xml</MediaType><Syntax>http://www.w3.org/2001/XMLSchema</Syntax></Format>
+<Identifier>{http://www.utmc.uk.com/schemas/1.0/utmc/}utmc_data_object_vms-v1.0.xsd</Identifier>
+<Language>[ISO 639-2/B] ENG</Language>
+<Publisher>Kizoom, 109-123 Clifton Street, London EC4A 4LD</Publisher>
+<Relation><Requires>http://www.utmc.uk.com/schemas/1.0/utmc/utmc_device-v1.0.xsd</Requires></Relation>
+<Rights>Unclassified<Copyright>Freeflow, UTMC 2009</Copyright></Rights>
+<Source><p>Derived from the UTMC specification.</p></Source>
+<Status>Version 1.0 Draft for approval</Status>
+<Subject><Category>Transport, Roads and road transport</Category><Project>Freeflow UtmcXml Interface</Project></Subject>
+<Title>UTMC XML schema - Variable Message Sign (VMS) Device Object</Title>
+<Type>Standard</Type>
+</Metadata>
+</xsd:appinfo>
+</xsd:annotation>
+<xsd:simpleType name="VmsIdType">
+<xsd:annotation><xsd:documentation>Type for Identifier of Variable Message Sign.</xsd:documentation></xsd:annotation>
+<xsd:restriction base="ObjectIdType"/>
+</xsd:simpleType>
+<xsd:element name="VmsRef" type="VmsIdType" substitutionGroup="DeviceRef">
+<xsd:annotation><xsd:documentation>Reference to a Variable Message Sign.</xsd:documentation></xsd:annotation>
+</xsd:element>
+<xsd:complexType name="VmsFullRefStructure">
+<xsd:annotation><xsd:documentation>Type for full reference to a Variable Message Sign.</xsd:documentation></xsd:annotation>
+<xsd:complexContent>
+<xsd:extension base="ObjectFullRefStructure">
+<xsd:sequence><xsd:element ref="VmsRef"/></xsd:sequence>
+</xsd:extension>
+</xsd:complexContent>
+</xsd:complexType>
+<xsd:element name="Vms" substitutionGroup="AbstractDeviceObject">
+<xsd:annotation><xsd:documentation>Variable Message Sign Data Object.</xsd:documentation></xsd:annotation>
+<xsd:complexType>
+<xsd:complexContent>
+<xsd:restriction base="VmsStructure">
+<xsd:sequence>
+<xsd:sequence>
+<xsd:sequence>
+<xsd:element ref="ParticipantRef" minOccurs="0"/>
+</xsd:sequence>
+<xsd:sequence>
+<xsd:element name="SystemCodeNumber" type="VmsIdType"/>
+<xsd:element name="OriginatingParticipantRef" type="ParticipantIdType" minOccurs="0"/>
+<xsd:element name="OriginatingObjectRef" type="VmsIdType" minOccurs="0"/>
+</xsd:sequence>
+</xsd:sequence>
+<xsd:sequence>
+<xsd:group ref="VmsGroup"/>
+<xsd:group ref="VmsDeviceGroup"/>
+<xsd:element ref="Extensions" minOccurs="0"/>
+</xsd:sequence>
+</xsd:sequence>
+</xsd:restriction>
+</xsd:complexContent>
+</xsd:complexType>
+</xsd:element>
+<xsd:complexType name="VmsStructure">
+<xsd:annotation><xsd:documentation xml:lang="en">Type for Variable Message Sign.</xsd:documentation></xsd:annotation>
+<xsd:complexContent>
+<xsd:extension base="AbstractDeviceStructure">
+<xsd:sequence>
+<xsd:group ref="VmsGroup"/>
+<xsd:group ref="VmsDeviceGroup"/>
+<xsd:element ref="Extensions" minOccurs="0"/>
+</xsd:sequence>
+</xsd:extension>
+</xsd:complexContent>
+</xsd:complexType>
+<xsd:group name="VmsGroup">
+<xsd:annotation><xsd:documentation>Elements specific to Variable Message Sign.</xsd:documentation></xsd:annotation>
+<xsd:sequence>
+<xsd:element name="definitions" minOccurs="0">
+<xsd:complexType><xsd:sequence><xsd:element ref="VmsDefinition" maxOccurs="unbounded"/></xsd:sequence></xsd:complexType>
+</xsd:element>
+<xsd:element name="configurations" minOccurs="0">
+<xsd:complexType><xsd:sequence><xsd:element ref="VmsConfiguration" maxOccurs="unbounded"/></xsd:sequence></xsd:complexType>
+</xsd:element>
+<xsd:element name="dynamics" minOccurs="0">
+<xsd:complexType><xsd:sequence><xsd:element ref="VmsDynamic" minOccurs="0" maxOccurs="unbounded"/></xsd:sequence></xsd:complexType>
+</xsd:element>
+</xsd:sequence>
+</xsd:group>
+<xsd:element name="VmsDefinition" substitutionGroup="AbstractDeviceDefinition">
+<xsd:annotation><xsd:documentation>Variable Message Sign Definition.</xsd:documentation></xsd:annotation>
+<xsd:complexType>
+<xsd:complexContent>
+<xsd:restriction base="VmsDefinitionStructure">
+<xsd:sequence>
+<xsd:sequence>
+<xsd:element name="SystemCodeNumber" type="VmsIdType" minOccurs="0"/>
+<xsd:element name="ObjectTypeRef" type="VmsTypeIdType"/>
+<xsd:element name="QualityRef" type="VmsQualityIdType" minOccurs="0"/>
+<xsd:group ref="BaseDefinitionGroup"/>
+<xsd:group ref="DefinitionDescriptionGroup"/>
+<xsd:group ref="PointOnPathGroup" minOccurs="0"/>
+</xsd:sequence>
+<xsd:sequence><xsd:group ref="OffsetObjectGroup"/></xsd:sequence>
+<xsd:sequence>
+<xsd:group ref="VmsDefinitionGroup"/>
+<xsd:element ref="Extensions" minOccurs="0"/>
+</xsd:sequence>
+</xsd:sequence>
+</xsd:restriction>
+</xsd:complexContent>
+</xsd:complexType>
+</xsd:element>
+<xsd:complexType name="VmsDefinitionStructure">
+<xsd:complexContent>
+<xsd:extension base="AbstractDeviceDefinitionStructure">
+<xsd:sequence>
+<xsd:group ref="VmsDefinitionGroup"/>
+<xsd:element ref="Extensions" minOccurs="0"/>
+</xsd:sequence>
+</xsd:extension>
+</xsd:complexContent>
+</xsd:complexType>
+<xsd:group name="VmsDefinitionGroup">
+<xsd:sequence>
+<xsd:element name="SignHeight" type="xsd:integer" minOccurs="0"/>
+<xsd:element name="SignWidth" type="xsd:integer" minOccurs="0"/>
+<xsd:element name="NumberOfLines" type="xsd:integer" minOccurs="0"/>
+<xsd:element name="CharactersPerLine" type="xsd:integer" minOccurs="0"/>
+<xsd:element name="SupportsGraphics" type="xsd:boolean" minOccurs="0"/>
+<xsd:element name="ColourCapability" type="VmsColourCapabilityEnum" minOccurs="0"/>
+</xsd:sequence>
+</xsd:group>
+<xsd:simpleType name="VmsColourCapabilityEnum">
+<xsd:restriction base="xsd:string">
+<xsd:enumeration value="monochrome"/>
+<xsd:enumeration value="amber"/>
+<xsd:enumeration value="multiColour"/>
+<xsd:enumeration value="fullColour"/>
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:element name="VmsConfiguration" substitutionGroup="AbstractConfiguration">
+<xsd:complexType>
+<xsd:complexContent>
+<xsd:restriction base="VmsConfigurationStructure">
+<xsd:sequence>
+<xsd:sequence>
+<xsd:element name="SystemCodeNumber" type="VmsIdType" minOccurs="0"/>
+<xsd:group ref="AbstractConfigurationGroup"/>
+</xsd:sequence>
+<xsd:sequence>
+<xsd:group ref="VmsConfigurationGroup"/>
+<xsd:element ref="Extensions" minOccurs="0"/>
+</xsd:sequence>
+</xsd:sequence>
+</xsd:restriction>
+</xsd:complexContent>
+</xsd:complexType>
+</xsd:element>
+<xsd:complexType name="VmsConfigurationStructure">
+<xsd:complexContent>
+<xsd:extension base="AbstractConfigurationStructure">
+<xsd:sequence>
+<xsd:group ref="VmsConfigurationGroup"/>
+<xsd:element ref="Extensions" minOccurs="0"/>
+</xsd:sequence>
+</xsd:extension>
+</xsd:complexContent>
+</xsd:complexType>
+<xsd:group name="VmsConfigurationGroup">
+<xsd:sequence>
+<xsd:element name="DefaultBrightness" type="Percentage" minOccurs="0"/>
+<xsd:element name="AutoBrightness" type="xsd:boolean" minOccurs="0"/>
+<xsd:element name="DefaultDisplayTime" type="xsd:duration" minOccurs="0"/>
+<xsd:element name="ScrollSpeed" type="xsd:integer" minOccurs="0"/>
+</xsd:sequence>
+</xsd:group>
+<xsd:element name="VmsDynamic" type="VmsDynamicStructure" substitutionGroup="AbstractDynamic"/>
+<xsd:complexType name="VmsDynamicStructure">
+<xsd:complexContent>
+<xsd:extension base="AbstractDynamicStructure">
+<xsd:sequence>
+<xsd:group ref="VmsDynamicGroup"/>
+<xsd:element ref="Extensions" minOccurs="0"/>
+</xsd:sequence>
+</xsd:extension>
+</xsd:complexContent>
+</xsd:complexType>
+<xsd:group name="VmsDynamicGroup">
+<xsd:sequence>
+<xsd:element name="CurrentMessage" type="xsd:string" minOccurs="0"/>
+<xsd:element name="MessageLines" minOccurs="0">
+<xsd:complexType><xsd:sequence><xsd:element name="Line" type="xsd:string" maxOccurs="unbounded"/></xsd:sequence></xsd:complexType>
+</xsd:element>
+<xsd:element name="GraphicRef" type="xsd:string" minOccurs="0"/>
+<xsd:element name="GraphicImage" type="xsd:hexBinary" minOccurs="0"/>
+<xsd:element name="GraphicUrl" type="xsd:anyURI" minOccurs="0"/>
+<xsd:element name="Brightness" type="Percentage" minOccurs="0"/>
+<xsd:element name="MessageSetTime" type="xsd:dateTime" minOccurs="0"/>
+<xsd:element name="MessageExpiryTime" type="xsd:dateTime" minOccurs="0"/>
+<xsd:element ref="VmsStatusTypeRef" minOccurs="0"/>
+</xsd:sequence>
+</xsd:group>
+<xsd:group name="VmsDeviceGroup">
+<xsd:sequence>
+<xsd:element name="history" minOccurs="0">
+<xsd:complexType><xsd:sequence><xsd:element ref="VmsHistory" maxOccurs="unbounded"/></xsd:sequence></xsd:complexType>
+</xsd:element>
+<xsd:element name="faults" minOccurs="0">
+<xsd:complexType><xsd:sequence><xsd:element ref="VmsFault" maxOccurs="unbounded"/></xsd:sequence></xsd:complexType>
+</xsd:element>
+<xsd:element name="commands" minOccurs="0">
+<xsd:complexType><xsd:sequence><xsd:element ref="VmsCommand" maxOccurs="unbounded"/></xsd:sequence></xsd:complexType>
+</xsd:element>
+</xsd:sequence>
+</xsd:group>
+<xsd:element name="VmsFault" substitutionGroup="AbstractDeviceFault">
+<xsd:complexType>
+<xsd:complexContent>
+<xsd:restriction base="VmsFaultStructure">
+<xsd:sequence>
+<xsd:element name="SystemCodeNumber" type="VmsIdType" minOccurs="0"/>
+<xsd:group ref="AbstractDeviceFaultGroup"/>
+<xsd:sequence>
+<xsd:element name="FaultTypeRef" type="VmsFaultTypeIdType"/>
+<xsd:element ref="Extensions" minOccurs="0"/>
+</xsd:sequence>
+</xsd:sequence>
+</xsd:restriction>
+</xsd:complexContent>
+</xsd:complexType>
+</xsd:element>
+<xsd:complexType name="VmsFaultStructure">
+<xsd:complexContent>
+<xsd:extension base="AbstractDeviceFaultStructure">
+<xsd:sequence>
+<xsd:element name="FaultTypeRef" type="VmsFaultTypeIdType"/>
+<xsd:element ref="Extensions" minOccurs="0"/>
+</xsd:sequence>
+</xsd:extension>
+</xsd:complexContent>
+</xsd:complexType>
+<xsd:element name="VmsHistory" substitutionGroup="AbstractDeviceHistory">
+<xsd:complexType>
+<xsd:complexContent>
+<xsd:restriction base="VmsHistoryStructure">
+<xsd:sequence>
+<xsd:element name="SystemCodeNumber" type="VmsIdType" minOccurs="0"/>
+<xsd:group ref="AbstractDeviceHistoryGroup"/>
+<xsd:sequence><xsd:element ref="Extensions" minOccurs="0"/></xsd:sequence>
+</xsd:sequence>
+</xsd:restriction>
+</xsd:complexContent>
+</xsd:complexType>
+</xsd:element>
+<xsd:complexType name="VmsHistoryStructure">
+<xsd:complexContent>
+<xsd:extension base="AbstractDeviceHistoryStructure">
+<xsd:sequence><xsd:element ref="Extensions" minOccurs="0"/></xsd:sequence>
+</xsd:extension>
+</xsd:complexContent>
+</xsd:complexType>
+<xsd:element name="VmsCommand" substitutionGroup="AbstractDeviceCommand">
+<xsd:complexType>
+<xsd:complexContent>
+<xsd:restriction base="VmsCommandStructure">
+<xsd:sequence>
+<xsd:element name="SystemCodeNumber" type="VmsIdType" minOccurs="0"/>
+<xsd:group ref="DeviceCommandRequestGroup"/>
+<xsd:group ref="DeviceCommandResponseGroup"/>
+<xsd:sequence>
+<xsd:group ref="VmsCommandGroup"/>
+<xsd:element ref="Extensions" minOccurs="0"/>
+</xsd:sequence>
+</xsd:sequence>
+</xsd:restriction>
+</xsd:complexContent>
+</xsd:complexType>
+</xsd:element>
+<xsd:complexType name="VmsCommandStructure">
+<xsd:complexContent>
+<xsd:extension base="AbstractDeviceCommandStructure">
+<xsd:sequence>
+<xsd:group ref="VmsCommandGroup"/>
+<xsd:element ref="Extensions" minOccurs="0"/>
+</xsd:sequence>
+</xsd:extension>
+</xsd:complexContent>
+</xsd:complexType>
+<xsd:group name="VmsCommandGroup">
+<xsd:sequence>
+<xsd:element name="MessageToDisplay" type="xsd:string" minOccurs="0"/>
+<xsd:element name="MessageLinesToDisplay" minOccurs="0">
+<xsd:complexType><xsd:sequence><xsd:element name="Line" type="xsd:string" maxOccurs="unbounded"/></xsd:sequence></xsd:complexType>
+</xsd:element>
+<xsd:element name="GraphicToDisplay" type="xsd:string" minOccurs="0"/>
+<xsd:element name="DisplayDuration" type="xsd:duration" minOccurs="0"/>
+<xsd:element name="SetBrightness" type="Percentage" minOccurs="0"/>
+<xsd:element name="ClearSign" type="xsd:boolean" minOccurs="0"/>
+</xsd:sequence>
+</xsd:group>
+<xsd:element name="VmsTypeRef" type="VmsTypeIdType" substitutionGroup="DeviceTypeRef"/>
+<xsd:simpleType name="VmsTypeIdType">
+<xsd:restriction base="TypeIdType"/>
+</xsd:simpleType>
+<xsd:element name="VmsTypeDefinition" substitutionGroup="DataObjectTypeDefinition">
+<xsd:complexType>
+<xsd:complexContent>
+<xsd:restriction base="TypeDefinitionStructure">
+<xsd:sequence>
+<xsd:element name="TypeId" type="VmsTypeIdType"/>
+<xsd:group ref="TypeDefinitionGroup"/>
+<xsd:element ref="Extensions" minOccurs="0"/>
+</xsd:sequence>
+</xsd:restriction>
+</xsd:complexContent>
+</xsd:complexType>
+</xsd:element>
+<xsd:simpleType name="VmsQualityIdType">
+<xsd:restriction base="QualityIdType"/>
+</xsd:simpleType>
+<xsd:element name="VmsQuality" substitutionGroup="AbstractQuality">
+<xsd:complexType>
+<xsd:complexContent>
+<xsd:restriction base="AbstractQualityStructure">
+<xsd:sequence>
+<xsd:element name="QualityId" type="VmsQualityIdType"/>
+<xsd:group ref="AbstractQualityGroup"/>
+<xsd:element ref="Extensions" minOccurs="0"/>
+</xsd:sequence>
+</xsd:restriction>
+</xsd:complexContent>
+</xsd:complexType>
+</xsd:element>
+<xsd:element name="VmsFaultTypeRef" type="VmsFaultTypeIdType" substitutionGroup="FaultTypeRef"/>
+<xsd:simpleType name="VmsFaultTypeIdType">
+<xsd:restriction base="TypeIdType"/>
+</xsd:simpleType>
+<xsd:element name="VmsFaultTypeDefinition" substitutionGroup="FaultTypeDefinition">
+<xsd:complexType>
+<xsd:complexContent>
+<xsd:restriction base="TypeDefinitionStructure">
+<xsd:sequence>
+<xsd:element name="TypeId" type="VmsFaultTypeIdType"/>
+<xsd:group ref="TypeDefinitionGroup"/>
+<xsd:element ref="Extensions" minOccurs="0"/>
+</xsd:sequence>
+</xsd:restriction>
+</xsd:complexContent>
+</xsd:complexType>
+</xsd:element>
+<xsd:element name="VmsStatusTypeRef" type="VmsStatusTypeIdType" substitutionGroup="DataValueTypeRef"/>
+<xsd:simpleType name="VmsStatusTypeIdType">
+<xsd:restriction base="TypeIdType"/>
+</xsd:simpleType>
+<xsd:simpleType name="VmsStatusTypeIdEnum">
+<xsd:restriction base="TypeIdEnum">
+<xsd:enumeration value="0"/>
+<xsd:enumeration value="Off"/>
+<xsd:enumeration value="1"/>
+<xsd:enumeration value="On"/>
+<xsd:enumeration value="2"/>
+<xsd:enumeration value="Blank"/>
+<xsd:enumeration value="3"/>
+<xsd:enumeration value="Displaying"/>
+<xsd:enumeration value="4"/>
+<xsd:enumeration value="Fault"/>
+<xsd:enumeration value="999"/>
+<xsd:enumeration value="Unknown"/>
+</xsd:restriction>
+</xsd:simpleType>
+<xsd:element name="VmsStatusTypeDefinition" substitutionGroup="ValueTypeDefinition">
+<xsd:complexType>
+<xsd:complexContent>
+<xsd:restriction base="TypeDefinitionStructure">
+<xsd:sequence>
+<xsd:element name="TypeId" type="VmsStatusTypeIdType"/>
+<xsd:group ref="TypeDefinitionGroup"/>
+<xsd:element ref="Extensions" minOccurs="0"/>
+</xsd:sequence>
+</xsd:restriction>
+</xsd:complexContent>
+</xsd:complexType>
+</xsd:element>
+<xsd:group name="VmsTypeDefinitionsGroup">
+<xsd:sequence>
+<xsd:element ref="VmsTypeDefinition" minOccurs="0" maxOccurs="unbounded"/>
+<xsd:element ref="VmsFaultTypeDefinition" minOccurs="0" maxOccurs="unbounded"/>
+<xsd:element ref="VmsStatusTypeDefinition" minOccurs="0" maxOccurs="unbounded"/>
+</xsd:sequence>
+</xsd:group>
+</xsd:schema>

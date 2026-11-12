@@ -1,0 +1,207 @@
+---
+title: UTMC Detector Domain
+---
+erDiagram
+    DETECTOR_TYPE {
+        TypeId typeId PK
+        string description
+        string notes
+        uri specificationLink
+    }
+
+    DETECTOR {
+        ObjectId detectorId PK
+        TypeId typeId FK
+        datetime creationDate
+        object location
+        ObjectId transportLinkId
+        number linkDistanceMetres
+        ObjectId networkLinkId
+        ObjectId networkPathId
+        string shortDescription
+        string longDescription
+        ParticipantId participantId
+        ParticipantId originatingParticipantId
+        ObjectId originatingObjectId
+    }
+
+    DETECTOR_CONFIGURATION {
+        ObjectId detectorId FK
+        datetime configurationDate
+        int thresholdUp
+        int thresholdDown
+    }
+
+    DETECTOR_MEASUREMENT {
+        ObjectId detectorId FK
+        datetime timestamp
+        object quality
+        string kind
+    }
+
+    FLOW_DYNAMIC {
+        ObjectId detectorId FK
+        datetime timestamp
+        object quality
+        string kind
+        int totalFlow
+        int periodSeconds
+        any[] classCounts
+    }
+
+    OCCUPANCY_DYNAMIC {
+        ObjectId detectorId FK
+        datetime timestamp
+        object quality
+        string kind
+        number occupancyPercent
+        int periodSeconds
+    }
+
+    QUEUE_DYNAMIC {
+        ObjectId detectorId FK
+        datetime timestamp
+        object quality
+        string kind
+        bool queuePresent
+        enum severity
+    }
+
+    SPEED_DYNAMIC {
+        ObjectId detectorId FK
+        datetime timestamp
+        object quality
+        string kind
+        number meanSpeedKph
+        int periodSeconds
+    }
+
+    HEADWAY_DYNAMIC {
+        ObjectId detectorId FK
+        datetime timestamp
+        object quality
+        string kind
+        number meanHeadwaySeconds
+        int periodSeconds
+    }
+
+    DETECTOR_COMMAND {
+        ObjectId detectorId FK
+        int commandCorrelationId
+        datetime requestTime
+        string kind
+    }
+
+    RESET_DETECTOR_COMMAND {
+        ObjectId detectorId FK
+        int commandCorrelationId
+        datetime requestTime
+        string kind
+    }
+
+    CALIBRATE_DETECTOR_COMMAND {
+        ObjectId detectorId FK
+        int commandCorrelationId
+        datetime requestTime
+        string kind
+    }
+
+    SET_THRESHOLD_DETECTOR_COMMAND {
+        ObjectId detectorId FK
+        int commandCorrelationId
+        datetime requestTime
+        string kind
+        int thresholdUp
+        int thresholdDown
+    }
+
+    DETECTOR_COMMAND_RESPONSE {
+        ObjectId detectorId FK
+        int commandCorrelationId
+        object status
+        datetime responseTime
+        string code
+        string message
+    }
+
+    DETECTOR_FAULT {
+        ObjectId detectorId FK
+        int faultId PK
+        TypeId faultTypeId FK
+        string supplierFaultNumber
+        TypeId subsystemTypeId
+        bool equipmentFault
+        bool communicationsFault
+        datetime creationDate
+        datetime lastUpdated
+        datetime clearedDate
+        string description
+        object acknowledgementState
+        datetime acknowledgementDate
+        int severity
+        object status
+        string[] parameters
+    }
+
+    DETECTOR_HISTORY {
+        ObjectId detectorId FK
+        int logId
+        datetime logDate
+        string logEntry
+        string logUser
+        string eventType
+    }
+
+    SYNC_STATUS {
+        enum success
+        enum rejected
+        enum failed
+    }
+
+    DETECTOR_SYNC_COMPLETE {
+        int syncCorrelationId
+        string syncId
+        object status
+        int objectCount
+        datetime completedTime
+        string message
+    }
+
+    SYNC_CATEGORY_ENUM {
+        enum definition
+        enum configuration
+        enum measurement
+        enum fault
+        enum type
+        enum status
+    }
+
+    DETECTOR_SYNC_REQUEST {
+        int syncCorrelationId
+        datetime requestTime
+        object[] categories
+        ObjectId[] objectIds
+        string subArea
+        TypeId typeId FK
+        bool activeOnly
+        datetime since
+    }
+
+    DETECTOR_TYPE ||--o{ DETECTOR : "classifies (typeId)"
+    DETECTOR ||--o| DETECTOR_CONFIGURATION : "has (detectorId)"
+    DETECTOR ||--o{ DETECTOR_MEASUREMENT : "emits (detectorId)"
+    DETECTOR ||--o{ DETECTOR_COMMAND : "receives (detectorId)"
+    DETECTOR ||--o{ DETECTOR_FAULT : "raises (detectorId)"
+    DETECTOR ||--o{ DETECTOR_HISTORY : "records (detectorId)"
+    DETECTOR_COMMAND ||--o{ DETECTOR_COMMAND_RESPONSE : "produces (commandCorrelationId, status-progression)"
+    DETECTOR_SYNC_COMPLETE }o--|| SYNC_STATUS : status
+    DETECTOR_SYNC_REQUEST }o--|| SYNC_CATEGORY_ENUM : categories
+    DETECTOR_MEASUREMENT ||--|| FLOW_DYNAMIC : "flow"
+    DETECTOR_MEASUREMENT ||--|| OCCUPANCY_DYNAMIC : "occupancy"
+    DETECTOR_MEASUREMENT ||--|| QUEUE_DYNAMIC : "queue"
+    DETECTOR_MEASUREMENT ||--|| SPEED_DYNAMIC : "speed"
+    DETECTOR_MEASUREMENT ||--|| HEADWAY_DYNAMIC : "headway"
+    DETECTOR_COMMAND ||--|| RESET_DETECTOR_COMMAND : "reset"
+    DETECTOR_COMMAND ||--|| CALIBRATE_DETECTOR_COMMAND : "calibrate"
+    DETECTOR_COMMAND ||--|| SET_THRESHOLD_DETECTOR_COMMAND : "setThreshold"
+

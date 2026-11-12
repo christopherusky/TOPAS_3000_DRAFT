@@ -1,0 +1,89 @@
+{
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/vms/vms_measurement-v1.0.json",
+  "$ref": "#/$defs/VmsDynamic",
+  "$defs": {
+    "VmsDynamic": {
+      "additionalProperties": false,
+      "description": "Variable message sign dynamic measurement data.",
+      "properties": {
+        "vmsId": {
+          "description": "Identifier of the VMS.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Time of the observation.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "quality": {
+          "$ref": "../common/common-v1.0.json#/$defs/Quality",
+          "description": "Optional quality statement."
+        },
+        "currentMessage": {
+          "type": "string",
+          "description": "Currently displayed message text."
+        },
+        "messageLines": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Message split by lines."
+        },
+        "graphicUrl": {
+          "type": "string",
+          "format": "uri",
+          "minLength": 1,
+          "description": "URL of the currently displayed graphic."
+        },
+        "brightnessPercent": {
+          "type": "number",
+          "maximum": 100.0,
+          "minimum": 0.0,
+          "description": "Current brightness percentage."
+        },
+        "messageSetTime": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the current message was set."
+        },
+        "messageExpiryTime": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the message expires."
+        },
+        "status": {
+          "$ref": "#/$defs/VmsStatus",
+          "description": "Operational status."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions."
+        }
+      },
+      "required": [
+        "vmsId",
+        "timestamp"
+      ],
+      "type": "object",
+      "title": "UTMC VMS Measurement"
+    },
+    "VmsStatus": {
+      "description": "Operational status of a variable message sign.",
+      "enum": [
+        "off",
+        "on",
+        "blank",
+        "displaying",
+        "fault",
+        "unknown"
+      ],
+      "type": "string"
+    }
+  }
+}

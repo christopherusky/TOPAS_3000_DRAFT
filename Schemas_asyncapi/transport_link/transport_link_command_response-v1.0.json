@@ -1,0 +1,56 @@
+{
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/transport_link/transport_link_command_response-v1.0.json",
+  "$ref": "#/$defs/TransportLinkCommandResponse",
+  "$defs": {
+    "TransportLinkCommandResponse": {
+      "additionalProperties": false,
+      "description": "Transport link command response payloads.",
+      "properties": {
+        "transportLinkId": {
+          "description": "Identifier of the transport link the command targeted.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "commandCorrelationId": {
+          "description": "Correlation identifier copied verbatim from the originating command request. Not an identifier of the command itself.",
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "status": {
+          "$ref": "../common/common-v1.0.json#/$defs/CommandResponseStatus",
+          "description": "Outcome of the command execution."
+        },
+        "responseTime": {
+          "description": "When the response was generated.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "code": {
+          "type": "string",
+          "description": "Machine-readable response code for programmatic handling."
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable response message with details."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions."
+        }
+      },
+      "required": [
+        "transportLinkId",
+        "commandCorrelationId",
+        "status",
+        "responseTime"
+      ],
+      "type": "object",
+      "title": "UTMC Transport Link Command Response"
+    }
+  }
+}

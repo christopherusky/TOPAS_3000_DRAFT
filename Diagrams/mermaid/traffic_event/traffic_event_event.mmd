@@ -1,0 +1,69 @@
+---
+title: UTMC Traffic Event Planned Event
+---
+erDiagram
+    PLANNED_EVENT {
+        ObjectId eventId
+        object plannedEventType
+        object status
+        string publicDescription
+        string locationDescription
+        object location
+        object severity
+        string phase
+        object lanesAffected
+        int lanesRestricted
+        int lanesOperational
+        string diversionRoute
+        bool diversionInForce
+        string reportedBy
+        string confirmedBy
+        string modifiedBy
+        datetime plannedStart
+        datetime plannedEnd
+        datetime actualStart
+        datetime actualEnd
+        string organiser
+        string venueName
+        string externalCountryCode
+        string externalSystemCode
+        string externalSituationId
+        int externalSituationVersion
+    }
+
+    PLANNED_EVENT_TYPE {
+        enum ballGame
+        enum boxing
+        enum athletics
+        enum cycleRace
+        enum demonstration
+        enum exhibition
+        enum fair
+        enum festival
+        enum football
+        enum funfair
+        enum golf
+        enum internationalSports
+        enum marathon
+        enum march
+        enum market
+        enum match
+        enum parade
+        enum procession
+        enum race
+        enum rugby
+        enum show
+        enum showJumping
+        enum sportsEvent
+        enum sportsMeeting
+        enum stateOccasion
+        enum strike
+        enum tennis
+        enum tournament
+        enum tradeFair
+        enum waterSports
+        enum winterSports
+        enum other
+    }
+
+

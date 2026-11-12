@@ -1,0 +1,92 @@
+"""Scenario S6 — Discriminated-union consumer for {{ channels.transport_link_measurement }}.
+
+Demonstrates: client-side dispatch on the `kind` discriminator. The TransportLinkMeasurement payload is one of three
+variants — SCOOT, GPS, or ANPR — distinguished by the `kind` field.
+Pydantic v2 picks the right concrete class automatically; the
+snippet pattern-matches on it to dispatch to a per-variant handler.
+
+This is the idiom for handling any of the discriminated unions
+in TOPAS 3000A (F6 in the cross-cutting design log).
+"""
+import os
+import sys
+
+from proton.handlers import MessagingHandler
+from proton.reactor import Container
+
+from asyncapi_clients.output.python.sdk.transport_link.transport_link_measurement_v1_0 import (
+    Model as TransportLinkMeasurementEnvelope,
+    TransportLinkSCOOTDynamic,
+    TransportLinkGPSDynamic,
+    TransportLinkANPRDynamic,
+)
+
+
+CHANNEL = "{{ channels.transport_link_measurement }}"
+SERVER = os.environ.get(
+    "TOPAS_AMQP_URL",
+    "{{ server_uri }}".format(host="localhost", port="5671"),
+)
+MAX_MESSAGES = int(os.environ.get("TOPAS_MAX_MESSAGES", "5"))
+
+
+def _handle(variant) -> str:
+    """Dispatch to a per-variant handler based on the runtime type."""
+    match variant:
+        case TransportLinkSCOOTDynamic():
+            return (
+                f"SCOOT flow={variant.currentFlowVehicles} "
+                f"occupancy%={variant.occupancyPercent}"
+            )
+        case TransportLinkGPSDynamic():
+            return f"GPS meanTravelTime={variant.meanTravelTimeSeconds}s"
+        case TransportLinkANPRDynamic():
+            return (
+                f"ANPR in={variant.numberPlatesIn} out={variant.numberPlatesOut} "
+                f"matches={variant.numberPlatesMatches}"
+            )
+        case _:
+            return f"unknown variant {type(variant).__name__}"
+
+
+class TransportLinkReader(MessagingHandler):
+    def __init__(self, url: str, channel: str) -> None:
+        super().__init__()
+        self.url = url
+        self.channel = channel
+        self.received = 0
+
+    def on_start(self, event):
+        conn = event.container.connect(self.url)
+        event.container.create_receiver(conn, self.channel)
+
+    def on_link_opened(self, event):
+        # Readiness handshake: the harness waits for this before
+        # starting the publisher. Every publisher sends a fixed burst and
+        # exits, so anything published before this link is attached is
+        # discarded by the broker and the subscriber then waits for messages
+        # that no longer exist. on_link_opened fires when the peer confirms
+        # the attach, which is the earliest point it is safe to publish.
+        if event.receiver is None:
+            return
+        self._links_open = getattr(self, "_links_open", 0) + 1
+        if self._links_open == 1:
+            print("[ready]", file=sys.stderr, flush=True)
+
+    def on_message(self, event):
+        envelope = TransportLinkMeasurementEnvelope.model_validate_json(event.message.body)
+        # envelope.root is TransportLinkMeasurement (a RootModel union).
+        variant = envelope.root.root
+        print(f"[{self.received + 1}] {_handle(variant)}", flush=True)
+        self.received += 1
+        if self.received >= MAX_MESSAGES:
+            event.connection.close()
+
+
+def main() -> int:
+    Container(TransportLinkReader(SERVER, CHANNEL)).run()
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

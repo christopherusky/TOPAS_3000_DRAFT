@@ -1,0 +1,193 @@
+@startuml
+title UTMC Transport Route Domain
+!pragma layout smetana
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam classFontSize 14
+skinparam classAttributeFontSize 11
+skinparam classFontStyle bold
+skinparam dpi 150
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam class {
+  BackgroundColor #FEFEFE
+  BorderColor #333333
+  ArrowColor #555555
+}
+scale max 4961*3508
+
+' ── transport_route_command ──
+class RequestTransportRouteStatusCommand {
+  +transportRouteId: ObjectId
+  +commandCorrelationId: integer
+  +requestTime: datetime
+  +kind: "requestStatus"
+   extensions: object
+}
+
+class TransportRouteCommand <<union>> {
+  discriminator: kind
+}
+
+' ── transport_route_command_response ──
+class TransportRouteCommandResponse {
+  +transportRouteId: ObjectId
+  +commandCorrelationId: integer
+  +status: CommandResponseStatus
+  +responseTime: datetime
+   code: string
+   message: string
+   extensions: object
+}
+
+' ── transport_route_configuration ──
+class TransportRouteConfiguration {
+  +transportRouteId: ObjectId
+  +configurationDate: datetime
+   routeName: string
+   routeStart: string
+   routeVia: string
+   routeEnd: string
+   routeLengthMeters: number
+   extensions: object
+}
+
+class TransportRouteSegmentConfiguration {
+  +transportRouteId: ObjectId
+  +configurationDate: datetime
+  +routeSegmentId: integer
+  +transportLinkId: ObjectId
+   extensions: object
+}
+
+' ── transport_route_definition ──
+class TransportRouteDefinition {
+  +transportRouteId: ObjectId
+  +typeId: TypeId
+  +creationDate: datetime
+   location: Point
+   endPoint: Point
+   shortDescription: string
+   longDescription: string
+   participantId: ParticipantId
+   ownerOperator: string
+   originatingParticipantId: ParticipantId
+   originatingObjectId: ObjectId
+   extensions: object
+}
+
+' ── transport_route_fault ──
+class TransportRouteFault {
+  +transportRouteId: ObjectId
+  +faultId: integer
+  +faultTypeId: TypeId
+   supplierFaultNumber: string
+   subsystemTypeId: TypeId
+   equipmentFault: boolean
+   communicationsFault: boolean
+  +creationDate: datetime
+   lastUpdated: datetime
+   clearedDate: datetime
+   description: string
+   acknowledgementState: AcknowledgementState
+   acknowledgementDate: datetime
+   severity: integer
+   status: FaultStatus
+   parameters: list<string>
+   extensions: object
+}
+
+' ── transport_route_history ──
+class TransportRouteHistoryEntry {
+  +transportRouteId: ObjectId
+  +logId: integer
+  +logDate: datetime
+  +logEntry: string
+   logUser: string
+   eventType: string
+   extensions: object
+}
+
+' ── transport_route_measurement ──
+class TransportRouteDynamic {
+  +transportRouteId: ObjectId
+  +timestamp: datetime
+   quality: Quality
+   currentJourneyTimeSeconds: number
+   estimatedSpeedKph: number
+   routeStatus: TransportRouteStatus
+   extensions: object
+}
+
+enum TransportRouteStatus {
+  inRange
+  outOfRange
+}
+
+' ── transport_route_sync_complete ──
+class SyncComplete {
+  +syncCorrelationId: integer
+   syncId: string
+  +status: SyncStatus
+  +objectCount: integer
+  +completedTime: datetime
+   message: string
+   extensions: object
+}
+
+enum SyncStatus {
+  success
+  rejected
+  failed
+}
+
+' ── transport_route_sync_request ──
+class SyncRequest {
+  +syncCorrelationId: integer
+  +requestTime: datetime
+   categories: list<SyncCategoryEnum>
+   objectIds: list<ObjectId>
+   subArea: string
+   typeId: TypeId
+   activeOnly: boolean
+   since: datetime
+   extensions: object
+}
+
+enum SyncCategoryEnum {
+  definition
+  configuration
+  measurement
+  fault
+  type
+  status
+}
+
+' ── transport_route_type ──
+class TransportRouteType {
+  +typeId: TypeId
+  +description: string
+   notes: string
+   specificationLink: uri
+   extensions: object
+}
+
+' ── External types ──
+class AcknowledgementState <<../fault_support/fault_support>> #EEEEEE
+class CommandResponseStatus <<../common/common>> #EEEEEE
+class FaultStatus <<../fault_support/fault_support>> #EEEEEE
+class Point <<../common/common>> #EEEEEE
+class Quality <<../common/common>> #EEEEEE
+
+TransportRouteCommand <|-- RequestTransportRouteStatusCommand
+TransportRouteCommandResponse ..> CommandResponseStatus : status
+TransportRouteDefinition ..> Point : location
+TransportRouteDefinition ..> Point : endPoint
+TransportRouteFault ..> AcknowledgementState : acknowledgementState
+TransportRouteFault ..> FaultStatus : status
+TransportRouteDynamic ..> Quality : quality
+TransportRouteDynamic --> TransportRouteStatus : routeStatus
+SyncComplete --> SyncStatus : status
+SyncRequest --> SyncCategoryEnum : categories
+
+@enduml

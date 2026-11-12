@@ -1,0 +1,24 @@
+---
+title: UTMC Transport Route Fault
+---
+erDiagram
+    TRANSPORT_ROUTE_FAULT {
+        ObjectId transportRouteId FK
+        int faultId PK
+        TypeId faultTypeId FK
+        string supplierFaultNumber
+        TypeId subsystemTypeId
+        bool equipmentFault
+        bool communicationsFault
+        datetime creationDate
+        datetime lastUpdated
+        datetime clearedDate
+        string description
+        object acknowledgementState
+        datetime acknowledgementDate
+        int severity
+        object status
+        string[] parameters
+    }
+
+

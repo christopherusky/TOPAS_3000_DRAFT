@@ -1,0 +1,36 @@
+# docker-compose.tls.yml — Artemis speaking AMQP over TLS 1.3 only, with a
+# client certificate required (AC5-4).
+#
+# The ordinary smoke broker is plain TCP and says so (docker-compose.yml), so it
+# can prove nothing about transport security. This one exists to be tested by
+# tls_conformance.py: it offers TLS 1.3 and nothing earlier, and the TLS
+# handshake itself refuses a client with no certificate or one from a CA the
+# broker does not trust. It listens on 5675 so it can run beside the plain
+# broker (5672) and the authenticated one (5674).
+#
+# The certificates are throwaway and must exist before `up`:
+#   asyncapi_clients/smoketest/tls/make_certs.sh asyncapi_clients/smoketest/tls/certs
+#
+# Origin:    Hand-written for asyncapi-clients conformance testing
+# Author:    Christopher Kettell, TRL Software
+# License:   Apache-2.0
+services:
+  artemis-tls:
+    image: apache/activemq-artemis:2.31.2-alpine
+    container_name: topas-smoketest-artemis-tls
+    environment:
+      ARTEMIS_USER: admin
+      ARTEMIS_PASSWORD: admin
+      ANONYMOUS_LOGIN: "true"
+    ports:
+      - "5675:5671"
+    volumes:
+      - ./tls/broker.xml:/var/lib/artemis-instance/etc-override/broker.xml:ro
+      # Mounted outside etc-override so it does not depend on how the image
+      # copies that directory; broker.xml names this path.
+      - ./tls/certs:/opt/topas-tls:ro
+    healthcheck:
+      test: ["CMD", "sh", "-c", "nc -z localhost 5671"]
+      interval: 5s
+      timeout: 3s
+      retries: 24

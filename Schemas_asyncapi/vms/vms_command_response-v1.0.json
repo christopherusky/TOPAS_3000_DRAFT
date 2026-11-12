@@ -1,0 +1,56 @@
+{
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/vms/vms_command_response-v1.0.json",
+  "$ref": "#/$defs/VmsCommandResponse",
+  "$defs": {
+    "VmsCommandResponse": {
+      "additionalProperties": false,
+      "description": "Variable message sign command response payloads.",
+      "properties": {
+        "vmsId": {
+          "description": "Identifier of the VMS the command targeted.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "commandCorrelationId": {
+          "description": "Correlation identifier copied verbatim from the originating command request. Not an identifier of the command itself.",
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "status": {
+          "$ref": "../common/common-v1.0.json#/$defs/CommandResponseStatus",
+          "description": "Outcome of the command execution."
+        },
+        "responseTime": {
+          "description": "When the response was generated.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "code": {
+          "type": "string",
+          "description": "Machine-readable response code."
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable response message."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions."
+        }
+      },
+      "required": [
+        "vmsId",
+        "commandCorrelationId",
+        "status",
+        "responseTime"
+      ],
+      "type": "object",
+      "title": "UTMC VMS Command Response"
+    }
+  }
+}

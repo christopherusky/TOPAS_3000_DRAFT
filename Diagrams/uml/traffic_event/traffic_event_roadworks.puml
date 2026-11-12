@@ -1,0 +1,72 @@
+@startuml
+title UTMC Traffic Event Roadworks
+!pragma layout smetana
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam classFontSize 14
+skinparam classAttributeFontSize 11
+skinparam classFontStyle bold
+skinparam dpi 150
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam class {
+  BackgroundColor #FEFEFE
+  BorderColor #333333
+  ArrowColor #555555
+}
+scale max 3508*2480
+
+class RoadworksEvent {
+  +eventId: ObjectId
+  +roadworksType: RoadworksType
+  +status: EventStatus
+   publicDescription: string
+   locationDescription: string
+   location: Point
+   severity: SeverityType
+   phase: string
+   lanesAffected: LanesAffectedType
+   lanesRestricted: integer
+   lanesOperational: integer
+   diversionRoute: string
+   diversionInForce: boolean
+   reportedBy: string
+   confirmedBy: string
+   modifiedBy: string
+   plannedStart: datetime
+   plannedEnd: datetime
+   actualStart: datetime
+   actualEnd: datetime
+   contractor: string
+   trafficSignals: boolean
+   contraflow: boolean
+   confirmedDate: datetime
+   externalCountryCode: string
+   externalSystemCode: string
+   externalSituationId: string
+   externalSituationVersion: integer
+   extensions: object
+}
+
+enum RoadworksType {
+  centralReservation
+  general
+  overhead
+  surface
+  verge
+  waterMainWork
+  other
+}
+
+class EventStatus <<traffic_event_common>> #EEEEEE
+class LanesAffectedType <<traffic_event_common>> #EEEEEE
+class Point <<../common/common>> #EEEEEE
+class SeverityType <<traffic_event_common>> #EEEEEE
+
+RoadworksEvent --> RoadworksType : roadworksType
+RoadworksEvent ..> EventStatus : status
+RoadworksEvent ..> Point : location
+RoadworksEvent ..> SeverityType : severity
+RoadworksEvent ..> LanesAffectedType : lanesAffected
+
+@enduml

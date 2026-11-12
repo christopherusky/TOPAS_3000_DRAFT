@@ -1,0 +1,95 @@
+@startuml
+title UTMC Traffic Event Planned Event
+!pragma layout smetana
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam classFontSize 14
+skinparam classAttributeFontSize 11
+skinparam classFontStyle bold
+skinparam dpi 150
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam class {
+  BackgroundColor #FEFEFE
+  BorderColor #333333
+  ArrowColor #555555
+}
+scale max 3508*2480
+
+class PlannedEvent {
+  +eventId: ObjectId
+  +plannedEventType: PlannedEventType
+  +status: EventStatus
+   publicDescription: string
+   locationDescription: string
+   location: Point
+   severity: SeverityType
+   phase: string
+   lanesAffected: LanesAffectedType
+   lanesRestricted: integer
+   lanesOperational: integer
+   diversionRoute: string
+   diversionInForce: boolean
+   reportedBy: string
+   confirmedBy: string
+   modifiedBy: string
+   plannedStart: datetime
+   plannedEnd: datetime
+   actualStart: datetime
+   actualEnd: datetime
+   organiser: string
+   venueName: string
+   externalCountryCode: string
+   externalSystemCode: string
+   externalSituationId: string
+   externalSituationVersion: integer
+   extensions: object
+}
+
+enum PlannedEventType {
+  ballGame
+  boxing
+  athletics
+  cycleRace
+  demonstration
+  exhibition
+  fair
+  festival
+  football
+  funfair
+  golf
+  internationalSports
+  marathon
+  march
+  market
+  match
+  parade
+  procession
+  race
+  rugby
+  show
+  showJumping
+  sportsEvent
+  sportsMeeting
+  stateOccasion
+  strike
+  tennis
+  tournament
+  tradeFair
+  waterSports
+  winterSports
+  other
+}
+
+class EventStatus <<traffic_event_common>> #EEEEEE
+class LanesAffectedType <<traffic_event_common>> #EEEEEE
+class Point <<../common/common>> #EEEEEE
+class SeverityType <<traffic_event_common>> #EEEEEE
+
+PlannedEvent --> PlannedEventType : plannedEventType
+PlannedEvent ..> EventStatus : status
+PlannedEvent ..> Point : location
+PlannedEvent ..> SeverityType : severity
+PlannedEvent ..> LanesAffectedType : lanesAffected
+
+@enduml

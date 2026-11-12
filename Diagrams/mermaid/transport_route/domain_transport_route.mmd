@@ -1,0 +1,147 @@
+---
+title: UTMC Transport Route Domain
+---
+erDiagram
+    TRANSPORT_ROUTE_TYPE {
+        TypeId typeId PK
+        string description
+        string notes
+        uri specificationLink
+    }
+
+    TRANSPORT_ROUTE {
+        ObjectId transportRouteId PK
+        TypeId typeId FK
+        datetime creationDate
+        object location
+        object endPoint
+        string shortDescription
+        string longDescription
+        ParticipantId participantId
+        string ownerOperator
+        ParticipantId originatingParticipantId
+        ObjectId originatingObjectId
+    }
+
+    TRANSPORT_ROUTE_CONFIGURATION {
+        ObjectId transportRouteId FK
+        datetime configurationDate
+        string routeName
+        string routeStart
+        string routeVia
+        string routeEnd
+        number routeLengthMeters
+    }
+
+    TRANSPORT_ROUTE_STATUS {
+        enum inRange
+        enum outOfRange
+    }
+
+    TRANSPORT_ROUTE_MEASUREMENT {
+        ObjectId transportRouteId FK
+        datetime timestamp
+        object quality
+        number currentJourneyTimeSeconds
+        number estimatedSpeedKph
+        object routeStatus
+    }
+
+    TRANSPORT_ROUTE_COMMAND {
+        ObjectId transportRouteId FK
+        int commandCorrelationId
+        datetime requestTime
+        string kind
+    }
+
+    REQUEST_TRANSPORT_ROUTE_STATUS_COMMAND {
+        ObjectId transportRouteId FK
+        int commandCorrelationId
+        datetime requestTime
+        string kind
+    }
+
+    TRANSPORT_ROUTE_COMMAND_RESPONSE {
+        ObjectId transportRouteId FK
+        int commandCorrelationId
+        object status
+        datetime responseTime
+        string code
+        string message
+    }
+
+    TRANSPORT_ROUTE_FAULT {
+        ObjectId transportRouteId FK
+        int faultId PK
+        TypeId faultTypeId FK
+        string supplierFaultNumber
+        TypeId subsystemTypeId
+        bool equipmentFault
+        bool communicationsFault
+        datetime creationDate
+        datetime lastUpdated
+        datetime clearedDate
+        string description
+        object acknowledgementState
+        datetime acknowledgementDate
+        int severity
+        object status
+        string[] parameters
+    }
+
+    TRANSPORT_ROUTE_HISTORY {
+        ObjectId transportRouteId FK
+        int logId
+        datetime logDate
+        string logEntry
+        string logUser
+        string eventType
+    }
+
+    SYNC_STATUS {
+        enum success
+        enum rejected
+        enum failed
+    }
+
+    TRANSPORT_ROUTE_SYNC_COMPLETE {
+        int syncCorrelationId
+        string syncId
+        object status
+        int objectCount
+        datetime completedTime
+        string message
+    }
+
+    SYNC_CATEGORY_ENUM {
+        enum definition
+        enum configuration
+        enum measurement
+        enum fault
+        enum type
+        enum status
+    }
+
+    TRANSPORT_ROUTE_SYNC_REQUEST {
+        int syncCorrelationId
+        datetime requestTime
+        object[] categories
+        ObjectId[] objectIds
+        string subArea
+        TypeId typeId FK
+        bool activeOnly
+        datetime since
+    }
+
+    TRANSPORT_ROUTE_TYPE ||--o{ TRANSPORT_ROUTE : "classifies (typeId)"
+    TRANSPORT_ROUTE ||--o| TRANSPORT_ROUTE_CONFIGURATION : "has (transportRouteId)"
+    TRANSPORT_ROUTE ||--o{ TRANSPORT_ROUTE_MEASUREMENT : "emits (transportRouteId)"
+    TRANSPORT_ROUTE ||--o{ TRANSPORT_ROUTE_COMMAND : "receives (transportRouteId)"
+    TRANSPORT_ROUTE ||--o{ TRANSPORT_ROUTE_FAULT : "raises (transportRouteId)"
+    TRANSPORT_ROUTE ||--o{ TRANSPORT_ROUTE_HISTORY : "records (transportRouteId)"
+    TRANSPORT_ROUTE_COMMAND ||--o{ TRANSPORT_ROUTE_COMMAND_RESPONSE : "produces (commandCorrelationId, status-progression)"
+    TRANSPORT_ROUTE_MEASUREMENT }o--|| TRANSPORT_ROUTE_STATUS : routeStatus
+    TRANSPORT_ROUTE_SYNC_COMPLETE }o--|| SYNC_STATUS : status
+    TRANSPORT_ROUTE_SYNC_REQUEST }o--|| SYNC_CATEGORY_ENUM : categories
+    TRANSPORT_ROUTE_COMMAND ||--|| REQUEST_TRANSPORT_ROUTE_STATUS_COMMAND : "requestStatus"
+

@@ -1,0 +1,251 @@
+@startuml
+title UTMC Detector Domain
+!pragma layout smetana
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam classFontSize 14
+skinparam classAttributeFontSize 11
+skinparam classFontStyle bold
+skinparam dpi 150
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam class {
+  BackgroundColor #FEFEFE
+  BorderColor #333333
+  ArrowColor #555555
+}
+scale max 4961*3508
+
+' ── detector_command ──
+class CalibrateDetectorCommand {
+  +detectorId: ObjectId
+  +commandCorrelationId: integer
+  +requestTime: datetime
+  +kind: "calibrate"
+   extensions: object
+}
+
+class ResetDetectorCommand {
+  +detectorId: ObjectId
+  +commandCorrelationId: integer
+  +requestTime: datetime
+  +kind: "reset"
+   extensions: object
+}
+
+class SetThresholdDetectorCommand {
+  +detectorId: ObjectId
+  +commandCorrelationId: integer
+  +requestTime: datetime
+  +kind: "setThreshold"
+  +thresholdUp: integer
+  +thresholdDown: integer
+   extensions: object
+}
+
+class DetectorCommand <<union>> {
+  discriminator: kind
+}
+
+' ── detector_command_response ──
+class DetectorCommandResponse {
+  +detectorId: ObjectId
+  +commandCorrelationId: integer
+  +status: CommandResponseStatus
+  +responseTime: datetime
+   code: string
+   message: string
+   extensions: object
+}
+
+' ── detector_configuration ──
+class DetectorConfiguration {
+  +detectorId: ObjectId
+  +configurationDate: datetime
+   thresholdUp: integer
+   thresholdDown: integer
+   extensions: object
+}
+
+' ── detector_definition ──
+class DetectorDefinition {
+  +detectorId: ObjectId
+  +typeId: TypeId
+  +creationDate: datetime
+   location: Point
+   transportLinkId: ObjectId
+   linkDistanceMetres: number
+   networkLinkId: ObjectId
+   networkPathId: ObjectId
+   shortDescription: string
+   longDescription: string
+   participantId: ParticipantId
+   originatingParticipantId: ParticipantId
+   originatingObjectId: ObjectId
+   extensions: object
+}
+
+' ── detector_fault ──
+class DetectorFault {
+  +detectorId: ObjectId
+  +faultId: integer
+  +faultTypeId: TypeId
+   supplierFaultNumber: string
+   subsystemTypeId: TypeId
+   equipmentFault: boolean
+   communicationsFault: boolean
+  +creationDate: datetime
+   lastUpdated: datetime
+   clearedDate: datetime
+   description: string
+   acknowledgementState: AcknowledgementState
+   acknowledgementDate: datetime
+   severity: integer
+   status: FaultStatus
+   parameters: list<string>
+   extensions: object
+}
+
+' ── detector_history ──
+class DetectorHistoryEntry {
+  +detectorId: ObjectId
+  +logId: integer
+  +logDate: datetime
+  +logEntry: string
+   logUser: string
+   eventType: string
+   extensions: object
+}
+
+' ── detector_measurement ──
+class FlowDynamic {
+  +detectorId: ObjectId
+  +timestamp: datetime
+   quality: Quality
+  +kind: "flow"
+   totalFlow: integer
+   periodSeconds: integer
+   classCounts: list<any>
+   extensions: object
+}
+
+class HeadwayDynamic {
+  +detectorId: ObjectId
+  +timestamp: datetime
+   quality: Quality
+  +kind: "headway"
+  +meanHeadwaySeconds: number
+   periodSeconds: integer
+   extensions: object
+}
+
+class OccupancyDynamic {
+  +detectorId: ObjectId
+  +timestamp: datetime
+   quality: Quality
+  +kind: "occupancy"
+  +occupancyPercent: number
+   periodSeconds: integer
+   extensions: object
+}
+
+class QueueDynamic {
+  +detectorId: ObjectId
+  +timestamp: datetime
+   quality: Quality
+  +kind: "queue"
+  +queuePresent: boolean
+   severity: enum
+   extensions: object
+}
+
+class SpeedDynamic {
+  +detectorId: ObjectId
+  +timestamp: datetime
+   quality: Quality
+  +kind: "speed"
+  +meanSpeedKph: number
+   periodSeconds: integer
+   extensions: object
+}
+
+class DetectorMeasurement <<union>> {
+  discriminator: kind
+}
+
+' ── detector_sync_complete ──
+class SyncComplete {
+  +syncCorrelationId: integer
+   syncId: string
+  +status: SyncStatus
+  +objectCount: integer
+  +completedTime: datetime
+   message: string
+   extensions: object
+}
+
+enum SyncStatus {
+  success
+  rejected
+  failed
+}
+
+' ── detector_sync_request ──
+class SyncRequest {
+  +syncCorrelationId: integer
+  +requestTime: datetime
+   categories: list<SyncCategoryEnum>
+   objectIds: list<ObjectId>
+   subArea: string
+   typeId: TypeId
+   activeOnly: boolean
+   since: datetime
+   extensions: object
+}
+
+enum SyncCategoryEnum {
+  definition
+  configuration
+  measurement
+  fault
+  type
+  status
+}
+
+' ── detector_type ──
+class DetectorType {
+  +typeId: TypeId
+  +description: string
+   notes: string
+   specificationLink: uri
+   extensions: object
+}
+
+' ── External types ──
+class AcknowledgementState <<../fault_support/fault_support>> #EEEEEE
+class CommandResponseStatus <<../common/common>> #EEEEEE
+class FaultStatus <<../fault_support/fault_support>> #EEEEEE
+class Point <<../common/common>> #EEEEEE
+class Quality <<../common/common>> #EEEEEE
+
+DetectorCommand <|-- ResetDetectorCommand
+DetectorCommand <|-- CalibrateDetectorCommand
+DetectorCommand <|-- SetThresholdDetectorCommand
+DetectorCommandResponse ..> CommandResponseStatus : status
+DetectorDefinition ..> Point : location
+DetectorFault ..> AcknowledgementState : acknowledgementState
+DetectorFault ..> FaultStatus : status
+DetectorMeasurement <|-- FlowDynamic
+DetectorMeasurement <|-- OccupancyDynamic
+DetectorMeasurement <|-- QueueDynamic
+DetectorMeasurement <|-- SpeedDynamic
+DetectorMeasurement <|-- HeadwayDynamic
+FlowDynamic ..> Quality : quality
+HeadwayDynamic ..> Quality : quality
+OccupancyDynamic ..> Quality : quality
+QueueDynamic ..> Quality : quality
+SpeedDynamic ..> Quality : quality
+SyncComplete --> SyncStatus : status
+SyncRequest --> SyncCategoryEnum : categories
+
+@enduml

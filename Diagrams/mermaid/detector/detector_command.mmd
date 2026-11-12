@@ -1,0 +1,36 @@
+---
+title: UTMC Detector Command
+---
+erDiagram
+    CALIBRATE_DETECTOR_COMMAND {
+        ObjectId detectorId FK
+        int commandCorrelationId
+        datetime requestTime
+        string kind
+    }
+
+    RESET_DETECTOR_COMMAND {
+        ObjectId detectorId FK
+        int commandCorrelationId
+        datetime requestTime
+        string kind
+    }
+
+    SET_THRESHOLD_DETECTOR_COMMAND {
+        ObjectId detectorId FK
+        int commandCorrelationId
+        datetime requestTime
+        string kind
+        int thresholdUp
+        int thresholdDown
+    }
+
+    DETECTOR_COMMAND {
+        string kind
+    }
+
+    DETECTOR_COMMAND ||--|| RESET_DETECTOR_COMMAND : "reset"
+    DETECTOR_COMMAND ||--|| CALIBRATE_DETECTOR_COMMAND : "calibrate"
+    DETECTOR_COMMAND ||--|| SET_THRESHOLD_DETECTOR_COMMAND : "setThreshold"
+
+

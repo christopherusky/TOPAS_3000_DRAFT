@@ -1,0 +1,14 @@
+---
+title: UTMC Detector Command Response
+---
+erDiagram
+    DETECTOR_COMMAND_RESPONSE {
+        ObjectId detectorId FK
+        int commandCorrelationId
+        object status
+        datetime responseTime
+        string code
+        string message
+    }
+
+

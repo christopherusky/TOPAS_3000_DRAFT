@@ -1,0 +1,56 @@
+{
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/vms/vms_configuration-v1.0.json",
+  "$ref": "#/$defs/VmsConfiguration",
+  "$defs": {
+    "VmsConfiguration": {
+      "additionalProperties": false,
+      "description": "Variable message sign operational configuration.",
+      "properties": {
+        "vmsId": {
+          "description": "VMS this configuration applies to.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "configurationDate": {
+          "description": "When effective.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "defaultBrightnessPercent": {
+          "type": "number",
+          "maximum": 100.0,
+          "minimum": 0.0,
+          "description": "Default brightness percentage."
+        },
+        "autoBrightness": {
+          "type": "boolean",
+          "description": "Whether auto-brightness is enabled."
+        },
+        "defaultDisplayTimeSeconds": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "description": "Default message display time in seconds."
+        },
+        "scrollSpeed": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Text scroll speed."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions."
+        }
+      },
+      "required": [
+        "vmsId",
+        "configurationDate"
+      ],
+      "type": "object",
+      "title": "UTMC VMS Configuration"
+    }
+  }
+}

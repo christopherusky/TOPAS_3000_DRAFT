@@ -1,0 +1,45 @@
+{
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/transport_route/transport_route_type-v1.0.json",
+  "$ref": "#/$defs/TransportRouteType",
+  "$defs": {
+    "TransportRouteType": {
+      "additionalProperties": false,
+      "description": "Transport route type definitions.",
+      "properties": {
+        "typeId": {
+          "description": "Identifier of this transport route type.",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^\\S(?:[\\s\\S]*\\S)?$",
+          "title": "TypeId",
+          "type": "string"
+        },
+        "description": {
+          "description": "Human-readable description.",
+          "type": "string"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional notes."
+        },
+        "specificationLink": {
+          "type": "string",
+          "format": "uri",
+          "minLength": 1,
+          "description": "URL to specification."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions."
+        }
+      },
+      "required": [
+        "typeId",
+        "description"
+      ],
+      "type": "object",
+      "title": "UTMC Transport Route Type"
+    }
+  }
+}

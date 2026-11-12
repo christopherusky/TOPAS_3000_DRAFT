@@ -1,0 +1,286 @@
+@startuml
+title UTMC Transport Link Domain
+!pragma layout smetana
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam classFontSize 14
+skinparam classAttributeFontSize 11
+skinparam classFontStyle bold
+skinparam dpi 150
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam class {
+  BackgroundColor #FEFEFE
+  BorderColor #333333
+  ArrowColor #555555
+}
+scale max 4961*3508
+
+' ── transport_link_command ──
+class RecalibrateTransportLinkCommand {
+  +transportLinkId: ObjectId
+  +commandCorrelationId: integer
+  +requestTime: datetime
+  +kind: "recalibrate"
+   extensions: object
+}
+
+class RequestTransportLinkStatusCommand {
+  +transportLinkId: ObjectId
+  +commandCorrelationId: integer
+  +requestTime: datetime
+  +kind: "requestStatus"
+   extensions: object
+}
+
+class SetStocCommand {
+  +transportLinkId: ObjectId
+  +commandCorrelationId: integer
+  +requestTime: datetime
+  +kind: "setStoc"
+  +stocValue: string
+   extensions: object
+}
+
+class TransportLinkCommand <<union>> {
+  discriminator: kind
+}
+
+' ── transport_link_command_response ──
+class TransportLinkCommandResponse {
+  +transportLinkId: ObjectId
+  +commandCorrelationId: integer
+  +status: CommandResponseStatus
+  +responseTime: datetime
+   code: string
+   message: string
+   extensions: object
+}
+
+' ── transport_link_configuration ──
+class TransportLinkANPRConfiguration {
+  +transportLinkId: ObjectId
+  +configurationDate: datetime
+   lengthMetres: number
+   fullLengthMetres: number
+   numberOfLanes: integer
+   maximumSpeedKph: number
+   capacityVehiclesPerHour: number
+   extensions: object
+  +kind: "anpr"
+}
+
+class TransportLinkGPSConfiguration {
+  +transportLinkId: ObjectId
+  +configurationDate: datetime
+   lengthMetres: number
+   fullLengthMetres: number
+   numberOfLanes: integer
+   maximumSpeedKph: number
+   capacityVehiclesPerHour: number
+   extensions: object
+  +kind: "gps"
+}
+
+class TransportLinkSCOOTConfiguration {
+  +transportLinkId: ObjectId
+  +configurationDate: datetime
+   lengthMetres: number
+   fullLengthMetres: number
+   numberOfLanes: integer
+   maximumSpeedKph: number
+   capacityVehiclesPerHour: number
+   extensions: object
+  +kind: "scoot"
+}
+
+class TransportLinkConfiguration <<union>> {
+  discriminator: kind
+}
+
+' ── transport_link_definition ──
+class TransportLinkDefinition {
+  +transportLinkId: ObjectId
+  +typeId: TypeId
+  +creationDate: datetime
+   location: Point
+   endPoint: Point
+   shortDescription: string
+   longDescription: string
+   participantId: ParticipantId
+   originatingParticipantId: ParticipantId
+   originatingObjectId: ObjectId
+   extensions: object
+}
+
+' ── transport_link_fault ──
+class TransportLinkFault {
+  +transportLinkId: ObjectId
+  +faultId: integer
+  +faultTypeId: TypeId
+   supplierFaultNumber: string
+   subsystemTypeId: TypeId
+   equipmentFault: boolean
+   communicationsFault: boolean
+  +creationDate: datetime
+   lastUpdated: datetime
+   clearedDate: datetime
+   description: string
+   acknowledgementState: AcknowledgementState
+   acknowledgementDate: datetime
+   severity: integer
+   status: FaultStatus
+   parameters: list<string>
+   extensions: object
+}
+
+' ── transport_link_history ──
+class TransportLinkHistoryEntry {
+  +transportLinkId: ObjectId
+  +logId: integer
+  +logDate: datetime
+  +logEntry: string
+   logUser: string
+   eventType: string
+   extensions: object
+}
+
+' ── transport_link_measurement ──
+class TransportLinkANPRDynamic {
+  +transportLinkId: ObjectId
+  +timestamp: datetime
+   quality: Quality
+   averageSpeedKph: number
+   linkTravelTimeSeconds: number
+  +kind: "anpr"
+   numberPlatesIn: integer
+   numberPlatesOut: integer
+   numberPlatesMatches: integer
+   numberPlatesMatchesUsed: integer
+   extensions: object
+}
+
+class TransportLinkGPSDynamic {
+  +transportLinkId: ObjectId
+  +timestamp: datetime
+   quality: Quality
+   averageSpeedKph: number
+   linkTravelTimeSeconds: number
+  +kind: "gps"
+   currentJourneyTimeSeconds: number
+   meanTravelTimeSeconds: number
+   medianTravelTimeSeconds: number
+   varianceTravelTimeSeconds: number
+   numberOfVehicles: integer
+   reservedLaneFlowVehicles: number
+   extensions: object
+}
+
+class TransportLinkSCOOTDynamic {
+  +transportLinkId: ObjectId
+  +timestamp: datetime
+   quality: Quality
+   averageSpeedKph: number
+   linkTravelTimeSeconds: number
+  +kind: "scoot"
+   congestionPercent: number
+   currentFlowVehicles: number
+   occupancyPercent: number
+   extensions: object
+}
+
+class TransportLinkMeasurement <<union>> {
+  discriminator: kind
+}
+
+' ── transport_link_sync_complete ──
+class SyncComplete {
+  +syncCorrelationId: integer
+   syncId: string
+  +status: SyncStatus
+  +objectCount: integer
+  +completedTime: datetime
+   message: string
+   extensions: object
+}
+
+enum SyncStatus {
+  success
+  rejected
+  failed
+}
+
+' ── transport_link_sync_request ──
+class SyncRequest {
+  +syncCorrelationId: integer
+  +requestTime: datetime
+   categories: list<SyncCategoryEnum>
+   objectIds: list<ObjectId>
+   subArea: string
+   typeId: TypeId
+   activeOnly: boolean
+   since: datetime
+   extensions: object
+}
+
+enum SyncCategoryEnum {
+  definition
+  configuration
+  measurement
+  fault
+  type
+  status
+}
+
+' ── transport_link_type ──
+class LinkStatusType {
+  +kind: "linkStatus"
+  +typeId: TypeId
+  +description: string
+   notes: string
+   extensions: object
+}
+
+class TransportLinkType {
+  +kind: "transportLink"
+  +typeId: TypeId
+  +description: string
+   notes: string
+   specificationLink: uri
+   extensions: object
+}
+
+class TransportLinkTypeUnion <<union>> {
+  discriminator: kind
+}
+
+' ── External types ──
+class AcknowledgementState <<../fault_support/fault_support>> #EEEEEE
+class CommandResponseStatus <<../common/common>> #EEEEEE
+class FaultStatus <<../fault_support/fault_support>> #EEEEEE
+class Point <<../common/common>> #EEEEEE
+class Quality <<../common/common>> #EEEEEE
+
+TransportLinkCommand <|-- SetStocCommand
+TransportLinkCommand <|-- RecalibrateTransportLinkCommand
+TransportLinkCommand <|-- RequestTransportLinkStatusCommand
+TransportLinkCommandResponse ..> CommandResponseStatus : status
+TransportLinkConfiguration <|-- TransportLinkSCOOTConfiguration
+TransportLinkConfiguration <|-- TransportLinkGPSConfiguration
+TransportLinkConfiguration <|-- TransportLinkANPRConfiguration
+TransportLinkDefinition ..> Point : location
+TransportLinkDefinition ..> Point : endPoint
+TransportLinkFault ..> AcknowledgementState : acknowledgementState
+TransportLinkFault ..> FaultStatus : status
+TransportLinkMeasurement <|-- TransportLinkSCOOTDynamic
+TransportLinkMeasurement <|-- TransportLinkANPRDynamic
+TransportLinkMeasurement <|-- TransportLinkGPSDynamic
+TransportLinkANPRDynamic ..> Quality : quality
+TransportLinkGPSDynamic ..> Quality : quality
+TransportLinkSCOOTDynamic ..> Quality : quality
+SyncComplete --> SyncStatus : status
+SyncRequest --> SyncCategoryEnum : categories
+TransportLinkTypeUnion <|-- TransportLinkType
+TransportLinkTypeUnion <|-- LinkStatusType
+
+@enduml

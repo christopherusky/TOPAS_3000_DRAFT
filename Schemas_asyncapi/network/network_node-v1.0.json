@@ -1,0 +1,38 @@
+{
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/network/network_node-v1.0.json",
+  "$ref": "#/$defs/NetworkNode",
+  "$defs": {
+    "NetworkNode": {
+      "additionalProperties": false,
+      "description": "Road network node (junction or endpoint).",
+      "properties": {
+        "nodeId": {
+          "description": "Unique identifier of this node.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable name."
+        },
+        "location": {
+          "$ref": "../common/common-v1.0.json#/$defs/GeoJsonPoint",
+          "description": "Geographic position as GeoJSON Point."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions."
+        }
+      },
+      "required": [
+        "nodeId"
+      ],
+      "type": "object",
+      "title": "UTMC Network Node"
+    }
+  }
+}

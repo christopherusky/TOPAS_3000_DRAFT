@@ -1,0 +1,156 @@
+#include <array>
+#include <cstdlib>
+#include <iostream>
+#include <map>
+#include <set>
+#include <string>
+
+#include <proton/connection.hpp>
+#include <proton/container.hpp>
+#include <proton/delivery.hpp>
+#include <proton/message.hpp>
+#include <proton/messaging_handler.hpp>
+#include <proton/receiver.hpp>
+#include <proton/receiver_options.hpp>
+#include <proton/source_options.hpp>
+
+#include <nlohmann/json.hpp>
+
+/**
+ * Scenario S7 — Static reference data: consume the network topology.
+ *
+ * Demonstrates: the snapshot-then-disconnect idiom for static
+ * reference data. Network topology is published across five
+ * channels (one per object type: node, link, zone, path, turn). A
+ * consumer that needs the topology opens five receivers in one
+ * session, accumulates each object into a per-channel
+ * `std::map<std::string, nlohmann::json>` keyed by the per-type id field, and
+ * disconnects once all five streams have produced their first
+ * message — different from S1/S5 which are continuous-telemetry
+ * consumers.
+ *
+ * The resulting in-memory `std::map`s are what a route-planning or
+ * incident-location component would build before serving its first
+ * request.
+ */
+class S7 : public proton::messaging_handler {
+    std::string url_;
+    std::array<std::string, 5> channels_;
+    // Channel name -> per-channel object store, keyed by per-type id field.
+    std::map<std::string, std::map<std::string, nlohmann::json>> topology_;
+    std::set<std::string> seen_first_on_;
+    // Each network object has a type-specific id field.
+    std::map<std::string, std::string> id_fields_;
+
+public:
+    S7(std::string url, std::array<std::string, 5> channels)
+        : url_(std::move(url)), channels_(std::move(channels)) {
+        for (const auto& ch : channels_) {
+            topology_[ch] = {};
+        }
+        id_fields_["{{ channels.network_node }}"] = "nodeId";
+        id_fields_["{{ channels.network_link }}"] = "linkId";
+        id_fields_["{{ channels.network_zone }}"] = "zoneId";
+        id_fields_["{{ channels.network_path }}"] = "pathId";
+        id_fields_["{{ channels.network_turn }}"] = "turnId";
+    }
+
+    void on_container_start(proton::container& c) override {
+        c.connect(url_);
+    }
+
+    void on_connection_open(proton::connection& conn) override {
+        // Open all five receivers on the same session/connection.
+        for (const auto& ch : channels_) {
+            conn.open_receiver(ch);
+        // Readiness handshake: the harness waits for this
+        // before starting the publisher.
+        std::cerr << "[ready]" << std::endl;
+        }
+    }
+
+    void on_message(proton::delivery& d, proton::message& msg) override {
+        const std::string channel = msg.address();
+        if (topology_.find(channel) == topology_.end()) {
+            return;  // unknown receiver, ignore
+        }
+
+        std::string body = body_as_string(msg);
+        nlohmann::json obj;
+        try {
+            obj = nlohmann::json::parse(body);
+        } catch (const nlohmann::json::parse_error& e) {
+            std::cerr << "[S7] JSON parse error on " << channel << ": "
+                      << e.what() << std::endl;
+            return;
+        }
+
+        // Look up the per-type id field (nodeId, linkId, zoneId, pathId, turnId).
+        const std::string& id_field = id_fields_.at(channel);
+        if (!obj.contains(id_field) || !obj[id_field].is_string()) {
+            return;
+        }
+        const std::string id = obj[id_field].get<std::string>();
+        topology_[channel][id] = obj;
+        seen_first_on_.insert(channel);
+
+        // Disconnect once we've heard from all five streams; in
+        // production a consumer would tune this differently (drain
+        // each stream, or wait for a sync-batch completion per A5).
+        if (seen_first_on_.size() == channels_.size()) {
+            std::cout << "[topology] ";
+            bool first = true;
+            for (const auto& ch : channels_) {
+                if (!first) std::cout << ", ";
+                const auto dot = ch.rfind('.');
+                const std::string short_name =
+                    dot != std::string::npos ? ch.substr(dot + 1) : ch;
+                std::cout << short_name << "=" << topology_[ch].size();
+                first = false;
+            }
+            std::cout << std::endl;
+            d.connection().close();
+        }
+    }
+
+private:
+    static std::string body_as_string(const proton::message& msg) {
+        const proton::value& body = msg.body();
+        if (body.empty()) return std::string();
+        try { return proton::get<std::string>(body); }
+        catch (const proton::conversion_error&) {
+            try {
+                proton::binary b = proton::get<proton::binary>(body);
+                return std::string(b.begin(), b.end());
+            } catch (const proton::conversion_error&) {
+                return proton::to_string(body);
+            }
+        }
+    }
+};
+
+int main(int argc, char* argv[]) {
+    (void)argc;
+    (void)argv;
+
+    const char* env_url = std::getenv("TOPAS_AMQP_URL");
+    std::string url = env_url ? env_url : "amqps://localhost:5671";
+
+    std::array<std::string, 5> channels = {
+        "{{ channels.network_node }}",
+        "{{ channels.network_link }}",
+        "{{ channels.network_zone }}",
+        "{{ channels.network_path }}",
+        "{{ channels.network_turn }}",
+    };
+
+    S7 handler(url, channels);
+    proton::container c(handler);
+    try {
+        c.run();
+    } catch (const std::exception& e) {
+        std::cerr << "[S7] AMQP error: " << e.what() << std::endl;
+        return 1;
+    }
+    return 0;
+}

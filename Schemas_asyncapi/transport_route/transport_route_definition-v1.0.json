@@ -1,0 +1,93 @@
+{
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/transport_route/transport_route_definition-v1.0.json",
+  "$ref": "#/$defs/TransportRouteDefinition",
+  "$defs": {
+    "TransportRouteDefinition": {
+      "additionalProperties": false,
+      "description": "Transport route equipment details.",
+      "properties": {
+        "transportRouteId": {
+          "description": "Unique identifier of this route.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "typeId": {
+          "description": "Unique identifier for a transport route type (road, bus, rail, ...).",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^\\S(?:[\\s\\S]*\\S)?$",
+          "title": "TypeId",
+          "type": "string"
+        },
+        "creationDate": {
+          "description": "When this definition was created.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "location": {
+          "$ref": "../common/common-v1.0.json#/$defs/Point",
+          "description": "Start point location."
+        },
+        "endPoint": {
+          "$ref": "../common/common-v1.0.json#/$defs/Point",
+          "description": "Route endpoint location."
+        },
+        "shortDescription": {
+          "type": "string",
+          "maxLength": 32,
+          "minLength": 1,
+          "description": "Short name."
+        },
+        "longDescription": {
+          "type": "string",
+          "maxLength": 2000,
+          "minLength": 1,
+          "description": "Longer description."
+        },
+        "participantId": {
+          "type": "string",
+          "description": "Owning system.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ParticipantId"
+        },
+        "ownerOperator": {
+          "type": "string",
+          "description": "Owner or operator."
+        },
+        "originatingParticipantId": {
+          "type": "string",
+          "description": "Upstream system.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ParticipantId"
+        },
+        "originatingObjectId": {
+          "type": "string",
+          "description": "ID on originating system.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId"
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions."
+        }
+      },
+      "required": [
+        "transportRouteId",
+        "typeId",
+        "creationDate"
+      ],
+      "type": "object",
+      "title": "UTMC Transport Route Definition"
+    }
+  }
+}

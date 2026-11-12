@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/traffic_event/traffic_event_common-v1.0.json",
+  "title": "UTMC Traffic Event Common",
+  "description": "Shared traffic event types (event status, severity, lanes affected).",
+  "$defs": {
+    "EventStatus": {
+      "description": "Event lifecycle state.",
+      "enum": [
+        "active",
+        "planned",
+        "suspended",
+        "cleared"
+      ],
+      "type": "string"
+    },
+    "LanesAffectedType": {
+      "description": "Lane closure pattern.\n\nI = open lane, T = closed lane, read nearside to offside.",
+      "enum": [
+        "I",
+        "T",
+        "II",
+        "IT",
+        "TI",
+        "TT",
+        "III",
+        "IIT",
+        "ITI",
+        "ITT",
+        "TII",
+        "TIT",
+        "TTI",
+        "TTT",
+        "IIII",
+        "IIIT",
+        "IITT",
+        "ITTT",
+        "TIII",
+        "TTTT",
+        "allOpen"
+      ],
+      "type": "string"
+    },
+    "SeverityType": {
+      "description": "Event severity.",
+      "enum": [
+        "unknown",
+        "low",
+        "medium",
+        "high"
+      ],
+      "type": "string"
+    }
+  }
+}

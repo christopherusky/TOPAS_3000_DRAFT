@@ -1,0 +1,295 @@
+import { randomUUID } from "node:crypto";
+import rhea from "rhea";
+import type { Sender } from "rhea";
+
+/**
+ * Scenario S3 — Publish a command, await its response (A11).
+ *
+ * Demonstrates AMQP 1.0 request/reply addressing. The requester creates a
+ * **dynamic reply node**, waits for the broker to assign its address, and
+ * puts that address in the command's `reply-to`. The processor answers
+ * that node and nobody else — no shared response channel, no
+ * broker-specific selector, no filtering after delivery.
+ *
+ * The same six stages appear in every language's S3:
+ *
+ *   1. connect
+ *   2. create the dynamic reply receiver
+ *   3. obtain the broker-assigned reply address
+ *   4. send the command with message-id and reply-to
+ *   5. receive responses on that node
+ *   6. independently verify delivery isolation, transport correlation
+ *      and application correlation
+ *
+ * Stage 3 is not optional in rhea: `open_receiver({source:{dynamic:true}})`
+ * returns before the peer attaches, and the address is `undefined` until
+ * the `receiver_open` event carries the broker's assignment. Publishing
+ * earlier leaves the response nowhere to go.
+ */
+
+const COMMAND_CHANNEL = "{{ channels.vms_command }}";
+const SERVER_URL =
+  process.env.TOPAS_AMQP_URL ??
+  "{{ server_uri }}".replace("{host}", "localhost").replace("{port}", "5671");
+// Audit/tracing only under A11 — it is not how the response is routed.
+const ORIGINATOR_ID =
+  process.env.TOPAS_ORIGINATOR ?? "asyncapi-clients-s3-demo";
+const COMMAND_CORRELATION_ID = parseInt(
+  process.env.TOPAS_COMMAND_CORRELATION_ID ?? "3701",
+  10,
+);
+// How many responses this requester expects, terminal one included. A
+// pending->success progression is 2. The conformance harness sets this so a
+// short delivery is a failure rather than a quiet pass.
+const EXPECTED_RESPONSES = parseInt(
+  process.env.TOPAS_EXPECTED_RESPONSES ?? "0",
+  10,
+);
+
+// Transport identity of the request. The response's correlation-id must
+// equal this. Set explicitly rather than left to the library, so what is
+// compared at stage 6 is the AMQP message-id itself.
+const MESSAGE_ID = randomUUID();
+
+interface VmsCommand {
+  kind: string;
+  text: string;
+  commandCorrelationId: number;
+}
+
+// Three independent invariants, counted by failure kind. None may
+// compensate for another: a response on the right node with the right
+// commandCorrelationId but no correlation-id is still a failure.
+let received = 0;
+let foreign = 0; // routing: delivered here, addressed elsewhere
+let missingTo = 0; // absence
+let missingCorr = 0; // absence
+let wrongCorr = 0; // transformation: right node, wrong id
+let missingApp = 0; // absence
+let wrongApp = 0; // transformation
+
+const container = rhea.create_container();
+let sender: Sender | undefined;
+let replyAddress: string | undefined;
+let sent = false;
+
+container.on("connection_open", (ctx) => {
+  // (1) connect
+  sender = ctx.connection.open_sender({
+    target: { address: COMMAND_CHANNEL, capabilities: ["topic"] },
+  });
+  // (2) dynamic reply node — the broker creates it and names it, so no
+  // address is supplied here because none exists yet.
+  ctx.connection.open_receiver({ source: { dynamic: true } });
+});
+
+container.on("receiver_open", (ctx) => {
+  // (3) The assigned address arrives with the peer's attach frame. rhea
+  // copies it onto the local source too, but reading the remote attach is
+  // what actually says the broker has named the node.
+  replyAddress =
+    ctx.receiver?.remote?.attach?.source?.address ??
+    ctx.receiver?.source?.address;
+  console.error(`[reply-node] ${replyAddress}`);
+  console.error("[ready]");
+  trySend(sender);
+});
+
+container.on("sendable", (ctx) => {
+  trySend(ctx.sender);
+});
+
+function trySend(link: Sender | undefined): void {
+  if (sent || !link || !link.sendable() || replyAddress == null) return;
+  // (4) send the command. reply-to tells the processor where to answer;
+  // message-id is what its correlation-id will mirror.
+  const command: VmsCommand = {
+    kind: "DisplayMessage",
+    text: "HELLO TOPAS",
+    commandCorrelationId: COMMAND_CORRELATION_ID,
+  };
+  link.send({
+    body: JSON.stringify(command),
+    message_id: MESSAGE_ID,
+    reply_to: replyAddress,
+    content_type: "application/json",
+    application_properties: {
+      "{{ headers.originator }}": ORIGINATOR_ID,
+    },
+  });
+  sent = true;
+  console.log(
+    `[S3] sent reply-to=${replyAddress} message-id=${MESSAGE_ID} originator=${ORIGINATOR_ID}`,
+  );
+  // Machine-readable request identity, so the conformance harness can aim
+  // defective responses at this node and prove the checks above can
+  // actually fail.
+  console.log(`[a11-request] node=${replyAddress} messageId=${MESSAGE_ID}`);
+}
+
+container.on("message", (ctx) => {
+  // (5) this arrives on the private reply node. Anything not correlated to
+  // our request should never have been delivered here at all — under A11
+  // that is an isolation failure, not a routine filtering step.
+  const msg = ctx.message;
+  if (msg == null) return;
+  const correlation = msg.correlation_id;
+  const to = typeof msg.to === "string" ? msg.to : undefined;
+
+  // (6a) correlation-id. Absence, transformation and routing are three
+  // different faults, counted as such. `to` is the discriminator: a
+  // response bearing someone else's correlation-id was mis-delivered if
+  // addressed elsewhere, but merely mis-correlated if addressed here.
+  // There is no "ignore what isn't mine" branch — that is the A4
+  // behaviour A11 replaced.
+  //
+  // Tested with `== null` rather than for truthiness throughout this
+  // handler: an AMQP identifier may legitimately be the ulong 0, and
+  // commandCorrelationId is an integer whose schema minimum is 0.
+  if (correlation == null) {
+    missingCorr += 1;
+    console.error("[absence] response carried no correlation-id");
+  } else if (!sameAmqpId(correlation, MESSAGE_ID)) {
+    if (to === replyAddress) {
+      wrongCorr += 1;
+      console.error(
+        `[transformation] correlation-id=${describeAmqpId(correlation)} != request ` +
+          `message-id ${MESSAGE_ID}, but addressed to this node`,
+      );
+    } else {
+      foreign += 1;
+      console.error(
+        `[routing] response for correlation-id=${describeAmqpId(correlation)} ` +
+          `(to=${to}) reached our private reply node`,
+      );
+    }
+    return;
+  }
+
+  // (6b) `to` — unconditional. A11 requires the response to be addressed,
+  // and it survives delivery to a dynamic node, so absence is a fault
+  // rather than a broker quirk.
+  if (to == null || to === "") {
+    missingTo += 1;
+    console.error("[absence] response carried no `to`");
+  }
+
+  // Decoding does not degrade: an unrecognised body throws rather than
+  // becoming a plausible-looking placeholder.
+  const payload = decodeCommandBody(msg.body) as Record<string, unknown>;
+  const status =
+    typeof payload.status === "string" ? payload.status : "success";
+
+  // (6c) application correlation — mandatory in the schema, so absence
+  // fails even when the transport correlation was perfect.
+  const appId = payload.commandCorrelationId;
+  if (appId == null) {
+    missingApp += 1;
+    console.error("[absence] response carried no commandCorrelationId");
+  } else if (appId !== COMMAND_CORRELATION_ID) {
+    wrongApp += 1;
+    console.error(
+      `[transformation] commandCorrelationId ${appId} != ${COMMAND_CORRELATION_ID}`,
+    );
+  }
+  received += 1;
+
+  console.log(`[response] ${status} ${JSON.stringify(payload)}`);
+  // Any status other than "pending" is terminal.
+  if (status !== "pending") {
+    // Machine-readable summary for the conformance harness. The prose above
+    // is for a reader; this line is what gets asserted on.
+    console.log(
+      `[a11] node=${replyAddress} expected=${EXPECTED_RESPONSES} ` +
+        `received=${received} foreign=${foreign} missingTo=${missingTo} ` +
+        `missingCorr=${missingCorr} wrongCorr=${wrongCorr} ` +
+        `missingApp=${missingApp} wrongApp=${wrongApp}`,
+    );
+    ctx.connection.close();
+  }
+});
+
+container.on("connection_close", () => process.exit(0));
+container.on("disconnected", () => process.exit(0));
+
+container.on("error", (err) => {
+  console.error(`[S3] error: ${err}`);
+  process.exit(1);
+});
+
+// Fail fast if no terminal response within 30s.
+setTimeout(() => {
+  console.error("[S3] no terminal response within 30s — aborting.");
+  process.exit(2);
+}, 30_000).unref();
+
+const parsed = new URL(SERVER_URL);
+const isTls = parsed.protocol === "amqps:";
+const host = parsed.hostname;
+const port = parseInt(parsed.port || (isTls ? "5671" : "5672"), 10);
+if (isTls) {
+  container.connect({ host, port, transport: "tls" });
+} else {
+  container.connect({ host, port });
+}
+
+/**
+ * Compare an AMQP identifier against the string we sent, without flattening
+ * either through `String()`.
+ *
+ * The AMQP 1.0 message-id/correlation-id may be a string, ulong, uuid or
+ * binary, and rhea surfaces each differently: a string stays a string, a
+ * ulong arrives as a number, and a uuid arrives as a 16-byte Buffer whose
+ * `String()` rendering is the *empty string*. Comparing pretty-printed
+ * values would therefore report a uuid as absent rather than as a type the
+ * peer introduced. A representation we did not send is not equal to what we
+ * sent — that is a transformation, and saying so is the point of the test.
+ */
+function sameAmqpId(actual: unknown, expected: string): boolean {
+  if (typeof actual === "string") return actual === expected;
+  if (Buffer.isBuffer(actual) && actual.length === 16) {
+    return uuidFromBuffer(actual) === expected.toLowerCase();
+  }
+  return false;
+}
+
+/** Diagnostics that name the representation, since `String()` can hide it. */
+function describeAmqpId(id: unknown): string {
+  if (typeof id === "string") return `string:${id}`;
+  if (typeof id === "number") return `ulong:${id}`;
+  if (Buffer.isBuffer(id)) {
+    return id.length === 16
+      ? `uuid:${uuidFromBuffer(id)}`
+      : `binary:${id.toString("hex")}`;
+  }
+  return `${typeof id}:${JSON.stringify(id)}`;
+}
+
+function uuidFromBuffer(buf: Buffer): string {
+  const h = buf.toString("hex");
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+}
+
+/**
+ * An explicit compatibility layer over the body representations clients
+ * produce — a string from an AMQP value section, a Buffer from a data
+ * section. Anything else throws rather than degrading, because a
+ * conformance test that turns an unrecognised body into `{raw: "..."}`
+ * passes vacuously.
+ */
+function decodeCommandBody(body: unknown): unknown {
+  if (typeof body === "string") return JSON.parse(body);
+  if (Buffer.isBuffer(body)) return JSON.parse(body.toString("utf-8"));
+  // rhea also wraps a described value as {typecode, content}.
+  if (
+    body != null &&
+    typeof body === "object" &&
+    "content" in (body as Record<string, unknown>)
+  ) {
+    return decodeCommandBody((body as Record<string, unknown>).content);
+  }
+  throw new Error(
+    `unhandled body representation ${Object.prototype.toString.call(body)}; ` +
+      "add it to decodeCommandBody rather than degrading",
+  );
+}

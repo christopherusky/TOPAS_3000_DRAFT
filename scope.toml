@@ -1,0 +1,50 @@
+# TOPAS 3000A scope: which domains are live, and which are deferred.
+#
+# `bin/emit.py` reads this file and emits only the domains whose phase is at or
+# below `live_phase`. Everything downstream follows the emitted output: the
+# AsyncAPI document, the channel list, the SDKs, the diagrams, the drift gates and
+# the specification's channel table. Starting the next phase is a one-line change
+# to `live_phase`, followed by regenerating.
+#
+# A deferred domain's models stay in `topas_3000_model/` and its tests keep
+# running, so cross-cutting changes still reach it. It is simply not emitted.
+#
+# Every package under `topas_3000_model/` must be listed here, and every entry
+# must exist: `tests/test_scope.py` fails otherwise, so a new domain cannot be
+# added without deciding its phase.
+
+live_phase = 3
+
+# The delivery phase in which each domain goes live. The note names the phase the
+# domain was first built in; a domain deferred to 4 was narrowed out of the live
+# scope by decision.
+[domains]
+detector        = 1
+traffic_signal  = 1
+transport_link  = 1
+transport_route = 2
+vms             = 2
+traffic_event   = 2
+network         = 2
+strategy        = 3
+
+# Deferred to Phase 4. Not emitted while live_phase is 3 or lower.
+car_park             = 4   # built in phase 1
+access_control       = 4   # built in phase 2
+cctv                 = 4   # built in phase 2
+air_quality          = 4   # built in phase 2
+meteorological       = 4   # built in phase 2
+air_quality_enhanced = 4   # built in phase 3
+
+# Library packages: always emitted, whatever the phase.
+[libraries]
+always = ["common", "fault_support"]
+
+# Which live domains the broker smoke scenarios use. They must be live domains;
+# `tests/test_scope.py` checks.
+[smoke]
+# S4 (sync-versus-delta consumer): any data channel will do, as it reads the
+# message mode and not the payload.
+sync_delta_channel = "detector.measurement"
+# S2 (wildcard `*.fault` subscriber): domains the fault publisher sprays to.
+fault_domains = ["detector", "vms", "traffic-signal"]

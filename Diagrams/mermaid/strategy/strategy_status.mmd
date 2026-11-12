@@ -1,0 +1,18 @@
+---
+title: UTMC Strategy Status
+---
+erDiagram
+    STRATEGY_STATUS {
+        string strategyId FK
+        object strategyStatus
+        string statusMessage
+        string errorMessage
+        datetime strategyChangeStateTime
+    }
+
+    STRATEGY_STATUS_ENUM {
+        enum active
+        enum inactive
+    }
+
+

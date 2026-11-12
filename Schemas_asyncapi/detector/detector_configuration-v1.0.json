@@ -1,0 +1,46 @@
+{
+  "$id": "https://schemas.example.invalid/topas3000a/v1.0/detector/detector_configuration-v1.0.json",
+  "$ref": "#/$defs/DetectorConfiguration",
+  "$defs": {
+    "DetectorConfiguration": {
+      "additionalProperties": false,
+      "description": "Detector operational configuration.",
+      "properties": {
+        "detectorId": {
+          "description": "Identifier of the detector this configuration applies to.",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "title": "ObjectId",
+          "type": "string"
+        },
+        "configurationDate": {
+          "description": "When this configuration record became effective.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "thresholdUp": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Upward threshold for alerting (e.g. occupancy threshold)."
+        },
+        "thresholdDown": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Downward threshold for alerting."
+        },
+        "extensions": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Vendor or local extensions. Open-content object."
+        }
+      },
+      "required": [
+        "detectorId",
+        "configurationDate"
+      ],
+      "type": "object",
+      "title": "UTMC Detector Configuration"
+    }
+  }
+}

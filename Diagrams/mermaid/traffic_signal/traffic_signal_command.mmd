@@ -1,0 +1,54 @@
+---
+title: UTMC Traffic Signal 0064 Command
+---
+erDiagram
+    FORCE_STAGE_COMMAND {
+        ObjectId trafficSignalId FK
+        int commandCorrelationId
+        datetime requestTime
+        string kind
+        int stageNumber
+    }
+
+    HOLD_STAGE_COMMAND {
+        ObjectId trafficSignalId FK
+        int commandCorrelationId
+        datetime requestTime
+        string kind
+        int stageNumber
+    }
+
+    REQUEST_STATUS_COMMAND {
+        ObjectId trafficSignalId FK
+        int commandCorrelationId
+        datetime requestTime
+        string kind
+    }
+
+    SET_PLAN_COMMAND {
+        ObjectId trafficSignalId FK
+        int commandCorrelationId
+        datetime requestTime
+        string kind
+        int planNumber
+    }
+
+    SYNCHRONIZE_CLOCK_COMMAND {
+        ObjectId trafficSignalId FK
+        int commandCorrelationId
+        datetime requestTime
+        string kind
+        datetime targetTime
+    }
+
+    TRAFFIC_SIGNAL_COMMAND {
+        string kind
+    }
+
+    TRAFFIC_SIGNAL_COMMAND ||--|| SET_PLAN_COMMAND : "setPlan"
+    TRAFFIC_SIGNAL_COMMAND ||--|| FORCE_STAGE_COMMAND : "forceStage"
+    TRAFFIC_SIGNAL_COMMAND ||--|| HOLD_STAGE_COMMAND : "holdStage"
+    TRAFFIC_SIGNAL_COMMAND ||--|| SYNCHRONIZE_CLOCK_COMMAND : "synchronizeClock"
+    TRAFFIC_SIGNAL_COMMAND ||--|| REQUEST_STATUS_COMMAND : "requestStatus"
+
+

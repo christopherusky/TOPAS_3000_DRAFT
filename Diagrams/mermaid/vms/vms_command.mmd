@@ -1,0 +1,48 @@
+---
+title: UTMC VMS Command
+---
+erDiagram
+    CLEAR_SIGN_COMMAND {
+        ObjectId vmsId FK
+        int commandCorrelationId
+        datetime requestTime
+        string kind
+    }
+
+    DISPLAY_GRAPHIC_COMMAND {
+        ObjectId vmsId FK
+        int commandCorrelationId
+        datetime requestTime
+        string kind
+        uri graphicUrl
+        int displayDurationSeconds
+    }
+
+    DISPLAY_MESSAGE_COMMAND {
+        ObjectId vmsId FK
+        int commandCorrelationId
+        datetime requestTime
+        string kind
+        string message
+        string[] messageLines
+        int displayDurationSeconds
+    }
+
+    SET_BRIGHTNESS_COMMAND {
+        ObjectId vmsId FK
+        int commandCorrelationId
+        datetime requestTime
+        string kind
+        number brightnessPercent
+    }
+
+    VMS_COMMAND {
+        string kind
+    }
+
+    VMS_COMMAND ||--|| DISPLAY_MESSAGE_COMMAND : "displayMessage"
+    VMS_COMMAND ||--|| DISPLAY_GRAPHIC_COMMAND : "displayGraphic"
+    VMS_COMMAND ||--|| SET_BRIGHTNESS_COMMAND : "setBrightness"
+    VMS_COMMAND ||--|| CLEAR_SIGN_COMMAND : "clearSign"
+
+

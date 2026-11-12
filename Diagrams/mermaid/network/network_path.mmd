@@ -1,0 +1,15 @@
+---
+title: UTMC Network Path
+---
+erDiagram
+    NETWORK_PATH {
+        ObjectId pathId
+        TypeId typeId FK
+        string description
+        bool permanent
+        ObjectId[] linkIds
+        number initialTrimMeters
+        number finalTrimMeters
+    }
+
+

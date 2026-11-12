@@ -1,0 +1,27 @@
+---
+title: UTMC Transport Link Type
+---
+erDiagram
+    LINK_STATUS_TYPE {
+        string kind
+        TypeId typeId PK
+        string description
+        string notes
+    }
+
+    TRANSPORT_LINK_TYPE {
+        string kind
+        TypeId typeId PK
+        string description
+        string notes
+        uri specificationLink
+    }
+
+    TRANSPORT_LINK_TYPE_UNION {
+        string kind
+    }
+
+    TRANSPORT_LINK_TYPE_UNION ||--|| TRANSPORT_LINK_TYPE : "transportLink"
+    TRANSPORT_LINK_TYPE_UNION ||--|| LINK_STATUS_TYPE : "linkStatus"
+
+
