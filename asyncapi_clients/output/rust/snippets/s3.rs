@@ -309,8 +309,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     // Machine-readable summary for the conformance harness. Printed before
     // shutdown, because the close/end/close sequence below can block and a
-    // summary that never reaches the harness reads as a failed run
-    // println!(
+    // summary that never reaches the harness reads as a failed run.
+    println!(
         "[a11] node={reply_address} expected={expected_responses} received={received} \
          foreign={foreign} missingTo={missing_to} missingCorr={missing_corr} \
          wrongCorr={wrong_corr} missingApp={missing_app} wrongApp={wrong_app}"
