@@ -33,7 +33,7 @@ Anything you write in a comment is **public**, along with your username. Do not 
 |---|---|---|
 | Ask a question, report a mistake or make a general comment | **Open an issue** | 3 |
 | Comment on one particular sentence, table row or line in a file | **Comment on a line** | 4 |
-| Reply to something someone else has already said | **Reply to a discussion** | 5 |
+| Reply to something someone else has already said | **Reply to an issue** | 5 |
 | Suggest the exact new wording | **Open an issue with your wording** | 6 |
 
 If you are unsure, use an **issue** (section 3). It always works.
@@ -85,12 +85,12 @@ The link to the line stays attached to your comment, so the reader can click str
 
 ---
 
-## 5. Reply to an existing comment or discussion
+## 5. Reply to an existing issue
 
-If an issue or discussion already exists on your topic:
+If an issue already exists on your topic:
 
-1. Open the **Issues** tab (or **Discussions**, if the repository has it switched on).
-2. Click the title of the item you want to join.
+1. Open the **Issues** tab.
+2. Click the title of the issue you want to join.
 3. Read the existing conversation first.
 4. Scroll to the bottom. Type your reply into the **Add a comment** box.
 5. Click **Comment**.
@@ -129,7 +129,7 @@ The maintainers will consider it and either update the document or reply with a 
 1. A maintainer reads your issue.
 2. They may reply with a question, so check your email.
 3. They will either change the documents, explain why not, or note the point as deferred. The specification's *Deferred and Won't Do* section lists what is outside the current scope.
-4. When the matter is settled, they close the issue. A closed issue can still be read, and you can reopen the discussion by replying.
+4. When the matter is settled, they close the issue. A closed issue can still be read, and you can reopen it by replying.
 
 Response times are not guaranteed. Certification is performed by TOPAS, and feedback on this repository does not form part of that process.
 
